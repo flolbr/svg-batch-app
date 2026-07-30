@@ -148,4 +148,4 @@ Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending commit for visible/exported-column selection.
+`153b600 feat: add column visibility preferences`
