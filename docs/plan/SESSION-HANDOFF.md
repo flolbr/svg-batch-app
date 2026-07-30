@@ -186,4 +186,4 @@ Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending commit for isolated live SVG preview rendering.
+`181ebfd feat: render isolated SVG preview`
