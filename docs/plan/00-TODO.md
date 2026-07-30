@@ -42,7 +42,9 @@ Only one implementation item should normally be `[-]`.
 - [x] Add accessible desktop panel resize handles while keeping the responsive stack fixed.
   - Main files: `src/App.tsx`, `src/styles.css`, `src/App.test.tsx`, `docs/plan/03-UI-AND-COMPONENTS.md`.
   - Tests: `bun run test -- src/App.test.tsx`; `bun run check`; Browser Harness pointer, keyboard, and responsive checks at 1920 px and 1000 px.
-- [ ] Add initial Zustand store with project, UI, source, and selection slices.
+- [x] Add initial Zustand store with project, UI, source, and selection slices.
+  - Main files: `src/store.ts`, `src/store.test.ts`, `src/App.tsx`.
+  - Tests: `bun run test -- src/store.test.ts`; `bun run test -- src/App.test.tsx`; `bun run check`.
 - [ ] Parse and validate the embedded `#svg-batch-project` JSON at startup.
 
 ## Phase 2 — Spreadsheet import and grid

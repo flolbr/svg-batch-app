@@ -36,8 +36,8 @@ import {
   type PointerEvent,
   type ReactNode,
   useRef,
-  useState,
 } from "react";
+import { type PanelWeights, useAppStore } from "./store";
 
 const rows = [
   ["Alice Martin", "Premium", "Paris", "DOC-001"],
@@ -45,7 +45,6 @@ const rows = [
   ["Alicia Morel", "VIP", "Marseille", "DOC-003"],
 ];
 
-const initialPanelWeights = [38, 27, 35];
 const minimumPanelWidths = [360, 300, 360];
 
 type ResizeSession = {
@@ -118,7 +117,8 @@ function PanelResizeHandle({
 export function App() {
   const workspaceRef = useRef<HTMLElement>(null);
   const resizeSession = useRef<ResizeSession | null>(null);
-  const [panelWeights, setPanelWeights] = useState(initialPanelWeights);
+  const panelWeights = useAppStore((state) => state.ui.panelWeights);
+  const setPanelWeights = useAppStore((state) => state.setPanelWeights);
 
   function readPanelWidths() {
     const panels = workspaceRef.current?.querySelectorAll(".workspace-panel");
@@ -144,7 +144,9 @@ export function App() {
     nextWidths[dividerIndex + 1] = pairWidth - leftWidth;
     const totalWidth = nextWidths.reduce((total, width) => total + width, 0);
 
-    setPanelWeights(nextWidths.map((width) => width / totalWidth));
+    setPanelWeights(
+      nextWidths.map((width) => width / totalWidth) as PanelWeights,
+    );
   }
 
   function startPanelResize(
