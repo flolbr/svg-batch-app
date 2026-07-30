@@ -32,6 +32,10 @@ No implementation task is active. Embedded project startup loading is complete.
 - Valid project identity is loaded into Zustand. Missing, malformed,
   unsupported, incomplete, or unexpectedly shaped data is not partially loaded
   and produces a persistent error notification.
+- `docs/examples/membership-demo/` is the canonical end-to-end fixture for
+  spreadsheet, SVG, mapping, search, selection, filename, and export flows.
+- The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
+  a safe SVG, expected mapping intent, and verified checksums.
 
 ## What remains
 
@@ -50,19 +54,21 @@ Start the first `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
 ## Files changed
 
-- `src/project/loadProject.ts`
-- `src/project/loadProject.test.ts`
-- `src/main.tsx`
-- `src/store.ts`
-- `src/store.test.ts`
-- `docs/plan/00-TODO.md`
+- `.gitattributes`
+- `README.md`
+- `docs/examples/`
+- `docs/plan/04-DATA-AND-SEARCH.md`
+- `docs/plan/09-TEST-PLAN.md`
+- `docs/plan/README.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/project/loadProject.test.ts src/store.test.ts`
+- `cd docs/examples/membership-demo && sha256sum -c SHA256SUMS`
+- `jq empty docs/examples/membership-demo/expected-mappings.json`
+- `xmllint --noout docs/examples/membership-demo/membership-template.svg`
 - `bun run check`
 
-## Latest implementation commit
+## Latest substantive commit
 
-`958c38e feat: load embedded project at startup`
+`581d775 docs: add membership example fixtures`
