@@ -188,6 +188,12 @@ Prefer direct children with `data-option`.
 
 Do not recursively search the whole group by default.
 
+The implementation considers direct option/ID children only. `data-option`
+mode prefers an exact trimmed option match and then falls back to a direct
+child ID; explicit ID mode matches IDs only. Selection hides other candidates
+without changing non-candidate children or nested descendants. Unknown or
+ambiguous values do not partially change the group.
+
 ### QR code
 
 ```ts

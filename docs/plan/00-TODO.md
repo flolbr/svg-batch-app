@@ -266,7 +266,19 @@ Only one implementation item should normally be `[-]`.
     `src/mappings/textMapping.ts`.
   - Tests: `bun run test -- src/mappings/visibilityMapping.test.ts
     src/mappings/textMapping.test.ts`; `bunx tsc -b`; `bun run check`.
-- [ ] Implement exclusive child selection by `data-option`, then ID fallback.
+- [x] Implement exclusive child selection by `data-option`, then ID fallback.
+  - Exclusive groups match only direct candidate children. `data-option` mode
+    prefers an exact trimmed option and falls back to an exact child ID; ID
+    mode matches IDs directly. The selected option is shown and other
+    candidates are hidden, while non-candidates and nested descendants remain
+    unchanged.
+  - Empty, required, unknown, ambiguous, missing, and incompatible cases
+    return structured issues without partial mutation.
+  - Main files: `src/mappings/groupMapping.ts`,
+    `src/mappings/groupMapping.test.ts`.
+  - Tests: `bun run test -- src/mappings/groupMapping.test.ts
+    src/mappings/visibilityMapping.test.ts src/mappings/textMapping.test.ts`;
+    `bunx tsc -b`; `bun run check`.
 - [ ] Implement QR generation into a placeholder bounds.
 - [ ] Implement image replacement mapping.
 - [ ] Add text fitting:

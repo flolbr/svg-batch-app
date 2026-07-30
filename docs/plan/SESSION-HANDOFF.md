@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Yes/no visibility mapping is complete.
+No implementation task is active. Exclusive child-group mapping is complete.
 
 ## What works
 
@@ -171,6 +171,10 @@ No implementation task is active. Yes/no visibility mapping is complete.
 - Visibility mapping normalizes configured and row values, applies direct
   `display` show/hide changes on the clone, and reports missing, required,
   empty, unknown, or ambiguous values without throwing.
+- Exclusive group mapping considers direct children only, prefers
+  `data-option` with ID fallback, supports explicit ID mode, and preserves
+  non-candidates/nested descendants. Error paths do not partially hide
+  options.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -178,34 +182,31 @@ No implementation task is active. Yes/no visibility mapping is complete.
 
 ## What remains
 
-Exclusive child-group mapping is the next Phase 4 item.
+QR generation into placeholder bounds is the next Phase 4 item.
 
 ## Next concrete step
 
 Continue `Phase 4 — Mapping engine` in `00-TODO.md`:
 
-1. mark “Implement exclusive child selection by `data-option`, then ID
-   fallback” `[-]`;
-2. match direct children only and hide nonmatching options;
-3. cover empty, unknown, and fallback behavior without recursive matching.
+1. mark “Implement QR generation into a placeholder bounds” `[-]`;
+2. derive target bounds and replace placeholder content with vector QR paths;
+3. cover error correction, margin, empty behavior, and invalid bounds.
 
 ## Files changed
 
-- `src/mappings/mappingUtils.ts`
-- `src/mappings/textMapping.ts`
-- `src/mappings/visibilityMapping.ts`
-- `src/mappings/visibilityMapping.test.ts`
+- `src/mappings/groupMapping.ts`
+- `src/mappings/groupMapping.test.ts`
 - `docs/plan/00-TODO.md`
 - `docs/plan/05-SVG-AND-MAPPINGS.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/mappings/visibilityMapping.test.ts
-  src/mappings/textMapping.test.ts`
+- `bun run test -- src/mappings/groupMapping.test.ts
+  src/mappings/visibilityMapping.test.ts src/mappings/textMapping.test.ts`
 - `bunx tsc -b`
 - `bun run check`
 
 ## Latest substantive commit
 
-`c26072f feat: apply visibility mappings`
+Pending current feature commit.
