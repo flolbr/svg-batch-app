@@ -113,6 +113,8 @@ Preview:
 
 - render the accepted sanitized SVG inside a capability-free sandboxed iframe;
 - no direct event handlers from imported SVG;
+- highlight the selected target in the derived preview document without
+  changing the accepted SVG;
 - show a checker or neutral canvas;
 - indicate overflow and missing mappings;
 - keep QR codes vector.

@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Isolated live SVG preview rendering is
+No implementation task is active. Selected SVG target highlighting is
 complete.
 
 ## What works
@@ -148,6 +148,9 @@ complete.
   iframe. Imported markup never enters the parent application DOM.
 - The isolated preview centers and contains the SVG, ignores pointer
   interaction, and replaces its document when a new template is accepted.
+- Selecting an SVG object adds a preview-only marker with a blue outline and
+  drop shadow inside the sandboxed iframe. Changing selection moves the marker,
+  while the accepted SVG snapshot remains unchanged.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -155,15 +158,16 @@ complete.
 
 ## What remains
 
-Preview target highlighting and navigation controls remain Phase 3 work.
+Selected-row preview navigation, zoom/fit controls, and source status remain
+Phase 3 work.
 
 ## Next concrete step
 
 Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
-1. mark “Highlight the selected SVG object in the preview” `[-]`;
-2. derive preview-only markup from the accepted SVG and selected target ID;
-3. verify highlighting never mutates the accepted template snapshot.
+1. mark “Add previous/next selected-row preview controls” `[-]`;
+2. define navigation order from the selected row IDs in the active worksheet;
+3. add focused tests for empty, boundary, and filtered-selection behavior.
 
 ## Files changed
 

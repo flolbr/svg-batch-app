@@ -42,4 +42,28 @@ describe("SvgPreview", () => {
       expect.stringContaining("first-svg"),
     );
   });
+
+  it("highlights only the derived preview document", () => {
+    const acceptedSvg =
+      '<svg><g id="group"><rect id="target"/></g></svg>';
+    const { rerender } = render(
+      <SvgPreview acceptedSvg={acceptedSvg} selectedTargetId="target" />,
+    );
+    const frame = screen.getByTitle("SVG preview");
+
+    expect(frame.getAttribute("srcdoc")).toContain(
+      'id="target" data-svg-batch-highlight="true"',
+    );
+    expect(acceptedSvg).not.toContain("data-svg-batch-highlight");
+
+    rerender(
+      <SvgPreview acceptedSvg={acceptedSvg} selectedTargetId="group" />,
+    );
+    expect(frame.getAttribute("srcdoc")).toContain(
+      'id="group" data-svg-batch-highlight="true"',
+    );
+    expect(frame.getAttribute("srcdoc")).not.toContain(
+      'id="target" data-svg-batch-highlight="true"',
+    );
+  });
 });

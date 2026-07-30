@@ -1277,7 +1277,10 @@ export function App() {
 
             <div className="preview-canvas">
               {svg ? (
-                <SvgPreview acceptedSvg={svg.acceptedSvg} />
+                <SvgPreview
+                  acceptedSvg={svg.acceptedSvg}
+                  selectedTargetId={selectedSvgObjectId}
+                />
               ) : (
                 <div className="preview-document">
                   <IconFileTypeSvg size={52} stroke={1.3} />

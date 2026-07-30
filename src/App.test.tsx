@@ -198,6 +198,14 @@ describe("App", () => {
     await user.click(screen.getByRole("treeitem", { name: /badge/ }));
     expect(useAppStore.getState().selection.svgObjectId).toBe("badge");
     expect(screen.getByText("badge · g · Unmapped")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(preview.getAttribute("srcdoc")).toContain(
+        'id="badge" data-svg-batch-highlight="true"',
+      );
+    });
+    expect(useAppStore.getState().sources.svg?.acceptedSvg).not.toContain(
+      "data-svg-batch-highlight",
+    );
 
     await user.type(
       screen.getByRole("textbox", { name: "Search SVG objects" }),

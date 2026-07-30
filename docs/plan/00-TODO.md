@@ -203,7 +203,15 @@ Only one implementation item should normally be `[-]`.
     `src/SvgPreview.module.css`, `src/App.tsx`, `src/App.test.tsx`.
   - Tests: `bun run test -- src/SvgPreview.test.tsx src/App.test.tsx`;
     `bun run check`; Browser Harness sandboxed preview check.
-- [ ] Highlight the selected SVG object in the preview.
+- [x] Highlight the selected SVG object in the preview.
+  - The selected target receives a preview-only marker and blue outline/drop
+    shadow inside the sandboxed iframe; changing selection moves the marker
+    without mutating the accepted SVG snapshot.
+  - Main files: `src/SvgPreview.tsx`, `src/SvgPreview.test.tsx`, `src/App.tsx`,
+    `src/App.test.tsx`.
+  - Tests: `bun run test -- src/SvgPreview.test.tsx src/App.test.tsx`;
+    `bun run build:single`; `bun run check`; Browser Harness preview highlight
+    check.
 - [ ] Add previous/next selected-row preview controls.
 - [ ] Add zoom and fit controls.
 - [ ] Show source status: embedded, linked, Drive, unavailable, modified.
