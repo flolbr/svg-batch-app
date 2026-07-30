@@ -220,4 +220,4 @@ Continue `Phase 4 — Mapping engine` in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending current feature commit.
+`0dfc128 feat: apply image mappings`
