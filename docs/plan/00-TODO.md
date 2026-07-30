@@ -291,7 +291,20 @@ Only one implementation item should normally be `[-]`.
   - Tests: `bun run test -- src/mappings/qrMapping.test.ts
     src/mappings/groupMapping.test.ts src/mappings/visibilityMapping.test.ts
     src/mappings/textMapping.test.ts`; `bun run build:single`; `bun run check`.
-- [ ] Implement image replacement mapping.
+- [x] Implement image replacement mapping.
+  - Image mapping replaces bounded `<image>` targets and expresses contain,
+    cover, or stretch through `preserveAspectRatio` while preserving geometry
+    and unrelated attributes.
+  - Direct values accept embedded raster data URLs only. An explicit resolver
+    can supply validated raster data, blob, or HTTPS values for later
+    local/Drive/remote adapters. Unsafe, missing, resolver, empty, required,
+    target, and bounds failures return structured issues without mutation.
+  - Main files: `src/mappings/imageMapping.ts`,
+    `src/mappings/imageMapping.test.ts`.
+  - Tests: `bun run test -- src/mappings/imageMapping.test.ts
+    src/mappings/qrMapping.test.ts src/mappings/groupMapping.test.ts
+    src/mappings/visibilityMapping.test.ts src/mappings/textMapping.test.ts`;
+    `bunx tsc -b`; `bun run check`.
 - [ ] Add text fitting:
   - keep size;
   - shrink to fit;

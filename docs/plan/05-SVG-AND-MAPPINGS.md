@@ -232,6 +232,13 @@ Image values may resolve to:
 
 For the MVP, prefer embedded project assets.
 
+Image mapping requires a bounded `<image>` target and preserves its geometry
+while setting `preserveAspectRatio` for contain, cover, or stretch. Direct row
+values accept embedded raster data URLs only. A caller-supplied synchronous
+resolver may provide validated raster data, blob, or HTTPS URLs for later
+asset adapters; unsafe, missing, or failing resolutions leave the template
+unchanged and return an issue.
+
 ## Applying mappings
 
 Always clone the accepted template DOM.

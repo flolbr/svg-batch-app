@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Vector QR mapping is complete.
+No implementation task is active. Image replacement mapping is complete.
 
 ## What works
 
@@ -179,6 +179,10 @@ No implementation task is active. Vector QR mapping is complete.
   centers a square matrix with configured margin/error correction, and
   replaces placeholder children with crisp white/black vector geometry.
   Invalid or failed generation leaves the placeholder unchanged.
+- Image mapping updates bounded `<image>` targets with contain, cover, or
+  stretch fit while preserving geometry. Direct values accept embedded raster
+  data only; an explicit validated resolver boundary supports later
+  local/Drive/HTTPS assets without enabling those adapters now.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -186,32 +190,34 @@ No implementation task is active. Vector QR mapping is complete.
 
 ## What remains
 
-Image replacement mapping is the next Phase 4 item.
+Text fitting is the next Phase 4 item.
 
 ## Next concrete step
 
 Continue `Phase 4 — Mapping engine` in `00-TODO.md`:
 
-1. mark “Implement image replacement mapping” `[-]`;
-2. replace supported image targets using contain, cover, or stretch geometry;
-3. cover empty behavior, missing assets, and unsafe image values.
+1. mark “Add text fitting” `[-]`;
+2. implement keep, shrink, truncate, and validation-error behavior for
+   one-line text targets;
+3. keep measurement injectable/deterministic for unit tests and shared
+   preview/export use.
 
 ## Files changed
 
-- `src/mappings/qrMapping.ts`
-- `src/mappings/qrMapping.test.ts`
+- `src/mappings/imageMapping.ts`
+- `src/mappings/imageMapping.test.ts`
 - `docs/plan/00-TODO.md`
 - `docs/plan/05-SVG-AND-MAPPINGS.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/mappings/qrMapping.test.ts
-  src/mappings/groupMapping.test.ts src/mappings/visibilityMapping.test.ts
-  src/mappings/textMapping.test.ts`
-- `bun run build:single`
+- `bun run test -- src/mappings/imageMapping.test.ts
+  src/mappings/qrMapping.test.ts src/mappings/groupMapping.test.ts
+  src/mappings/visibilityMapping.test.ts src/mappings/textMapping.test.ts`
+- `bunx tsc -b`
 - `bun run check`
 
 ## Latest substantive commit
 
-`47b730b feat: generate vector QR mappings`
+Pending current feature commit.
