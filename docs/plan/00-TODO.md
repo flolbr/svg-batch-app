@@ -33,7 +33,9 @@ Only one implementation item should normally be `[-]`.
     - responsive fallback stacks panels below 1100 px.
   - Main files: `src/App.tsx`, `src/styles.css`, `src/App.test.tsx`.
   - Tests: `bun run check`; Browser Harness at 1920 px and 1000 px.
-- [ ] Add Mantine theme and a small set of shared CSS variables matching the UI reference.
+- [x] Add Mantine theme and a small set of shared CSS variables matching the UI reference.
+  - Main files: `src/theme.ts`, `src/main.tsx`, `src/styles.css`, `src/theme.test.ts`.
+  - Tests: `bun run test -- src/theme.test.ts src/App.test.tsx`; `bun run check`; Browser Harness at 1920 px and 1000 px.
 - [ ] Add top-level error boundary and toast/notification surface.
 - [ ] Add initial Zustand store with project, UI, source, and selection slices.
 - [ ] Parse and validate the embedded `#svg-batch-project` JSON at startup.

@@ -1,14 +1,16 @@
 :root {
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-  color: #17191c;
-  background: #f5f7fa;
+  --app-color-background: #f5f7fa;
+  --app-color-surface: #ffffff;
+  --app-color-border: #e0e5eb;
+  --app-color-text: #17191c;
+  --app-color-muted: #667180;
+  --app-color-primary: #2874db;
+  --app-color-primary-dark: #234f9f;
+  --app-shadow-panel: 0 1px 3px rgb(20 35 55 / 4%);
+
+  font-family: var(--mantine-font-family);
+  color: var(--app-color-text);
+  background: var(--app-color-background);
 }
 
 * {
@@ -43,7 +45,7 @@ select {
   justify-content: space-between;
   gap: 24px;
   padding: 0 24px;
-  background: #ffffff;
+  background: var(--app-color-surface);
   border-bottom: 1px solid #e3e7ed;
 }
 
@@ -56,8 +58,8 @@ select {
   width: 36px;
   height: 40px;
   place-items: center;
-  color: #ffffff;
-  background: #2874db;
+  color: var(--app-color-surface);
+  background: var(--app-color-primary);
   border-radius: 7px;
 }
 
@@ -66,10 +68,10 @@ select {
   width: 36px;
   height: 36px;
   place-items: center;
-  color: #ffffff;
+  color: var(--app-color-surface);
   font-size: 13px;
   font-weight: 700;
-  background: #234f9f;
+  background: var(--app-color-primary-dark);
   border-radius: 50%;
 }
 
@@ -89,9 +91,9 @@ select {
   min-height: 620px;
   padding: 14px;
   overflow: hidden;
-  border-color: #e0e5eb;
+  border-color: var(--app-color-border);
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgb(20 35 55 / 4%);
+  box-shadow: var(--app-shadow-panel);
 }
 
 .workspace-panel h2 {
@@ -115,7 +117,7 @@ select {
   height: 36px;
   padding: 0 12px;
   color: #272b30;
-  background: #ffffff;
+  background: var(--app-color-surface);
   border: 1px solid #ced4da;
   border-radius: 4px;
 }
@@ -154,7 +156,7 @@ select {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: #6d7682;
+  color: var(--app-color-muted);
   border: 1px dashed #ccd4df;
   border-radius: 8px;
 }
@@ -196,8 +198,8 @@ select {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: #667180;
-  background: #ffffff;
+  color: var(--app-color-muted);
+  background: var(--app-color-surface);
   border: 1px solid #d7dce3;
   box-shadow: 0 4px 18px rgb(34 45 61 / 12%);
 }
@@ -209,8 +211,8 @@ select {
   gap: 20px;
   margin: 0 14px 14px;
   padding: 12px 20px;
-  background: #ffffff;
-  border: 1px solid #e0e5eb;
+  background: var(--app-color-surface);
+  border: 1px solid var(--app-color-border);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgb(20 35 55 / 5%);
 }
