@@ -168,6 +168,12 @@ type VisibilityMapping = BaseMapping & {
 
 Normalize case and whitespace.
 
+Visibility mapping changes only the target's direct `display` attribute on the
+caller-owned SVG clone. True/show removes it and false/hide sets it to `none`.
+Required and configured empty behavior are applied before normalized true/false
+matching; unknown or ambiguous values return issues without changing the
+target.
+
 ### Exclusive child group
 
 ```ts

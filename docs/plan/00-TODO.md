@@ -256,7 +256,16 @@ Only one implementation item should normally be `[-]`.
     `src/mappings/textMapping.test.ts`, `src/mappings/validation.ts`.
   - Tests: `bun run test -- src/mappings/textMapping.test.ts`; `bunx tsc -b`;
     `bun run check`.
-- [ ] Implement yes/no visibility mapping.
+- [x] Implement yes/no visibility mapping.
+  - Visibility values and configured true/false lists are normalized by case
+    and whitespace. True/show removes the direct `display` attribute;
+    false/hide sets `display="none"`; empty, unknown, ambiguous, missing
+    column, and missing target cases return structured issues as applicable.
+  - Main files: `src/mappings/visibilityMapping.ts`,
+    `src/mappings/visibilityMapping.test.ts`, `src/mappings/mappingUtils.ts`,
+    `src/mappings/textMapping.ts`.
+  - Tests: `bun run test -- src/mappings/visibilityMapping.test.ts
+    src/mappings/textMapping.test.ts`; `bunx tsc -b`; `bun run check`.
 - [ ] Implement exclusive child selection by `data-option`, then ID fallback.
 - [ ] Implement QR generation into a placeholder bounds.
 - [ ] Implement image replacement mapping.

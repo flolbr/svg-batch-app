@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Direct text content mapping is complete.
+No implementation task is active. Yes/no visibility mapping is complete.
 
 ## What works
 
@@ -168,6 +168,9 @@ No implementation task is active. Direct text content mapping is complete.
   clone using displayed row values. Missing data/targets, incompatible tags,
   and required blanks return structured issues without throwing or mutating
   the accepted template.
+- Visibility mapping normalizes configured and row values, applies direct
+  `display` show/hide changes on the clone, and reports missing, required,
+  empty, unknown, or ambiguous values without throwing.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -175,31 +178,34 @@ No implementation task is active. Direct text content mapping is complete.
 
 ## What remains
 
-Yes/no visibility mapping is the next Phase 4 item.
+Exclusive child-group mapping is the next Phase 4 item.
 
 ## Next concrete step
 
 Continue `Phase 4 — Mapping engine` in `00-TODO.md`:
 
-1. mark “Implement yes/no visibility mapping” `[-]`;
-2. normalize configured values and row text by case and whitespace;
-3. cover true, false, empty, and unknown values without throwing.
+1. mark “Implement exclusive child selection by `data-option`, then ID
+   fallback” `[-]`;
+2. match direct children only and hide nonmatching options;
+3. cover empty, unknown, and fallback behavior without recursive matching.
 
 ## Files changed
 
+- `src/mappings/mappingUtils.ts`
 - `src/mappings/textMapping.ts`
-- `src/mappings/textMapping.test.ts`
-- `src/mappings/validation.ts`
+- `src/mappings/visibilityMapping.ts`
+- `src/mappings/visibilityMapping.test.ts`
 - `docs/plan/00-TODO.md`
 - `docs/plan/05-SVG-AND-MAPPINGS.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/mappings/textMapping.test.ts`
+- `bun run test -- src/mappings/visibilityMapping.test.ts
+  src/mappings/textMapping.test.ts`
 - `bunx tsc -b`
 - `bun run check`
 
 ## Latest substantive commit
 
-`8b18178 feat: apply direct text mappings`
+Pending current feature commit.

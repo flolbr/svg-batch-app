@@ -1,29 +1,7 @@
 import type { SourceRow } from "../data/normalizeWorkbook";
+import { findElementById, mappingIssue } from "./mappingUtils";
 import type { TextMapping } from "./schema";
 import type { ValidationIssue } from "./validation";
-
-function mappingIssue(
-  row: SourceRow,
-  mapping: TextMapping,
-  code: string,
-  message: string,
-): ValidationIssue {
-  return {
-    level: "error",
-    code,
-    message,
-    rowId: row.id,
-    mappingId: mapping.id,
-    targetId: mapping.targetId,
-    columnId: mapping.columnId,
-  };
-}
-
-function findTarget(svg: SVGSVGElement, id: string): Element | undefined {
-  return Array.from(svg.getElementsByTagName("*")).find(
-    (element) => element.getAttribute("id") === id,
-  );
-}
 
 export function applyTextMapping(
   svg: SVGSVGElement,
@@ -42,7 +20,7 @@ export function applyTextMapping(
     ];
   }
 
-  const target = findTarget(svg, mapping.targetId);
+  const target = findElementById(svg, mapping.targetId);
   if (!target) {
     return [
       mappingIssue(
