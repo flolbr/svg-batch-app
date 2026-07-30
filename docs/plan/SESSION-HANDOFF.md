@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. The initial Zustand store is complete.
+No implementation task is active. Embedded project startup loading is complete.
 
 ## What works
 
@@ -27,35 +27,42 @@ No implementation task is active. The initial Zustand store is complete.
 - The existing desktop panel weights and resize updates use the UI slice.
 - Project and source slices start explicitly empty; row and SVG object
   selections start empty and remain separate from UI state.
+- Startup reads the inert `#svg-batch-project` JSON block and validates the
+  current version-1 project identity with Zod.
+- Valid project identity is loaded into Zustand. Missing, malformed,
+  unsupported, incomplete, or unexpectedly shaped data is not partially loaded
+  and produces a persistent error notification.
 
 ## What remains
 
-Project restoration and other product behavior are not implemented yet. The
+The complete persisted project schema and migrations remain Phase 6 work.
+Spreadsheet import and other product behavior are not implemented yet; the
 controls and sample data in the themed shell are static.
 
 ## Next concrete step
 
-Start the next `Phase 1 — Application shell` item in `00-TODO.md`:
+Start the first `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
-1. mark embedded project JSON parsing and validation `[-]`;
-2. define the smallest startup schema required for the current empty project;
-3. load valid `#svg-batch-project` JSON and surface invalid embedded data through
-   the existing error/notification UI.
+1. mark local CSV, XLSX, and XLS import `[-]`;
+2. inspect the spreadsheet and data-model plans before defining the import
+   boundary;
+3. keep worksheet selection and row normalization in their later TODO items.
 
 ## Files changed
 
+- `src/project/loadProject.ts`
+- `src/project/loadProject.test.ts`
+- `src/main.tsx`
 - `src/store.ts`
 - `src/store.test.ts`
-- `src/App.tsx`
 - `docs/plan/00-TODO.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/store.test.ts`
-- `bun run test -- src/App.test.tsx`
+- `bun run test -- src/project/loadProject.test.ts src/store.test.ts`
 - `bun run check`
 
 ## Latest implementation commit
 
-`7b29799 feat: add initial application store`
+`958c38e feat: load embedded project at startup`
