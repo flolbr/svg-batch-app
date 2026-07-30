@@ -8,7 +8,11 @@ import {
   TextInput,
 } from "@mantine/core";
 import type { DataColumn } from "./data/normalizeWorkbook";
-import { mappingSchema, type Mapping } from "./mappings/schema";
+import {
+  getMappingStatus,
+  mappingTypesForTarget,
+} from "./mappings/mappingStatus";
+import type { Mapping } from "./mappings/schema";
 
 export type MappingTarget = {
   id: string;
@@ -31,13 +35,6 @@ const typeLabels = {
   qr: "QR code",
   image: "Image",
 } as const;
-
-function allowedTypes(tagName: string): Mapping["type"][] {
-  if (tagName === "text" || tagName === "tspan") return ["text", "visibility"];
-  if (tagName === "g") return ["exclusive-group", "qr", "visibility"];
-  if (tagName === "image") return ["image", "visibility"];
-  return ["visibility"];
-}
 
 function defaultMapping(
   type: Mapping["type"],
@@ -91,7 +88,7 @@ export function MappingEditor({
   onChange,
   onRemove,
 }: MappingEditorProps) {
-  const types = allowedTypes(target.tagName);
+  const types = mappingTypesForTarget(target.tagName);
   const typeOptions = types.map((value) => ({
     value,
     label: typeLabels[value],
@@ -100,20 +97,15 @@ export function MappingEditor({
     value: column.id,
     label: column.displayName,
   }));
-  const validation = mapping ? mappingSchema.safeParse(mapping) : undefined;
-  let validationMessage: string | undefined;
-  if (validation && !validation.success) {
-    validationMessage = validation.error.issues[0]?.message;
-  } else if (mapping && mapping.targetId !== target.id) {
-    validationMessage = "Mapping target does not match the selected SVG object.";
-  } else if (mapping && !types.includes(mapping.type)) {
-    validationMessage = "Mapping type is incompatible with this SVG object.";
-  } else if (
-    mapping &&
-    !columns.some((column) => column.id === mapping.columnId)
-  ) {
-    validationMessage = "Spreadsheet column is unavailable in this worksheet.";
-  }
+  const status = getMappingStatus(
+    target,
+    mapping,
+    new Set(columns.map((column) => column.id)),
+  );
+  const validationMessage =
+    status.kind === "warning" || status.kind === "error"
+      ? status.message
+      : undefined;
 
   function selectType(type: string | null) {
     if (!type || columns.length === 0) return;

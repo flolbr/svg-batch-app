@@ -53,6 +53,53 @@ describe("SvgObjectTree", () => {
     );
   });
 
+  it("renders accessible mapped, warning, and error states", () => {
+    render(
+      <SvgObjectTree
+        nodes={nodes}
+        onSelect={vi.fn()}
+        query=""
+        selectedId={null}
+        statuses={{
+          name: {
+            kind: "mapped",
+            label: "Mapped",
+            message: "Mapping configuration is valid.",
+          },
+          city: {
+            kind: "warning",
+            label: "Warning",
+            message: 'Spreadsheet column "city" is unavailable.',
+          },
+          logo: {
+            kind: "error",
+            label: "Error",
+            message: "Mapping type is incompatible.",
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Mapped")).toHaveAttribute(
+      "title",
+      "Mapping configuration is valid.",
+    );
+    expect(screen.getByText("Warning")).toHaveAttribute(
+      "data-status",
+      "warning",
+    );
+    expect(screen.getByText("Error")).toHaveAttribute("data-status", "error");
+    expect(screen.getAllByText("Unmapped")).toHaveLength(2);
+    expect(
+      screen.getByRole("treeitem", { name: /Name.*Mapped/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(
+        'Warning: Spreadsheet column "city" is unavailable.',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("collapses branches and selects items by click or Enter", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();

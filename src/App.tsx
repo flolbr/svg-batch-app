@@ -82,6 +82,7 @@ import {
   type RowOverride,
 } from "./data/rowOverrides";
 import { createRowSearchIndex, searchRows } from "./data/searchRows";
+import { getMappingStatus } from "./mappings/mappingStatus";
 import { type PanelWeights, useAppStore } from "./store";
 import { importSvgFile, type SvgSourceStatus } from "./svg/importSvg";
 import type { SvgTreeNode } from "./svg/buildSvgTree";
@@ -448,6 +449,22 @@ export function App() {
   const selectedMapping = mappings.find(
     (mapping) => mapping.targetId === selectedSvgObjectId,
   );
+  const svgMappingStatuses = useMemo(() => {
+    const columnIds = new Set(sourceColumns.map((column) => column.id));
+    const mappingsByTargetId = new Map(
+      mappings.map((mapping) => [mapping.targetId, mapping]),
+    );
+    return Object.fromEntries(
+      (svg?.targets ?? []).map((target) => [
+        target.id,
+        getMappingStatus(
+          target,
+          mappingsByTargetId.get(target.id),
+          columnIds,
+        ),
+      ]),
+    );
+  }, [mappings, sourceColumns, svg?.targets]);
   const svgSourceStatus =
     svgSourceStatusPresentation[svg?.sourceStatus ?? "unavailable"];
   const visibleColumns = useMemo(
@@ -1252,6 +1269,7 @@ export function App() {
                   onSelect={setSvgObjectSelection}
                   query={svgSearchQuery}
                   selectedId={selectedSvgObjectId}
+                  statuses={svgMappingStatuses}
                 />
               </Stack>
             )}

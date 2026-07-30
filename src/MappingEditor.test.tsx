@@ -289,7 +289,7 @@ describe("MappingEditor", () => {
     );
 
     expect(screen.getByRole("status")).toHaveTextContent(
-      "Spreadsheet column is unavailable",
+      'Spreadsheet column "plan" is unavailable',
     );
     expect(screen.queryByText("Mapping configured.")).not.toBeInTheDocument();
   });

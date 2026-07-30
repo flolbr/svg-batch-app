@@ -297,6 +297,9 @@ describe("App", () => {
       },
     ]);
     expect(screen.getByText("Mapping configured.")).toBeInTheDocument();
+    expect(
+      screen.getByRole("treeitem", { name: /Member name.*Mapped/ }),
+    ).toBeInTheDocument();
 
     await user.click(
       screen.getByRole("combobox", { name: "Spreadsheet column" }),
@@ -310,6 +313,9 @@ describe("App", () => {
 
     await user.click(screen.getByRole("button", { name: "Remove mapping" }));
     expect(useAppStore.getState().mappings).toEqual([]);
+    expect(
+      screen.getByRole("treeitem", { name: /Member name.*Unmapped/ }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Remove mapping" }),
     ).not.toBeInTheDocument();

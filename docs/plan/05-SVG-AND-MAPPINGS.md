@@ -111,7 +111,13 @@ The custom tree uses semantic tree/treeitem/group roles, roving focus,
 `aria-expanded` and `aria-selected`, click or Enter selection, and standard
 arrow-key navigation. Search is case- and accent-insensitive, hides
 nonmatching branches while preserving ancestor context, and exposes matching
-descendants. Each target currently reports Unmapped status.
+descendants.
+
+Each target derives one configuration status without reading Zustand inside
+the tree: Unmapped when no mapping exists; Error when the schema, target ID, or
+target/type pairing is invalid; Warning when the active worksheet lacks the
+configured column; and Mapped otherwise. The same pure derivation supplies the
+mapping editor's inline feedback so those surfaces cannot disagree.
 
 ## Mapping schema
 

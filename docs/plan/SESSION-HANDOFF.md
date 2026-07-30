@@ -4,8 +4,7 @@ Last updated: 2026-07-31
 
 ## Current task
 
-No implementation task is active. The mapping editor UI and column selector
-are complete.
+No implementation task is active. SVG-tree mapping validity is complete.
 
 ## What works
 
@@ -193,6 +192,12 @@ are complete.
 - Runtime mappings are one-per-target in Zustand. Mapping type changes preserve
   shared fields, worksheet changes retain mappings for later validation, and
   replacing the SVG clears mappings tied to the previous template.
+- The SVG tree and mapping editor share one pure configuration-status
+  derivation. Targets show Unmapped, Mapped, Warning for an unavailable
+  active-sheet column, or Error for invalid and target-incompatible mappings.
+- Tree status badges expose visible text, distinct colors, compact decorative
+  symbols, and title text with the exact explanation without coupling the tree
+  to Zustand.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -200,26 +205,28 @@ are complete.
 
 ## What remains
 
-Showing mapping validity in the SVG tree is the next Phase 4 item.
+Mapping application unit tests are the next and final Phase 4 item.
 
 ## Next concrete step
 
 Continue `Phase 4 — Mapping engine` in `00-TODO.md`:
 
-1. mark “Show mapping validity in the SVG tree” `[-]`;
-2. derive mapped, warning, and error status from the current mappings, SVG
-   targets, and active worksheet columns;
-3. render the status accessibly without coupling the tree to Zustand.
+1. mark “Add mapping application unit tests” `[-]`;
+2. implement the ordered clone-and-apply orchestration described in
+   `05-SVG-AND-MAPPINGS.md`;
+3. cover ordering, clone isolation, issue aggregation, and supported mapping
+   types without duplicating individual mapper tests.
 
 ## Files changed
 
+- `src/mappings/mappingStatus.ts`
+- `src/mappings/mappingStatus.test.ts`
+- `src/SvgObjectTree.tsx`
+- `src/SvgObjectTree.test.tsx`
+- `src/SvgObjectTree.module.css`
 - `src/MappingEditor.tsx`
-- `src/MappingEditor.test.tsx`
 - `src/App.tsx`
 - `src/App.test.tsx`
-- `src/store.ts`
-- `src/store.test.ts`
-- `src/styles.css`
 - `docs/plan/00-TODO.md`
 - `docs/plan/03-UI-AND-COMPONENTS.md`
 - `docs/plan/05-SVG-AND-MAPPINGS.md`
@@ -227,13 +234,14 @@ Continue `Phase 4 — Mapping engine` in `00-TODO.md`:
 
 ## Tests run
 
-- `bun run test -- src/MappingEditor.test.tsx src/store.test.ts
-  src/App.test.tsx`
+- `bun run test -- src/mappings/mappingStatus.test.ts
+  src/MappingEditor.test.tsx src/SvgObjectTree.test.tsx src/App.test.tsx`
+- `bunx tsc -b`
 - `bun run check`
-- Browser Harness at 1920 px with the membership demo CSV/SVG: created a text
-  mapping, chose the Note column, switched to shrink fitting, exposed minimum
-  font size, and removed the mapping.
+- Browser Harness at 1920 px with the membership demo XLSX/SVG: created a text
+  mapping and observed Mapped, switched to Mapping Guide and observed Warning
+  with the missing-column explanation, then removed it and observed Unmapped.
 
 ## Latest substantive commit
 
-`c88aea9 feat: add mapping editor`
+Pending `feat: show mapping validity`

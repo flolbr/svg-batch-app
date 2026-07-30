@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
+import type { MappingStatus } from "./mappings/mappingStatus";
 import type { SvgTreeNode } from "./svg/buildSvgTree";
 import classes from "./SvgObjectTree.module.css";
 
@@ -8,12 +9,26 @@ type SvgObjectTreeProps = {
   query: string;
   selectedId: string | null;
   onSelect: (id: string) => void;
+  statuses?: Readonly<Record<string, MappingStatus>>;
 };
 
 type VisibleNode = SvgTreeNode & {
   level: number;
   parentId: string | null;
   hasVisibleChildren: boolean;
+};
+
+const unmappedStatus: MappingStatus = {
+  kind: "unmapped",
+  label: "Unmapped",
+  message: "No mapping configured.",
+};
+
+const statusIcons: Record<MappingStatus["kind"], string> = {
+  unmapped: "–",
+  mapped: "✓",
+  warning: "!",
+  error: "×",
 };
 
 function normalized(value: string): string {
@@ -63,6 +78,7 @@ export function SvgObjectTree({
   query,
   selectedId,
   onSelect,
+  statuses = {},
 }: SvgObjectTreeProps) {
   const [expandedIds, setExpandedIds] = useState(
     () => new Set(branchIds(nodes)),
@@ -163,6 +179,7 @@ export function SvgObjectTree({
     return treeNodes.map((node) => {
       const visibleNode = visibleNodes.find((item) => item.id === node.id)!;
       const isExpanded = expandedIds.has(node.id) || Boolean(normalizedQuery);
+      const status = statuses[node.id] ?? unmappedStatus;
 
       return (
         <div key={node.id}>
@@ -202,7 +219,17 @@ export function SvgObjectTree({
             )}
             <span className={classes.label}>{node.label}</span>
             <span className={classes.tag}>{node.tagName}</span>
-            <span className={classes.status}>Unmapped</span>
+            <span
+              aria-label={`${status.label}: ${status.message}`}
+              className={classes.status}
+              data-status={status.kind}
+              title={status.message}
+            >
+              <span aria-hidden="true" className={classes.statusIcon}>
+                {statusIcons[status.kind]}
+              </span>
+              {status.label}
+            </span>
           </div>
           {visibleNode.hasVisibleChildren && isExpanded && (
             <div className={classes.group} role="group">

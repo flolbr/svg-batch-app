@@ -108,6 +108,12 @@ first column, while the column selector includes every source column even when
 it is hidden from the grid. Switching worksheets does not silently discard a
 mapping whose column is absent; validation reports that incompatibility.
 
+Tree mapping badges share the editor's configuration-status derivation.
+Unmapped is neutral, Mapped is green, a missing active-worksheet column is a
+yellow Warning, and invalid schema, target mismatch, or target/type
+incompatibility is a red Error. Each badge includes visible text and a title
+with the exact explanation; its symbol is decorative.
+
 ## Right panel — Preview
 
 Controls:

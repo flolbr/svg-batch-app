@@ -331,7 +331,21 @@ Only one implementation item should normally be `[-]`.
   - Tests: `bun run test -- src/MappingEditor.test.tsx src/store.test.ts
     src/App.test.tsx`; `bun run check`; Browser Harness mapping create, column,
     fit, and removal checks with the membership demo fixtures.
-- [ ] Show mapping validity in the SVG tree.
+- [x] Show mapping validity in the SVG tree.
+  - One pure status function is shared by the mapping editor and tree:
+    unmapped without configuration, mapped when valid, warning when the
+    active worksheet lacks the mapped column, and error for invalid,
+    mismatched, or target-incompatible mappings.
+  - Tree badges use visible text, color, a compact symbol, and a title with the
+    exact status explanation; the tree remains independent of Zustand.
+  - Main files: `src/mappings/mappingStatus.ts`,
+    `src/mappings/mappingStatus.test.ts`, `src/SvgObjectTree.tsx`,
+    `src/SvgObjectTree.test.tsx`, `src/SvgObjectTree.module.css`,
+    `src/MappingEditor.tsx`, `src/App.tsx`, `src/App.test.tsx`.
+  - Tests: `bun run test -- src/mappings/mappingStatus.test.ts
+    src/MappingEditor.test.tsx src/SvgObjectTree.test.tsx src/App.test.tsx`;
+    `bunx tsc -b`; `bun run check`; Browser Harness mapped, missing-column
+    warning, and unmapped checks with the membership demo fixtures.
 - [ ] Add mapping application unit tests.
 
 ## Phase 5 — Validation and export

@@ -65,8 +65,30 @@
 }
 
 .status {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--mantine-color-gray-1);
+  color: var(--mantine-color-gray-7);
+}
+
+.status[data-status="mapped"] {
+  background: var(--mantine-color-green-1);
+  color: var(--mantine-color-green-9);
+}
+
+.status[data-status="warning"] {
   background: var(--mantine-color-yellow-1);
   color: var(--mantine-color-yellow-9);
+}
+
+.status[data-status="error"] {
+  background: var(--mantine-color-red-1);
+  color: var(--mantine-color-red-9);
+}
+
+.statusIcon {
+  font-weight: 700;
 }
 
 .empty {
