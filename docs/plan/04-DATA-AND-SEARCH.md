@@ -248,17 +248,23 @@ Manual rows remain transient until the dedicated Phase 2 persistence item.
 
 ## Selected columns
 
-Persist separately:
+Visible and exported columns are independent, worksheet-scoped preferences:
 
 ```ts
 type ColumnPreferences = {
   visible: ColumnId[];
-  searchable: ColumnId[];
   exported: ColumnId[];
 };
 ```
 
-All imported columns remain mappable unless intentionally disabled because of unsupported data.
+Both lists default to every imported column. Visibility only controls grid
+rendering; hiding a column does not remove it from search, structured filters,
+or future mapping. Export selection records which columns future export flows
+will include.
+
+The preferences remain transient until the dedicated Phase 2 persistence item.
+All imported columns remain mappable unless intentionally disabled because of
+unsupported data.
 
 ## Workbook snapshot
 

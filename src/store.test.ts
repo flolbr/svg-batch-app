@@ -65,6 +65,9 @@ describe("useAppStore", () => {
     const stateAfter = useAppStore.getState();
     expect(stateAfter.sources.spreadsheet).toEqual({
       ...spreadsheet,
+      columnPreferencesBySheet: {
+        Customers: { visible: [], exported: [] },
+      },
       data: { columns: [], rows: [] },
       manualRowsBySheet: {},
       normalizedDataBySheet: {
@@ -237,5 +240,54 @@ describe("useAppStore", () => {
     expect(useAppStore.getState().sources.spreadsheet?.data.rows[0].id).toBe(
       memberRowId,
     );
+  });
+
+  it("keeps visible and exported column preferences scoped to each worksheet", () => {
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.aoa_to_sheet([
+        ["Name", "City"],
+        ["Ada", "London"],
+      ]),
+      "Members",
+    );
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.aoa_to_sheet([["Plan"], ["Basic"]]),
+      "Plans",
+    );
+    useAppStore.getState().setSpreadsheetSource({
+      fileName: "members.xlsx",
+      fileSize: 123,
+      sheetNames: workbook.SheetNames,
+      workbook,
+    });
+
+    expect(
+      useAppStore.getState().sources.spreadsheet?.columnPreferencesBySheet,
+    ).toEqual({
+      Members: {
+        visible: ["col-0", "col-1"],
+        exported: ["col-0", "col-1"],
+      },
+    });
+
+    useAppStore.getState().setColumnPreferences({
+      visible: ["col-0"],
+      exported: ["col-1"],
+    });
+    useAppStore.getState().setSelectedWorksheet("Plans");
+    useAppStore.getState().setColumnPreferences({
+      visible: [],
+      exported: ["col-0"],
+    });
+
+    expect(
+      useAppStore.getState().sources.spreadsheet?.columnPreferencesBySheet,
+    ).toEqual({
+      Members: { visible: ["col-0"], exported: ["col-1"] },
+      Plans: { visible: [], exported: ["col-0"] },
+    });
   });
 });

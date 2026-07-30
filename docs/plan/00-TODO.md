@@ -117,7 +117,16 @@ Only one implementation item should normally be `[-]`.
     `src/App.tsx`, `src/App.test.tsx`, `src/styles.css`.
   - Tests: `bun run test -- src/data/rowOverrides.test.ts src/store.test.ts src/App.test.tsx`;
     `bun run check`.
-- [ ] Add visible/exported-column selection.
+- [x] Add visible/exported-column selection.
+  - Visible and exported columns are independent, worksheet-scoped
+    preferences that default to every imported column.
+  - The Columns popover controls grid visibility and future export inclusion.
+    Hidden columns remain available to search, filters, and future mappings.
+  - Main files: `src/data/columnPreferences.ts`,
+    `src/data/columnPreferences.test.ts`, `src/ColumnSettings.tsx`,
+    `src/store.ts`, `src/store.test.ts`, `src/App.tsx`, `src/App.test.tsx`.
+  - Tests: `bun run test -- src/data/columnPreferences.test.ts src/store.test.ts src/App.test.tsx`;
+    `bun run check`.
 - [ ] Persist selected rows, filters, edits, and manual rows.
 
 ## Phase 3 — SVG import, tree, and preview

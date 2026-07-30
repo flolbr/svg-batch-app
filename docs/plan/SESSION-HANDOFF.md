@@ -4,7 +4,8 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Imported-row edit overrides are complete.
+No implementation task is active. Visible/exported-column selection is
+complete.
 
 ## What works
 
@@ -100,6 +101,14 @@ No implementation task is active. Imported-row edit overrides are complete.
   entered form while exposing typed numbers to range filters.
 - Imported-row overrides remain transient until their dedicated persistence
   item.
+- The Columns popover exposes independent Visible and Export checkboxes for
+  every imported column. Both preferences default to all columns.
+- Column preferences are scoped to each worksheet and survive worksheet
+  switches while the imported workbook remains loaded.
+- Visibility only changes the rendered grid. Hidden columns remain available
+  to fuzzy search, structured filters, and future mappings.
+- Export selections are recorded for the future export flow. Column
+  preferences remain transient until the dedicated persistence item.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -107,40 +116,36 @@ No implementation task is active. Imported-row edit overrides are complete.
 
 ## What remains
 
-Column visibility/export preferences and project persistence remain Phase 2
-work.
+Persisting selected rows, filters, row edits, manual rows, and column
+preferences remains Phase 2 work.
 
 ## Next concrete step
 
 Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
-1. mark “Add visible/exported-column selection” `[-]`;
-2. define and test independent visible and exported column preferences;
-3. connect the Columns control to the grid without removing columns from
-   search or mapping availability.
+1. mark “Persist selected rows, filters, edits, and manual rows” `[-]`;
+2. define the persisted worksheet-state boundary and validation;
+3. restore the current selection, filters, overrides, manual rows, and column
+   preferences without weakening imported-source immutability.
 
 ## Files changed
 
 - `src/App.tsx`
 - `src/App.test.tsx`
-- `src/styles.css`
+- `src/ColumnSettings.tsx`
 - `src/store.ts`
 - `src/store.test.ts`
-- `src/data/rowOverrides.ts`
-- `src/data/rowOverrides.test.ts`
+- `src/data/columnPreferences.ts`
+- `src/data/columnPreferences.test.ts`
 - `docs/plan/00-TODO.md`
 - `docs/plan/04-DATA-AND-SEARCH.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/data/rowOverrides.test.ts src/store.test.ts`
-- `bun run test -- src/App.test.tsx`
-- `bun run test -- src/data/rowOverrides.test.ts src/store.test.ts src/App.test.tsx`
-- `bun run lint`
-- `bun run build:single`
+- `bun run test -- src/data/columnPreferences.test.ts src/store.test.ts src/App.test.tsx`
 - `bun run check`
 
 ## Latest substantive commit
 
-`6e5d0b3 feat: add imported row overrides`
+Pending commit for visible/exported-column selection.

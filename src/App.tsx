@@ -27,7 +27,6 @@ import {
   IconCheck,
   IconChevronLeft,
   IconChevronRight,
-  IconColumns3,
   IconCopy,
   IconDatabase,
   IconDownload,
@@ -58,6 +57,8 @@ import {
   useState,
 } from "react";
 import { ColumnFilters } from "./ColumnFilters";
+import { ColumnSettings } from "./ColumnSettings";
+import type { ColumnPreferences } from "./data/columnPreferences";
 import { filterRows, type ColumnFilter } from "./data/filterRows";
 import { importSpreadsheet } from "./data/importSpreadsheet";
 import {
@@ -85,6 +86,10 @@ const emptySourceColumns: DataColumn[] = [];
 const emptySourceRows: SourceRow[] = [];
 const emptyManualRows: ManualRow[] = [];
 const emptyRowOverrides: RowOverride[] = [];
+const emptyColumnPreferences: ColumnPreferences = {
+  visible: [],
+  exported: [],
+};
 export const ROW_VIRTUALIZATION_THRESHOLD = 200;
 
 type ResizeSession = {
@@ -369,6 +374,9 @@ export function App() {
   const deselectRows = useAppStore((state) => state.deselectRows);
   const selectRows = useAppStore((state) => state.selectRows);
   const setManualRows = useAppStore((state) => state.setManualRows);
+  const setColumnPreferences = useAppStore(
+    (state) => state.setColumnPreferences,
+  );
   const setRowOverrides = useAppStore((state) => state.setRowOverrides);
   const setPanelWeights = useAppStore((state) => state.setPanelWeights);
   const setSelectedWorksheet = useAppStore(
@@ -380,6 +388,16 @@ export function App() {
   const toggleRowSelection = useAppStore((state) => state.toggleRowSelection);
   const sourceColumns = spreadsheet?.data.columns ?? emptySourceColumns;
   const sourceRows = spreadsheet?.data.rows ?? emptySourceRows;
+  const columnPreferences =
+    spreadsheet?.columnPreferencesBySheet[spreadsheet.selectedSheetName] ??
+    emptyColumnPreferences;
+  const visibleColumns = useMemo(
+    () =>
+      sourceColumns.filter((column) =>
+        columnPreferences.visible.includes(column.id),
+      ),
+    [columnPreferences.visible, sourceColumns],
+  );
   const rowOverrides =
     spreadsheet?.rowOverridesBySheet[spreadsheet.selectedSheetName] ??
     emptyRowOverrides;
@@ -453,12 +471,12 @@ export function App() {
   );
   const dataColumns = useMemo<ColumnDef<SourceRow>[]>(
     () =>
-      sourceColumns.map((column) => ({
+      visibleColumns.map((column) => ({
         accessorFn: (row) => row.displayedValues[column.id],
         header: column.displayName,
         id: column.id,
       })),
-    [sourceColumns],
+    [visibleColumns],
   );
   const dataTable = useReactTable({
     columns: dataColumns,
@@ -831,9 +849,11 @@ export function App() {
                 onChange={setColumnFilters}
                 rows={allRows}
               />
-              <Button variant="default" leftSection={<IconColumns3 />}>
-                Columns
-              </Button>
+              <ColumnSettings
+                columns={sourceColumns}
+                onChange={setColumnPreferences}
+                preferences={columnPreferences}
+              />
             </Group>
 
             <Group gap="xs">
@@ -947,7 +967,7 @@ export function App() {
                         )}
                         {virtualRows.map((virtualRow) => (
                           <DataRow
-                            columns={sourceColumns}
+                            columns={visibleColumns}
                             editingManualRowId={editingManualRowId}
                             isEditingSourceRow={
                               editingSourceRowId ===
@@ -997,7 +1017,7 @@ export function App() {
                     ) : (
                       dataRows.map((row) => (
                         <DataRow
-                          columns={sourceColumns}
+                          columns={visibleColumns}
                           editingManualRowId={editingManualRowId}
                           isEditingSourceRow={
                             editingSourceRowId === row.original.id

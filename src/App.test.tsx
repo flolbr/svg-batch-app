@@ -781,6 +781,76 @@ describe("App", () => {
     ).toEqual([]);
   });
 
+  it("keeps visible and exported columns independent while hidden columns remain searchable", async () => {
+    const user = userEvent.setup();
+    setMemberSpreadsheet();
+
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    expect(
+      screen.getByRole("columnheader", { name: "City" }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Columns (2/2)" }));
+
+    const showCity = await screen.findByRole("checkbox", {
+      hidden: true,
+      name: "Show City column",
+    });
+    const exportCity = screen.getByRole("checkbox", {
+      hidden: true,
+      name: "Export City column",
+    });
+    await user.click(showCity);
+    expect(exportCity).toBeChecked();
+
+    await user.click(
+      screen.getByRole("checkbox", {
+        hidden: true,
+        name: "Export Name column",
+      }),
+    );
+    expect(
+      useAppStore.getState().sources.spreadsheet?.columnPreferencesBySheet
+        .Members,
+    ).toEqual({
+      visible: ["col-0"],
+      exported: ["col-1"],
+    });
+    expect(
+      screen.queryByRole("columnheader", { name: "City" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("cell", { name: "Paris" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Columns (1/2)" }));
+    const searchColumns = screen.getByRole("combobox", {
+      name: "Search columns",
+    });
+    expect(screen.getByRole("option", { name: "City" })).toBeInTheDocument();
+    await user.selectOptions(searchColumns, "col-1");
+    await user.type(
+      screen.getByRole("textbox", { name: "Search imported values" }),
+      "lyon",
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("cell", { name: "Chloé Petit" }),
+      ).not.toBeInTheDocument();
+    });
+    expect(
+      screen.getByRole("cell", { name: "Alice Martin" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("cell", { name: "Lyon" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("renders every row without a scroll region at the virtualization threshold", () => {
     setSpreadsheetRows(ROW_VIRTUALIZATION_THRESHOLD);
 

@@ -1,4 +1,8 @@
 import { create } from "zustand";
+import {
+  createColumnPreferences,
+  type ColumnPreferences,
+} from "./data/columnPreferences";
 import type { ImportedSpreadsheet } from "./data/importSpreadsheet";
 import type { ManualRow } from "./data/manualRows";
 import {
@@ -16,6 +20,7 @@ import type { Project } from "./project/loadProject";
 
 export type PanelWeights = [number, number, number];
 export type SpreadsheetSource = ImportedSpreadsheet & {
+  columnPreferencesBySheet: Record<string, ColumnPreferences>;
   data: NormalizedWorksheet;
   manualRowsBySheet: Record<string, ManualRow[]>;
   normalizedDataBySheet: Record<string, NormalizedWorksheet>;
@@ -41,6 +46,7 @@ type AppStore = {
   setPanelWeights: (panelWeights: PanelWeights) => void;
   setSelectedWorksheet: (sheetName: string) => void;
   setManualRows: (rows: ManualRow[]) => void;
+  setColumnPreferences: (preferences: ColumnPreferences) => void;
   setRowOverrides: (overrides: RowOverride[]) => void;
   setSpreadsheetSource: (spreadsheet: ImportedSpreadsheet) => void;
   clearRowSelection: () => void;
@@ -85,6 +91,14 @@ export const useAppStore = create<AppStore>()((set) => ({
           spreadsheet: {
             ...spreadsheet,
             data,
+            columnPreferencesBySheet: {
+              ...spreadsheet.columnPreferencesBySheet,
+              [sheetName]:
+                spreadsheet.columnPreferencesBySheet[sheetName] ??
+                createColumnPreferences(
+                  data.columns.map((column) => column.id),
+                ),
+            },
             normalizedDataBySheet: {
               ...spreadsheet.normalizedDataBySheet,
               [sheetName]: data,
@@ -105,11 +119,34 @@ export const useAppStore = create<AppStore>()((set) => ({
           ...state.sources,
           spreadsheet: {
             ...spreadsheet,
+            columnPreferencesBySheet: {
+              [selectedSheetName]: createColumnPreferences(
+                data.columns.map((column) => column.id),
+              ),
+            },
             data,
             manualRowsBySheet: {},
             normalizedDataBySheet: { [selectedSheetName]: data },
             rowOverridesBySheet: {},
             selectedSheetName,
+          },
+        },
+      };
+    }),
+  setColumnPreferences: (preferences) =>
+    set((state) => {
+      const spreadsheet = state.sources.spreadsheet;
+      if (!spreadsheet) return state;
+
+      return {
+        sources: {
+          ...state.sources,
+          spreadsheet: {
+            ...spreadsheet,
+            columnPreferencesBySheet: {
+              ...spreadsheet.columnPreferencesBySheet,
+              [spreadsheet.selectedSheetName]: preferences,
+            },
           },
         },
       };
