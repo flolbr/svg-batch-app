@@ -209,4 +209,4 @@ Continue `Phase 4 — Mapping engine` in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending current feature commit.
+`b0c46a0 feat: apply exclusive group mappings`
