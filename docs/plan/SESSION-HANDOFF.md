@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Embedded project startup loading is complete.
+No implementation task is active. Local CSV, XLSX, and XLS import is complete.
 
 ## What works
 
@@ -32,6 +32,10 @@ No implementation task is active. Embedded project startup loading is complete.
 - Valid project identity is loaded into Zustand. Missing, malformed,
   unsupported, incomplete, or unexpectedly shaped data is not partially loaded
   and produces a persistent error notification.
+- The Data panel accepts local CSV, XLSX, and XLS files and reports import
+  failures through the notification surface.
+- SheetJS keeps the parsed workbook and its worksheet names in transient source
+  state. The selected workbook is not persisted.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -39,36 +43,36 @@ No implementation task is active. Embedded project startup loading is complete.
 
 ## What remains
 
-The complete persisted project schema and migrations remain Phase 6 work.
-Spreadsheet import and other product behavior are not implemented yet; the
-controls and sample data in the themed shell are static.
+Worksheet selection, row normalization, and the rest of the spreadsheet grid
+remain Phase 2 work. The existing sample grid is still static until those items
+replace it with imported rows.
 
 ## Next concrete step
 
-Start the first `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
+Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
-1. mark local CSV, XLSX, and XLS import `[-]`;
-2. inspect the spreadsheet and data-model plans before defining the import
-   boundary;
-3. keep worksheet selection and row normalization in their later TODO items.
+1. mark worksheet choice `[-]`;
+2. add a control using the imported workbook's worksheet names;
+3. keep row and header normalization in the following TODO item.
 
 ## Files changed
 
-- `.gitattributes`
-- `README.md`
-- `docs/examples/`
+- `src/data/importSpreadsheet.ts`
+- `src/data/importSpreadsheet.test.ts`
+- `src/App.tsx`
+- `src/App.test.tsx`
+- `src/store.ts`
+- `src/store.test.ts`
+- `docs/plan/00-TODO.md`
 - `docs/plan/04-DATA-AND-SEARCH.md`
-- `docs/plan/09-TEST-PLAN.md`
-- `docs/plan/README.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `cd docs/examples/membership-demo && sha256sum -c SHA256SUMS`
-- `jq empty docs/examples/membership-demo/expected-mappings.json`
-- `xmllint --noout docs/examples/membership-demo/membership-template.svg`
+- `bun run test -- src/data/importSpreadsheet.test.ts`
+- `bun run test -- src/data/importSpreadsheet.test.ts src/store.test.ts src/App.test.tsx`
 - `bun run check`
 
 ## Latest substantive commit
 
-`581d775 docs: add membership example fixtures`
+Pending commit: local spreadsheet import.

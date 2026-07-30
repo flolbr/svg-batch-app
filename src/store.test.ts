@@ -46,4 +46,26 @@ describe("useAppStore", () => {
     expect(stateAfter.sources).toBe(stateBefore.sources);
     expect(stateAfter.selection).toBe(stateBefore.selection);
   });
+
+  it("stores an imported workbook without changing unrelated slices", () => {
+    const stateBefore = useAppStore.getState();
+    const spreadsheet = {
+      fileName: "customers.xlsx",
+      fileSize: 123,
+      sheetNames: ["Customers", "Mapping Guide"],
+      workbook: {
+        SheetNames: ["Customers", "Mapping Guide"],
+        Sheets: {},
+      },
+    };
+
+    stateBefore.setSpreadsheetSource(spreadsheet);
+
+    const stateAfter = useAppStore.getState();
+    expect(stateAfter.sources.spreadsheet).toBe(spreadsheet);
+    expect(stateAfter.sources.svg).toBe(stateBefore.sources.svg);
+    expect(stateAfter.project).toBe(stateBefore.project);
+    expect(stateAfter.ui).toBe(stateBefore.ui);
+    expect(stateAfter.selection).toBe(stateBefore.selection);
+  });
 });

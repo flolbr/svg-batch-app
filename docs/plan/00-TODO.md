@@ -52,7 +52,9 @@ Only one implementation item should normally be `[-]`.
 
 ## Phase 2 — Spreadsheet import and grid
 
-- [ ] Import local CSV, XLSX, and XLS files.
+- [x] Import local CSV, XLSX, and XLS files.
+  - Main files: `src/data/importSpreadsheet.ts`, `src/store.ts`, `src/App.tsx`.
+  - Tests: `bun run test -- src/data/importSpreadsheet.test.ts`; `bun run test -- src/data/importSpreadsheet.test.ts src/store.test.ts src/App.test.tsx`; `bun run check`.
 - [ ] Let the user choose a worksheet.
 - [ ] Normalize headers, rows, displayed values, and stable row IDs.
 - [ ] Render the grid with TanStack Table.

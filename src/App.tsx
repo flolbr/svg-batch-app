@@ -11,6 +11,7 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import {
   IconBox,
   IconChevronLeft,
@@ -31,12 +32,15 @@ import {
   IconUpload,
 } from "@tabler/icons-react";
 import {
+  type ChangeEvent,
   type CSSProperties,
   type KeyboardEvent,
   type PointerEvent,
   type ReactNode,
   useRef,
+  useState,
 } from "react";
+import { importSpreadsheet } from "./data/importSpreadsheet";
 import { type PanelWeights, useAppStore } from "./store";
 
 const rows = [
@@ -117,8 +121,44 @@ function PanelResizeHandle({
 export function App() {
   const workspaceRef = useRef<HTMLElement>(null);
   const resizeSession = useRef<ResizeSession | null>(null);
+  const [isImportingSpreadsheet, setIsImportingSpreadsheet] = useState(false);
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
+  const spreadsheet = useAppStore((state) => state.sources.spreadsheet);
   const setPanelWeights = useAppStore((state) => state.setPanelWeights);
+  const setSpreadsheetSource = useAppStore(
+    (state) => state.setSpreadsheetSource,
+  );
+
+  async function handleSpreadsheetFile(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file) {
+      return;
+    }
+
+    setIsImportingSpreadsheet(true);
+    try {
+      const importedSpreadsheet = await importSpreadsheet(file);
+      setSpreadsheetSource(importedSpreadsheet);
+      notifications.show({
+        color: "green",
+        message: `${importedSpreadsheet.sheetNames.length} worksheet${importedSpreadsheet.sheetNames.length === 1 ? "" : "s"} found.`,
+        title: `${importedSpreadsheet.fileName} imported`,
+      });
+    } catch (error) {
+      notifications.show({
+        color: "red",
+        message:
+          error instanceof Error
+            ? error.message
+            : "The spreadsheet could not be read.",
+        title: "Spreadsheet import failed",
+      });
+    } finally {
+      setIsImportingSpreadsheet(false);
+    }
+  }
 
   function readPanelWidths() {
     const panels = workspaceRef.current?.querySelectorAll(".workspace-panel");
@@ -257,8 +297,20 @@ export function App() {
             </div>
 
             <Group gap="sm">
-              <Button variant="outline" leftSection={<IconUpload />}>
+              <Button
+                component="label"
+                variant="outline"
+                leftSection={<IconUpload />}
+                loading={isImportingSpreadsheet}
+              >
                 Upload local file
+                <input
+                  accept=".csv,.xlsx,.xls"
+                  aria-label="Choose a CSV, XLSX, or XLS file"
+                  hidden
+                  onChange={handleSpreadsheetFile}
+                  type="file"
+                />
               </Button>
               <Button
                 variant="default"
@@ -270,9 +322,11 @@ export function App() {
             </Group>
 
             <Group gap="xs">
-              <Text size="sm">Sheet:</Text>
+              <Text size="sm">Source:</Text>
               <Text size="sm" c="blue" fw={600}>
-                No spreadsheet loaded
+                {spreadsheet
+                  ? `${spreadsheet.fileName} · ${spreadsheet.sheetNames.length} worksheet${spreadsheet.sheetNames.length === 1 ? "" : "s"}`
+                  : "No spreadsheet loaded"}
               </Text>
             </Group>
 

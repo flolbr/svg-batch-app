@@ -194,3 +194,10 @@ Optional source metadata:
 - Drive file ID when applicable.
 
 This avoids embedding large XLSX binaries in the project HTML.
+
+## Local import boundary
+
+The local file control accepts CSV, XLSX, and XLS files. SheetJS parses the
+selected file into the transient source state and exposes its worksheet names.
+Worksheet choice and normalization happen in their subsequent implementation
+steps; the workbook binary is not added to persisted project data.

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { ImportedSpreadsheet } from "./data/importSpreadsheet";
 import type { Project } from "./project/loadProject";
 
 export type PanelWeights = [number, number, number];
@@ -9,7 +10,7 @@ type AppStore = {
     panelWeights: PanelWeights;
   };
   sources: {
-    spreadsheet: null;
+    spreadsheet: ImportedSpreadsheet | null;
     svg: null;
   };
   selection: {
@@ -19,6 +20,7 @@ type AppStore = {
   };
   setProject: (project: Project) => void;
   setPanelWeights: (panelWeights: PanelWeights) => void;
+  setSpreadsheetSource: (spreadsheet: ImportedSpreadsheet) => void;
 };
 
 export const initialPanelWeights: PanelWeights = [38, 27, 35];
@@ -38,6 +40,13 @@ export const useAppStore = create<AppStore>()((set) => ({
     svgObjectId: null,
   },
   setProject: (project) => set({ project }),
+  setSpreadsheetSource: (spreadsheet) =>
+    set((state) => ({
+      sources: {
+        ...state.sources,
+        spreadsheet,
+      },
+    })),
   setPanelWeights: (panelWeights) =>
     set((state) => ({
       ui: {
