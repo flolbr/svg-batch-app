@@ -4,8 +4,8 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. The Mantine application theme and shared
-shell variables are complete.
+No implementation task is active. The top-level error boundary and notification
+surface are complete.
 
 ## What works
 
@@ -17,6 +17,9 @@ shell variables are complete.
 - Shared Mantine brand palette, typography, and radius defaults.
 - Shared shell variables for neutral surfaces, borders, text, blue accents, and
   panel shadow.
+- Top-level render failures show an accessible reload fallback.
+- Mantine notifications are mounted at the top right for later import, save,
+  and recoverable-error feedback.
 
 ## What remains
 
@@ -27,29 +30,29 @@ themed shell are static.
 
 Start the next `Phase 1 — Application shell` item in `00-TODO.md`:
 
-1. mark the top-level error boundary and notification surface item `[-]`;
-2. add the smallest error boundary and Mantine notification setup that covers
-   recoverable application feedback;
-3. keep feature-specific notification behavior deferred to its feature.
+1. mark the initial Zustand store item `[-]`;
+2. define the smallest project, UI, source, and selection slices required by the
+   documented initial state;
+3. keep source data immutable and avoid adding actions for unimplemented
+   features.
 
 ## Files changed
 
-- `src/theme.ts`
-- `src/theme.test.ts`
+- `src/AppErrorBoundary.tsx`
+- `src/AppErrorBoundary.test.tsx`
 - `src/main.tsx`
-- `src/styles.css`
+- `package.json`
+- `bun.lock`
 - `docs/plan/00-TODO.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/theme.test.ts src/App.test.tsx`
+- `bun run test -- src/AppErrorBoundary.test.tsx`
 - `bun run check`
-- Browser Harness at 1920 px: brand blue applied, three side-by-side panels, no
-  horizontal overflow.
-- Browser Harness at 1000 px: Preview-first stacked panels, sticky action bar,
-  no horizontal overflow.
+- Browser Harness at 1280 px: top-right notification rendered through the
+  mounted runtime surface with no page overflow.
 
 ## Latest implementation commit
 
-`5fb7aed feat: add Mantine application theme`
+`1b2254c feat: add application error feedback`
