@@ -24,13 +24,15 @@ Only one implementation item should normally be `[-]`.
 
 ## Phase 1 — Application shell
 
-- [ ] Replace the starter screen with the fixed three-panel desktop layout.
+- [x] Replace the starter screen with the fixed three-panel desktop layout.
   - Acceptance:
     - left data panel;
     - center SVG tree and mapping panel;
     - right preview panel;
     - persistent bottom action bar;
     - responsive fallback stacks panels below 1100 px.
+  - Main files: `src/App.tsx`, `src/styles.css`, `src/App.test.tsx`.
+  - Tests: `bun run check`; Browser Harness at 1920 px and 1000 px.
 - [ ] Add Mantine theme and a small set of shared CSS variables matching the UI reference.
 - [ ] Add top-level error boundary and toast/notification surface.
 - [ ] Add initial Zustand store with project, UI, source, and selection slices.

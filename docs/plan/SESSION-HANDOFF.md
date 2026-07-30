@@ -4,66 +4,48 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. The README setup and starter shell have been
-verified against the current dependency versions.
+No implementation task is active. The fixed three-panel application shell is
+complete.
 
-## What exists
+## What works
 
-- Product and implementation plan.
-- Agreed stack.
-- UI reference image.
-- Bun setup script.
-- Installed dependency manifest and `bun.lock`.
-- Minimal Vite + React + Mantine starter.
-- Single-file Vite build configuration.
-- Starter smoke test.
+- Desktop header and fixed-ratio Data, SVG Objects, and Preview panels.
+- Persistent bottom action bar with the primary project actions.
+- Static empty and sample states that establish the intended UI density.
+- Responsive layout below 1100 px with Preview first and a sticky action bar.
+- Accessible headings and labelled project action region.
 
-## What does not exist
+## What remains
 
-No product functionality is implemented yet:
-
-- no spreadsheet parsing;
-- no SVG import;
-- no mappings;
-- no preview;
-- no project persistence;
-- no export;
-- no Google Drive integration.
+Product behavior is not implemented yet. The controls and sample data in the
+shell are static.
 
 ## Next concrete step
 
-Start `Phase 1 — Application shell` in `00-TODO.md`:
+Start the next `Phase 1 — Application shell` item in `00-TODO.md`:
 
-1. mark the first Phase 1 item `[-]`;
-2. implement the three-panel layout;
-3. keep the content static;
-4. verify it matches `assets/ui-reference.png`;
-5. update this file and the TODO.
+1. mark the Mantine theme item `[-]`;
+2. add the small shared theme and CSS variables from the UI reference;
+3. keep the completed layout behavior unchanged.
 
-## Files most likely to change next
+## Files changed
 
 - `src/App.tsx`
 - `src/styles.css`
-- new small layout components under `src/ui/`
-
-## Tests currently expected
-
-- `bun run check` passes;
-- Browser Harness confirmed the starter shell at `http://localhost:5173/`.
-
-## Files changed during setup verification
-
-- `package.json`
-- `bun.lock`
-- `src/vite-env.d.ts`
-- `vitest.setup.ts`
-- `.gitignore`
+- `src/App.test.tsx`
 - `docs/plan/00-TODO.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
-## Known constraints
+## Tests run
 
-- Google Drive requires hosted mode.
-- The local core must work from `file://`.
-- The project must retain an embedded SVG snapshot.
-- Manual reload is sufficient; no polling or webhook system is planned.
+- `bun run test -- src/App.test.tsx`
+- `bun run build:single`
+- `bun run check`
+- Browser Harness at 1920 px: three side-by-side panels, persistent action bar,
+  no horizontal overflow.
+- Browser Harness at 1000 px: Preview-first stacked panels, sticky reachable
+  action bar, no horizontal overflow.
+
+## Latest implementation commit
+
+Pending commit for the three-panel application shell.
