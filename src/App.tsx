@@ -11,6 +11,7 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
+import { useDebouncedValue } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
   type ColumnDef,
@@ -45,15 +46,19 @@ import {
   type KeyboardEvent,
   type PointerEvent,
   type ReactNode,
+  useEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
 import { importSpreadsheet } from "./data/importSpreadsheet";
-import type { SourceRow } from "./data/normalizeWorkbook";
+import type { ColumnId, DataColumn, SourceRow } from "./data/normalizeWorkbook";
+import { createRowSearchIndex, searchRows } from "./data/searchRows";
 import { type PanelWeights, useAppStore } from "./store";
 
 const minimumPanelWidths = [360, 300, 360];
+const emptySourceColumns: DataColumn[] = [];
+const emptySourceRows: SourceRow[] = [];
 export const ROW_VIRTUALIZATION_THRESHOLD = 200;
 
 type ResizeSession = {
@@ -151,6 +156,9 @@ export function App() {
   const dataTableScrollRef = useRef<HTMLDivElement>(null);
   const resizeSession = useRef<ResizeSession | null>(null);
   const [isImportingSpreadsheet, setIsImportingSpreadsheet] = useState(false);
+  const [searchColumn, setSearchColumn] = useState<ColumnId | "all">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 150);
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
   const spreadsheet = useAppStore((state) => state.sources.spreadsheet);
   const setPanelWeights = useAppStore((state) => state.setPanelWeights);
@@ -160,18 +168,43 @@ export function App() {
   const setSpreadsheetSource = useAppStore(
     (state) => state.setSpreadsheetSource,
   );
+  const sourceColumns = spreadsheet?.data.columns ?? emptySourceColumns;
+  const sourceRows = spreadsheet?.data.rows ?? emptySourceRows;
+  const activeSearchColumn = sourceColumns.some(
+    (column) => column.id === searchColumn,
+  )
+    ? searchColumn
+    : "all";
+  const searchIndex = useMemo(
+    () =>
+      createRowSearchIndex(
+        sourceRows,
+        sourceColumns.map((column) => column.id),
+      ),
+    [sourceColumns, sourceRows],
+  );
+  const matchingRows = useMemo(
+    () =>
+      searchRows(
+        searchIndex,
+        sourceRows,
+        debouncedSearchQuery,
+        activeSearchColumn,
+      ),
+    [activeSearchColumn, debouncedSearchQuery, searchIndex, sourceRows],
+  );
   const dataColumns = useMemo<ColumnDef<SourceRow>[]>(
     () =>
-      spreadsheet?.data.columns.map((column) => ({
+      sourceColumns.map((column) => ({
         accessorFn: (row) => row.displayedValues[column.id],
         header: column.displayName,
         id: column.id,
-      })) ?? [],
-    [spreadsheet],
+      })),
+    [sourceColumns],
   );
   const dataTable = useReactTable({
     columns: dataColumns,
-    data: spreadsheet?.data.rows ?? [],
+    data: matchingRows,
     getCoreRowModel: getCoreRowModel(),
     getRowId: (row) => row.id,
   });
@@ -196,6 +229,10 @@ export function App() {
       ? rowVirtualizer.getTotalSize() -
         virtualRows[virtualRows.length - 1].end
       : 0;
+
+  useEffect(() => {
+    dataTableScrollRef.current?.scrollTo?.({ top: 0 });
+  }, [activeSearchColumn, debouncedSearchQuery]);
 
   async function handleSpreadsheetFile(event: ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget;
@@ -417,11 +454,24 @@ export function App() {
             <div className="data-tools">
               <TextInput
                 aria-label="Search imported values"
+                disabled={!spreadsheet}
                 placeholder="Search imported values..."
                 leftSection={<IconSearch size={16} />}
+                onChange={(event) => setSearchQuery(event.currentTarget.value)}
+                value={searchQuery}
               />
-              <select aria-label="Search columns" defaultValue="all">
+              <select
+                aria-label="Search columns"
+                disabled={sourceColumns.length === 0}
+                onChange={(event) => setSearchColumn(event.currentTarget.value)}
+                value={activeSearchColumn}
+              >
                 <option value="all">All columns</option>
+                {sourceColumns.map((column) => (
+                  <option key={column.id} value={column.id}>
+                    {column.displayName}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -474,9 +524,11 @@ export function App() {
                           className="data-table-empty"
                           colSpan={Math.max(dataColumns.length, 1)}
                         >
-                          {spreadsheet
-                            ? "This worksheet has no data rows."
-                            : "Upload a spreadsheet to view its rows."}
+                          {!spreadsheet
+                            ? "Upload a spreadsheet to view its rows."
+                            : debouncedSearchQuery.trim()
+                              ? "No rows match your search."
+                              : "This worksheet has no data rows."}
                         </Table.Td>
                       </Table.Tr>
                     ) : shouldVirtualizeRows ? (
@@ -529,7 +581,9 @@ export function App() {
             </div>
 
             <Text className="panel-footer" size="sm" c="dimmed">
-              {spreadsheet?.data.rows.length ?? 0} total rows
+              {debouncedSearchQuery.trim()
+                ? `${matchingRows.length} matching · ${sourceRows.length} total rows`
+                : `${sourceRows.length} total rows`}
             </Text>
           </Stack>
         </Paper>

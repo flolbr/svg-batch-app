@@ -68,7 +68,9 @@ Only one implementation item should normally be `[-]`.
   - Rows up to 200 use the ordinary table path; larger result sets use TanStack Virtual.
   - Main files: `src/App.tsx`, `src/App.test.tsx`, `src/styles.css`.
   - Tests: `bun run test -- src/App.test.tsx`; `bun run check`.
-- [ ] Add fuzzy row-value search across all or selected columns.
+- [x] Add fuzzy row-value search across all or selected columns.
+  - Main files: `src/data/searchRows.ts`, `src/data/searchRows.test.ts`, `src/App.tsx`, `src/App.test.tsx`.
+  - Tests: `bun run test -- src/data/searchRows.test.ts src/App.test.tsx`; `bun run check`.
 - [ ] Add Excel-style per-column filters.
 - [ ] Keep filtering and row selection independent.
 - [ ] Add “select all matching”, “select visible page”, and “clear selection”.

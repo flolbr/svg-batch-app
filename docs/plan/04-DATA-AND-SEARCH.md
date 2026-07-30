@@ -109,7 +109,10 @@ A row is either source or manual. Overrides apply only to source rows.
 
 ## Search
 
-Fuse.js indexes effective displayed row values.
+Fuse.js indexes effective displayed row values. The current source-row
+implementation builds the all-values and per-column indexes only when the
+normalized worksheet data changes. Manual rows and overrides join the same
+index when their dedicated items are implemented.
 
 Create one search document per row:
 
@@ -130,7 +133,9 @@ Normalize:
 
 Rebuild the search index only when source data, manual rows, or overrides change. Do not rebuild on every keystroke.
 
-Use a debounced query of roughly 100–200 ms.
+The data panel debounces queries by 150 ms. Search results retain source order,
+feed TanStack Table before the virtualization threshold is evaluated, and show
+matching and total row counts.
 
 Default multi-term behavior: all terms must match somewhere in the selected scope.
 

@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Thresholded row virtualization is complete.
+No implementation task is active. Fuzzy row-value search is complete.
 
 ## What works
 
@@ -55,6 +55,12 @@ No implementation task is active. Thresholded row virtualization is complete.
 - The virtual grid mounts only the viewport plus eight overscan rows, keeps
   headers sticky, exposes logical row counts/indexes, and supports keyboard
   focus and scrolling through the full result set.
+- Fuse indexes normalized displayed values when worksheet data changes.
+- Search is debounced by 150 ms, ignores case and accents, tolerates fuzzy
+  typos, and requires every query term to match.
+- Users can search across all values or one selected normalized column.
+- Matching rows retain source order and feed the existing table and
+  virtualization paths; the footer reports matching and total counts.
 - Manual-row controls remain disabled until their dedicated Phase 2 item.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
@@ -63,29 +69,30 @@ No implementation task is active. Thresholded row virtualization is complete.
 
 ## What remains
 
-Fuzzy row-value search and the rest of the spreadsheet workflow remain Phase 2
-work.
+Structured column filters and the rest of the spreadsheet workflow remain
+Phase 2 work.
 
 ## Next concrete step
 
 Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
-1. mark fuzzy row-value search `[-]`;
-2. implement normalized multi-term search across all or selected columns;
-3. keep search results compatible with the existing virtualized row model.
+1. mark Excel-style per-column filters `[-]`;
+2. define and test the persisted filter data shapes and matching logic;
+3. combine structured filters with the existing fuzzy-search results.
 
 ## Files changed
 
 - `src/App.tsx`
 - `src/App.test.tsx`
-- `src/styles.css`
+- `src/data/searchRows.ts`
+- `src/data/searchRows.test.ts`
 - `docs/plan/00-TODO.md`
 - `docs/plan/04-DATA-AND-SEARCH.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/App.test.tsx`
+- `bun run test -- src/data/searchRows.test.ts src/App.test.tsx`
 - `bun run check`
 
 ## Latest substantive commit

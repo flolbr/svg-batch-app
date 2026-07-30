@@ -1,6 +1,12 @@
 import { MantineProvider } from "@mantine/core";
 import userEvent from "@testing-library/user-event";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App, ROW_VIRTUALIZATION_THRESHOLD } from "./App";
 import { initialPanelWeights, useAppStore } from "./store";
@@ -305,6 +311,74 @@ describe("App", () => {
     expect(
       screen.queryByRole("cell", { name: "Alice" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("searches displayed values across all or one selected column", async () => {
+    const user = userEvent.setup();
+    useAppStore.getState().setSpreadsheetSource({
+      fileName: "members.xlsx",
+      fileSize: 1,
+      sheetNames: ["Members"],
+      workbook: {
+        SheetNames: ["Members"],
+        Sheets: {
+          Members: {
+            "!ref": "A1:B3",
+            A1: { t: "s", v: "Name" },
+            B1: { t: "s", v: "City" },
+            A2: { t: "s", v: "Chloé Petit" },
+            B2: { t: "s", v: "Paris" },
+            A3: { t: "s", v: "Alice Martin" },
+            B3: { t: "s", v: "Lyon" },
+          },
+        },
+      },
+    });
+
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    const search = screen.getByRole("textbox", {
+      name: "Search imported values",
+    });
+    const columnScope = screen.getByRole("combobox", {
+      name: "Search columns",
+    });
+
+    expect(columnScope).toHaveValue("all");
+    expect(screen.getByRole("option", { name: "Name" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "City" })).toBeInTheDocument();
+
+    await user.type(search, "shloe pari");
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("cell", { name: "Alice Martin" }),
+      ).not.toBeInTheDocument();
+    });
+    expect(
+      screen.getByRole("cell", { name: "Chloé Petit" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("1 matching · 2 total rows")).toBeInTheDocument();
+
+    await user.selectOptions(columnScope, "col-0");
+    expect(
+      await screen.findByText("No rows match your search."),
+    ).toBeInTheDocument();
+
+    await user.clear(search);
+    await user.type(search, "shloe");
+    expect(
+      await screen.findByRole("cell", { name: "Chloé Petit" }),
+    ).toBeInTheDocument();
+
+    await user.selectOptions(columnScope, "col-1");
+    expect(
+      await screen.findByText("No rows match your search."),
+    ).toBeInTheDocument();
   });
 
   it("renders every row without a scroll region at the virtualization threshold", () => {
