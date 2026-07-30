@@ -177,4 +177,4 @@ Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending commit for SVG object-tree construction.
+`1ddd447 feat: build SVG object tree`
