@@ -1,6 +1,7 @@
 import { MantineProvider } from "@mantine/core";
 import userEvent from "@testing-library/user-event";
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -194,6 +195,9 @@ describe("App", () => {
       expect(useAppStore.getState().sources.svg?.fileName).toBe("badge.svg");
     });
     expect(screen.getByText("Sanitized")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("SVG source status: Embedded"),
+    ).toBeInTheDocument();
     expect(screen.getByText("1 mapping target found")).toBeInTheDocument();
     expect(zoomOut).toBeEnabled();
     expect(zoomIn).toBeEnabled();
@@ -247,6 +251,53 @@ describe("App", () => {
     expect(
       screen.getByRole("textbox", { name: "Search SVG objects" }),
     ).toBeEnabled();
+  });
+
+  it("shows every SVG source status without enabling future adapters", () => {
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    expect(
+      screen.getByLabelText("SVG source status: Unavailable"),
+    ).toBeInTheDocument();
+
+    const statuses = [
+      ["embedded", "Embedded"],
+      ["linked", "Linked"],
+      ["drive", "Drive"],
+      ["unavailable", "Unavailable"],
+      ["modified", "Modified"],
+    ] as const;
+    statuses.forEach(([sourceStatus, label]) => {
+      act(() => {
+        useAppStore.getState().setSvgSource({
+          acceptedSvg:
+            '<svg xmlns="http://www.w3.org/2000/svg"><g id="badge"/></svg>',
+          fileName: "badge.svg",
+          fileSize: 1,
+          sourceStatus,
+          targets: [{ id: "badge", tagName: "g" }],
+          tree: [
+            {
+              children: [],
+              id: "badge",
+              label: "Badge",
+              tagName: "g",
+            },
+          ],
+        });
+      });
+      expect(
+        screen.getByLabelText(`SVG source status: ${label}`),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByRole("button", { name: "Open from Google Drive" }),
+    ).toBeDisabled();
   });
 
   it("imports a local spreadsheet and reports the available worksheets", async () => {

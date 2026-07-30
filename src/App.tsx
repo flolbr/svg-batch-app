@@ -82,13 +82,23 @@ import {
 } from "./data/rowOverrides";
 import { createRowSearchIndex, searchRows } from "./data/searchRows";
 import { type PanelWeights, useAppStore } from "./store";
-import { importSvgFile } from "./svg/importSvg";
+import { importSvgFile, type SvgSourceStatus } from "./svg/importSvg";
 import type { SvgTreeNode } from "./svg/buildSvgTree";
 
 const minimumPanelWidths = [360, 300, 360];
 const MIN_PREVIEW_ZOOM = 25;
 const MAX_PREVIEW_ZOOM = 200;
 const PREVIEW_ZOOM_STEP = 25;
+const svgSourceStatusPresentation: Record<
+  SvgSourceStatus,
+  { color: string; label: string }
+> = {
+  embedded: { color: "blue", label: "Embedded" },
+  linked: { color: "teal", label: "Linked" },
+  drive: { color: "indigo", label: "Drive" },
+  unavailable: { color: "gray", label: "Unavailable" },
+  modified: { color: "orange", label: "Modified" },
+};
 const emptySourceColumns: DataColumn[] = [];
 const emptySourceRows: SourceRow[] = [];
 const emptyManualRows: ManualRow[] = [];
@@ -431,6 +441,8 @@ export function App() {
     () => findSvgNode(svg?.tree ?? [], selectedSvgObjectId),
     [selectedSvgObjectId, svg?.tree],
   );
+  const svgSourceStatus =
+    svgSourceStatusPresentation[svg?.sourceStatus ?? "unavailable"];
   const visibleColumns = useMemo(
     () =>
       sourceColumns.filter((column) =>
@@ -1190,6 +1202,13 @@ export function App() {
                   Sanitized
                 </Badge>
               )}
+              <Badge
+                aria-label={`SVG source status: ${svgSourceStatus.label}`}
+                color={svgSourceStatus.color}
+                variant="light"
+              >
+                {svgSourceStatus.label}
+              </Badge>
             </Group>
             <Text size="sm" c={svg ? "blue" : "dimmed"} fw={svg ? 600 : 400}>
               {svg ? svg.fileName : "No SVG loaded"}

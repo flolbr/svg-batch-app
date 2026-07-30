@@ -75,7 +75,7 @@ Do not reproduce every Excel filter feature.
 Top:
 
 - object search;
-- compact source status;
+- compact source status: Embedded, Linked, Drive, Unavailable, or Modified;
 - reload/relink button.
 
 Tree:

@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Preview zoom and fit controls are complete.
+No implementation task is active. Phase 3 SVG source status is complete.
 
 ## What works
 
@@ -158,6 +158,9 @@ No implementation task is active. Preview zoom and fit controls are complete.
 - Preview zoom changes the iframe-only presentation from 25% to 200% in 25%
   steps. Fit restores the contained 100% view, and neither operation changes
   accepted SVG markup or selected-target highlighting.
+- The SVG panel exposes typed Embedded, Linked, Drive, Unavailable, and
+  Modified source badges. Local imports are Embedded, absence is Unavailable,
+  and unfinished linked/Drive adapters remain disabled.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -165,24 +168,24 @@ No implementation task is active. Preview zoom and fit controls are complete.
 
 ## What remains
 
-Source status remains Phase 3 work.
+Phase 3 is complete. Mapping-domain types are the next phase.
 
 ## Next concrete step
 
-Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
+Start the first `Phase 4 — Mapping engine` item in `00-TODO.md`:
 
-1. mark “Show source status: embedded, linked, Drive, unavailable, modified”
-   `[-]`;
-2. derive status from the source representation already supported by the local
-   core;
-3. avoid introducing linked or Drive behavior before their own TODO items.
+1. mark “Define mapping types” `[-]`;
+2. add the text, image, visibility, group selection, and QR mapping unions from
+   the implementation plan;
+3. keep types independent from React and cover any runtime validation added.
 
 ## Files changed
 
 - `src/App.tsx`
 - `src/App.test.tsx`
-- `src/SvgPreview.tsx`
-- `src/SvgPreview.test.tsx`
+- `src/store.test.ts`
+- `src/svg/importSvg.ts`
+- `src/svg/importSvg.test.ts`
 - `docs/plan/00-TODO.md`
 - `docs/plan/03-UI-AND-COMPONENTS.md`
 - `docs/plan/05-SVG-AND-MAPPINGS.md`
@@ -190,10 +193,10 @@ Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
 ## Tests run
 
-- `bun run test -- src/SvgPreview.test.tsx src/App.test.tsx`
+- `bun run test -- src/svg/importSvg.test.ts src/store.test.ts src/App.test.tsx`
 - `bun run check`
-- Browser Harness zoom and fit check
+- Browser Harness source-status check
 
 ## Latest substantive commit
 
-`e7cd170 feat: add preview zoom controls`
+Pending current feature commit.

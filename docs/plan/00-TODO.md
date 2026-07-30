@@ -228,7 +228,14 @@ Only one implementation item should normally be `[-]`.
     `src/SvgPreview.test.tsx`.
   - Tests: `bun run test -- src/SvgPreview.test.tsx src/App.test.tsx`;
     `bun run check`; Browser Harness zoom and fit check.
-- [ ] Show source status: embedded, linked, Drive, unavailable, modified.
+- [x] Show source status: embedded, linked, Drive, unavailable, modified.
+  - The SVG panel renders a typed compact status badge. Local imports are
+    Embedded, no source is Unavailable, and later adapters can supply Linked,
+    Drive, or Modified without enabling those unfinished flows.
+  - Main files: `src/svg/importSvg.ts`, `src/svg/importSvg.test.ts`,
+    `src/App.tsx`, `src/App.test.tsx`, `src/store.test.ts`.
+  - Tests: `bun run test -- src/svg/importSvg.test.ts src/store.test.ts
+    src/App.test.tsx`; `bun run check`; Browser Harness source-status check.
 
 ## Phase 4 — Mapping engine
 

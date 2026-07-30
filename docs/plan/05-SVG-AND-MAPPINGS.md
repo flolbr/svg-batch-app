@@ -23,6 +23,11 @@ derives a separate preview document with a highlight marker; the accepted
 template snapshot is never modified. Zoom similarly changes only derived
 iframe presentation CSS, while Fit restores the contained 100% view.
 
+The SVG panel reports a compact source status. A local import is `Embedded`,
+and no accepted source is `Unavailable`. `Linked`, `Drive`, and `Modified` are
+typed states for their later adapters; exposing the labels does not enable
+unfinished source behavior.
+
 The local importer parses SVG as XML, requires an SVG namespace root, rejects
 unsupported elements and event attributes, permits only local fragment
 references or embedded image data URLs, and rejects external `url(...)`

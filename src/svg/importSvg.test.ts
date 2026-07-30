@@ -22,6 +22,7 @@ describe("importSvgFile", () => {
 
     expect(result.fileName).toBe("template.svg");
     expect(result.fileSize).toBe(file.size);
+    expect(result.sourceStatus).toBe("embedded");
     expect(result.acceptedSvg).toContain(
       '<text id="name">Hello <tspan>world</tspan></text>',
     );

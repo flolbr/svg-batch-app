@@ -30,10 +30,14 @@ const supportedElements = new Set([
   "symbol",
 ]);
 
+export type SvgSourceStatus =
+  "embedded" | "linked" | "drive" | "unavailable" | "modified";
+
 export type ImportedSvg = {
   fileName: string;
   fileSize: number;
   acceptedSvg: string;
+  sourceStatus: SvgSourceStatus;
   targets: SvgTarget[];
   tree: SvgTreeNode[];
 };
@@ -131,6 +135,7 @@ export async function importSvgFile(file: File): Promise<ImportedSvg> {
     fileName: file.name,
     fileSize: file.size,
     acceptedSvg,
+    sourceStatus: "embedded",
     targets,
     tree,
   };

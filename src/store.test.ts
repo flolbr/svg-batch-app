@@ -68,6 +68,7 @@ describe("useAppStore", () => {
       fileName: "badge.svg",
       fileSize: 123,
       acceptedSvg: '<svg xmlns="http://www.w3.org/2000/svg" />',
+      sourceStatus: "embedded" as const,
       targets: [{ id: "badge", tagName: "g" }],
       tree: [
         {
