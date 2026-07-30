@@ -4,8 +4,8 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. The top-level error boundary and notification
-surface are complete.
+No implementation task is active. Accessible desktop panel resizing is
+complete.
 
 ## What works
 
@@ -20,6 +20,10 @@ surface are complete.
 - Top-level render failures show an accessible reload fallback.
 - Mantine notifications are mounted at the top right for later import, save,
   and recoverable-error feedback.
+- Desktop users can drag the compact six-dot panel grips or adjust them with the
+  left and right arrow keys.
+- Panel minimum widths are preserved, and resize controls are hidden in the
+  responsive stacked layout.
 
 ## What remains
 
@@ -38,21 +42,22 @@ Start the next `Phase 1 — Application shell` item in `00-TODO.md`:
 
 ## Files changed
 
-- `src/AppErrorBoundary.tsx`
-- `src/AppErrorBoundary.test.tsx`
-- `src/main.tsx`
-- `package.json`
-- `bun.lock`
+- `src/App.tsx`
+- `src/App.test.tsx`
+- `src/styles.css`
 - `docs/plan/00-TODO.md`
+- `docs/plan/03-UI-AND-COMPONENTS.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/AppErrorBoundary.test.tsx`
+- `bun run test -- src/App.test.tsx`
 - `bun run check`
-- Browser Harness at 1280 px: top-right notification rendered through the
-  mounted runtime surface with no page overflow.
+- Browser Harness at 1920 px: pointer drag and keyboard resize both changed
+  adjacent panel widths without horizontal overflow.
+- Browser Harness at 1000 px: separators hidden, Preview-first stack preserved,
+  no horizontal overflow.
 
 ## Latest implementation commit
 
-`1b2254c feat: add application error feedback`
+`b3696b5 feat: make workspace panels resizable`
