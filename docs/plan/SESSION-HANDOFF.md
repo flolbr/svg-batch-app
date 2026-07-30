@@ -196,4 +196,4 @@ Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending current feature commit.
+`e7cd170 feat: add preview zoom controls`
