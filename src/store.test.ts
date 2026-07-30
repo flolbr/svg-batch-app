@@ -5,7 +5,7 @@ describe("useAppStore", () => {
   it("starts with empty project, source, and selection slices and default UI weights", () => {
     const state = useAppStore.getState();
 
-    expect(state.project).toEqual({ status: "empty" });
+    expect(state.project).toBeNull();
     expect(state.ui).toEqual({ panelWeights: [38, 27, 35] });
     expect(state.sources).toEqual({ spreadsheet: null, svg: null });
     expect(state.selection).toEqual({
@@ -28,5 +28,22 @@ describe("useAppStore", () => {
     expect(stateAfter.sources).toBe(stateBefore.sources);
     expect(stateAfter.selection).toBe(stateBefore.selection);
     expect(initialPanelWeights).toEqual(initialWeightsBefore);
+  });
+
+  it("loads a validated project without changing transient state", () => {
+    const stateBefore = useAppStore.getState();
+    const project = {
+      schemaVersion: 1 as const,
+      projectId: "project-1",
+      name: "Badges",
+    };
+
+    stateBefore.setProject(project);
+
+    const stateAfter = useAppStore.getState();
+    expect(stateAfter.project).toEqual(project);
+    expect(stateAfter.ui).toBe(stateBefore.ui);
+    expect(stateAfter.sources).toBe(stateBefore.sources);
+    expect(stateAfter.selection).toBe(stateBefore.selection);
   });
 });

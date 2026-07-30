@@ -1,11 +1,10 @@
 import { create } from "zustand";
+import type { Project } from "./project/loadProject";
 
 export type PanelWeights = [number, number, number];
 
 type AppStore = {
-  project: {
-    status: "empty";
-  };
+  project: Project | null;
   ui: {
     panelWeights: PanelWeights;
   };
@@ -18,15 +17,14 @@ type AppStore = {
     selectedRowIds: string[];
     svgObjectId: string | null;
   };
+  setProject: (project: Project) => void;
   setPanelWeights: (panelWeights: PanelWeights) => void;
 };
 
 export const initialPanelWeights: PanelWeights = [38, 27, 35];
 
 export const useAppStore = create<AppStore>()((set) => ({
-  project: {
-    status: "empty",
-  },
+  project: null,
   ui: {
     panelWeights: initialPanelWeights,
   },
@@ -39,6 +37,7 @@ export const useAppStore = create<AppStore>()((set) => ({
     selectedRowIds: [],
     svgObjectId: null,
   },
+  setProject: (project) => set({ project }),
   setPanelWeights: (panelWeights) =>
     set((state) => ({
       ui: {

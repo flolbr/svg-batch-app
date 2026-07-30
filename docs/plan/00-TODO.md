@@ -45,7 +45,10 @@ Only one implementation item should normally be `[-]`.
 - [x] Add initial Zustand store with project, UI, source, and selection slices.
   - Main files: `src/store.ts`, `src/store.test.ts`, `src/App.tsx`.
   - Tests: `bun run test -- src/store.test.ts`; `bun run test -- src/App.test.tsx`; `bun run check`.
-- [ ] Parse and validate the embedded `#svg-batch-project` JSON at startup.
+- [x] Parse and validate the embedded `#svg-batch-project` JSON at startup.
+  - Initial implementation validates only the current project identity fields; the complete persisted schema remains a Phase 6 item.
+  - Main files: `src/project/loadProject.ts`, `src/project/loadProject.test.ts`, `src/main.tsx`, `src/store.ts`, `src/store.test.ts`.
+  - Tests: `bun run test -- src/project/loadProject.test.ts src/store.test.ts`; `bun run check`.
 
 ## Phase 2 — Spreadsheet import and grid
 
