@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Excel-style per-column filters are complete.
+No implementation task is active. Independent row selection is complete.
 
 ## What works
 
@@ -70,6 +70,11 @@ No implementation task is active. Excel-style per-column filters are complete.
 - Active filters can be removed individually or cleared together. Filters
   reset when the imported worksheet data changes and remain transient until
   the dedicated persistence item.
+- Each rendered row has a leading checkbox backed by its stable row ID in the
+  Zustand selection slice.
+- Search and structured filters only change which rows are visible. Hidden
+  selected rows remain selected, reappear checked when filters are removed,
+  and remain included in the action-bar selected count.
 - Manual-row controls remain disabled until their dedicated Phase 2 item.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
@@ -78,36 +83,39 @@ No implementation task is active. Excel-style per-column filters are complete.
 
 ## What remains
 
-Row-selection behavior and the rest of the spreadsheet workflow remain Phase 2
-work.
+Bulk-selection commands and the rest of the spreadsheet workflow remain Phase
+2 work.
 
 ## Next concrete step
 
 Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
-1. mark “Keep filtering and row selection independent” `[-]`;
-2. add row selection state and controls without deriving it from matching rows;
-3. verify selected rows remain selected when search or filters hide them.
+1. mark “Add ‘select all matching’, ‘select visible page’, and ‘clear
+   selection’” `[-]`;
+2. add and unit-test the bulk selection commands;
+3. connect the header and toolbar controls with correct checked and
+   indeterminate states.
 
 ## Files changed
 
 - `src/App.tsx`
 - `src/App.test.tsx`
-- `src/ColumnFilters.tsx`
-- `src/data/filterRows.ts`
-- `src/data/filterRows.test.ts`
+- `src/styles.css`
+- `src/store.ts`
+- `src/store.test.ts`
+- `src/data/rowSelection.ts`
+- `src/data/rowSelection.test.ts`
 - `docs/plan/00-TODO.md`
 - `docs/plan/04-DATA-AND-SEARCH.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/App.test.tsx`
-- `bun run test -- src/data/filterRows.test.ts src/data/searchRows.test.ts src/App.test.tsx`
+- `bun run test -- src/data/rowSelection.test.ts src/store.test.ts src/App.test.tsx`
 - `bun run lint`
 - `bun run build:single`
 - `bun run check`
 
 ## Latest substantive commit
 
-`299250b feat: add spreadsheet column filters`
+Pending commit for independent row selection.

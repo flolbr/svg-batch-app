@@ -85,6 +85,11 @@ describe("App", () => {
       },
     );
     useAppStore.setState((state) => ({
+      selection: {
+        activeRowId: null,
+        selectedRowIds: [],
+        svgObjectId: null,
+      },
       sources: { spreadsheet: null, svg: null },
       ui: { ...state.ui, panelWeights: initialPanelWeights },
     }));
@@ -438,6 +443,68 @@ describe("App", () => {
     expect(
       await screen.findByRole("cell", { name: "Alice Martin" }),
     ).toBeInTheDocument();
+  });
+
+  it("keeps selected rows selected while a filter hides them", async () => {
+    const user = userEvent.setup();
+    setMemberSpreadsheet();
+    const aliceRowId = useAppStore
+      .getState()
+      .sources.spreadsheet?.data.rows.find(
+        (row) => row.displayedValues["col-0"] === "Alice Martin",
+      )?.id;
+
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    await user.click(screen.getByRole("checkbox", { name: "Select row 2" }));
+    expect(useAppStore.getState().selection.selectedRowIds).toEqual([
+      aliceRowId,
+    ]);
+    expect(
+      screen.getByText("1 row selected · Not validated"),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Filters" }));
+    await user.click(
+      await screen.findByRole("combobox", { name: "Filter column" }),
+    );
+    const cityOption = screen
+      .getAllByRole("option", { hidden: true, name: "City" })
+      .find((option) => option.tagName === "DIV");
+    expect(cityOption).toBeDefined();
+    await user.click(cityOption!);
+    await user.click(
+      screen.getByRole("checkbox", { hidden: true, name: "Lyon" }),
+    );
+    await user.click(
+      screen.getByRole("button", { hidden: true, name: "Apply filter" }),
+    );
+
+    expect(
+      screen.queryByRole("cell", { name: "Alice Martin" }),
+    ).not.toBeInTheDocument();
+    expect(useAppStore.getState().selection.selectedRowIds).toEqual([
+      aliceRowId,
+    ]);
+    expect(
+      screen.getByText("1 row selected · Not validated"),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Filters (1)" }));
+    await user.click(
+      await screen.findByRole("button", {
+        hidden: true,
+        name: "Remove City filter",
+      }),
+    );
+
+    expect(
+      await screen.findByRole("checkbox", { name: "Select row 2" }),
+    ).toBeChecked();
   });
 
   it("renders every row without a scroll region at the virtualization threshold", () => {

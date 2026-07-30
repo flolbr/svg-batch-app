@@ -178,6 +178,12 @@ select {
   white-space: nowrap;
 }
 
+.data-table .data-table-selection {
+  width: 42px;
+  min-width: 42px;
+  padding-inline: 11px;
+}
+
 .data-table-scroll-virtual th {
   position: sticky;
   z-index: 1;

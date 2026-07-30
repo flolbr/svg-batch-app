@@ -2,6 +2,7 @@ import {
   ActionIcon,
   Badge,
   Button,
+  Checkbox,
   Group,
   Paper,
   Select,
@@ -130,9 +131,13 @@ function PanelResizeHandle({
 }
 
 function DataRow({
+  isSelected,
+  onToggleSelection,
   row,
   virtualIndex,
 }: {
+  isSelected: boolean;
+  onToggleSelection: (rowId: string) => void;
   row: Row<SourceRow>;
   virtualIndex?: number;
 }) {
@@ -143,6 +148,13 @@ function DataRow({
       }
       data-index={virtualIndex}
     >
+      <Table.Td className="data-table-selection">
+        <Checkbox
+          aria-label={`Select row ${row.index + 1}`}
+          checked={isSelected}
+          onChange={() => onToggleSelection(row.original.id)}
+        />
+      </Table.Td>
       {row.getVisibleCells().map((cell) => (
         <Table.Td key={cell.id}>
           {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -163,6 +175,7 @@ export function App() {
   const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 150);
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
   const spreadsheet = useAppStore((state) => state.sources.spreadsheet);
+  const selectedRowIds = useAppStore((state) => state.selection.selectedRowIds);
   const setPanelWeights = useAppStore((state) => state.setPanelWeights);
   const setSelectedWorksheet = useAppStore(
     (state) => state.setSelectedWorksheet,
@@ -170,6 +183,7 @@ export function App() {
   const setSpreadsheetSource = useAppStore(
     (state) => state.setSpreadsheetSource,
   );
+  const toggleRowSelection = useAppStore((state) => state.toggleRowSelection);
   const sourceColumns = spreadsheet?.data.columns ?? emptySourceColumns;
   const sourceRows = spreadsheet?.data.rows ?? emptySourceRows;
   const activeSearchColumn = sourceColumns.some(
@@ -198,6 +212,10 @@ export function App() {
   const matchingRows = useMemo(
     () => filterRows(searchedRows, columnFilters),
     [columnFilters, searchedRows],
+  );
+  const selectedRowIdSet = useMemo(
+    () => new Set(selectedRowIds),
+    [selectedRowIds],
   );
   const dataColumns = useMemo<ColumnDef<SourceRow>[]>(
     () =>
@@ -517,6 +535,10 @@ export function App() {
                   <Table.Thead>
                     {dataTable.getHeaderGroups().map((headerGroup) => (
                       <Table.Tr key={headerGroup.id}>
+                        <Table.Th
+                          aria-label="Row selection"
+                          className="data-table-selection"
+                        />
                         {headerGroup.headers.map((header) => (
                           <Table.Th key={header.id}>
                             {header.isPlaceholder
@@ -535,7 +557,7 @@ export function App() {
                       <Table.Tr>
                         <Table.Td
                           className="data-table-empty"
-                          colSpan={Math.max(dataColumns.length, 1)}
+                          colSpan={dataColumns.length + 1}
                         >
                           {!spreadsheet
                             ? "Upload a spreadsheet to view its rows."
@@ -557,14 +579,18 @@ export function App() {
                             className="data-table-spacer"
                           >
                             <Table.Td
-                              colSpan={dataColumns.length}
+                              colSpan={dataColumns.length + 1}
                               style={{ height: topSpacerHeight }}
                             />
                           </Table.Tr>
                         )}
                         {virtualRows.map((virtualRow) => (
                           <DataRow
+                            isSelected={selectedRowIdSet.has(
+                              dataRows[virtualRow.index].original.id,
+                            )}
                             key={dataRows[virtualRow.index].id}
+                            onToggleSelection={toggleRowSelection}
                             row={dataRows[virtualRow.index]}
                             virtualIndex={virtualRow.index}
                           />
@@ -575,14 +601,21 @@ export function App() {
                             className="data-table-spacer"
                           >
                             <Table.Td
-                              colSpan={dataColumns.length}
+                              colSpan={dataColumns.length + 1}
                               style={{ height: bottomSpacerHeight }}
                             />
                           </Table.Tr>
                         )}
                       </>
                     ) : (
-                      dataRows.map((row) => <DataRow key={row.id} row={row} />)
+                      dataRows.map((row) => (
+                        <DataRow
+                          isSelected={selectedRowIdSet.has(row.original.id)}
+                          key={row.id}
+                          onToggleSelection={toggleRowSelection}
+                          row={row}
+                        />
+                      ))
                     )}
                   </Table.Tbody>
                 </Table>
@@ -723,7 +756,8 @@ export function App() {
           <Button leftSection={<IconDownload />}>Export selected</Button>
         </Group>
         <Text size="sm" c="dimmed">
-          2 rows selected · Not validated
+          {selectedRowIds.length} {selectedRowIds.length === 1 ? "row" : "rows"}{" "}
+          selected · Not validated
         </Text>
       </footer>
     </div>

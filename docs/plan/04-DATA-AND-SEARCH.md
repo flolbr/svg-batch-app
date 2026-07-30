@@ -186,6 +186,15 @@ The header checkbox must communicate:
 - all visible selected;
 - some visible selected.
 
+Each rendered source row has a leading checkbox that toggles its stable row ID
+in the Zustand selection slice. Search and structured filters only determine
+which rows are rendered; they never remove hidden IDs from the selection. The
+action bar reports the full selected count, including rows hidden by the
+current search or filters.
+
+Bulk selection and header-checkbox behavior remain in the following Phase 2
+item.
+
 ## Manual rows
 
 `+ Add row` creates a blank manual row and enters edit mode.

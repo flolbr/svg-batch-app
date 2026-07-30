@@ -4,6 +4,7 @@ import {
   normalizeWorksheet,
   type NormalizedWorksheet,
 } from "./data/normalizeWorkbook";
+import { toggleSelectedRow } from "./data/rowSelection";
 import type { Project } from "./project/loadProject";
 
 export type PanelWeights = [number, number, number];
@@ -30,6 +31,7 @@ type AppStore = {
   setPanelWeights: (panelWeights: PanelWeights) => void;
   setSelectedWorksheet: (sheetName: string) => void;
   setSpreadsheetSource: (spreadsheet: ImportedSpreadsheet) => void;
+  toggleRowSelection: (rowId: string) => void;
 };
 
 export const initialPanelWeights: PanelWeights = [38, 27, 35];
@@ -83,6 +85,16 @@ export const useAppStore = create<AppStore>()((set) => ({
           ),
           selectedSheetName: spreadsheet.sheetNames[0],
         },
+      },
+    })),
+  toggleRowSelection: (rowId) =>
+    set((state) => ({
+      selection: {
+        ...state.selection,
+        selectedRowIds: toggleSelectedRow(
+          state.selection.selectedRowIds,
+          rowId,
+        ),
       },
     })),
   setPanelWeights: (panelWeights) =>

@@ -78,7 +78,14 @@ Only one implementation item should normally be `[-]`.
     `src/data/filterRows.test.ts`, `src/App.tsx`, `src/App.test.tsx`.
   - Tests: `bun run test -- src/data/filterRows.test.ts src/data/searchRows.test.ts src/App.test.tsx`;
     `bun run check`.
-- [ ] Keep filtering and row selection independent.
+- [x] Keep filtering and row selection independent.
+  - Leading row checkboxes toggle stable row IDs in the Zustand selection
+    slice; search and column filters only change row visibility.
+  - Main files: `src/data/rowSelection.ts`,
+    `src/data/rowSelection.test.ts`, `src/store.ts`, `src/store.test.ts`,
+    `src/App.tsx`, `src/App.test.tsx`, `src/styles.css`.
+  - Tests: `bun run test -- src/data/rowSelection.test.ts src/store.test.ts src/App.test.tsx`;
+    `bun run check`.
 - [ ] Add “select all matching”, “select visible page”, and “clear selection”.
 - [ ] Add editable manual rows through the final “+ Add row” line.
 - [ ] Add edit overrides for imported rows without mutating source rows.

@@ -115,4 +115,22 @@ describe("useAppStore", () => {
     stateAfterSelection.setSelectedWorksheet("Missing sheet");
     expect(useAppStore.getState()).toBe(stateAfterSelection);
   });
+
+  it("toggles selected row IDs without changing unrelated slices", () => {
+    const stateBefore = useAppStore.getState();
+
+    stateBefore.toggleRowSelection("row-1");
+
+    const stateAfterSelection = useAppStore.getState();
+    expect(stateAfterSelection.selection).toEqual({
+      ...stateBefore.selection,
+      selectedRowIds: ["row-1"],
+    });
+    expect(stateAfterSelection.project).toBe(stateBefore.project);
+    expect(stateAfterSelection.sources).toBe(stateBefore.sources);
+    expect(stateAfterSelection.ui).toBe(stateBefore.ui);
+
+    stateAfterSelection.toggleRowSelection("row-1");
+    expect(useAppStore.getState().selection.selectedRowIds).toEqual([]);
+  });
 });
