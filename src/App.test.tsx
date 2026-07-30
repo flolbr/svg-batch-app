@@ -188,6 +188,10 @@ describe("App", () => {
     });
     expect(screen.getByText("Sanitized")).toBeInTheDocument();
     expect(screen.getByText("1 mapping target found")).toBeInTheDocument();
+    const preview = screen.getByTitle("SVG preview");
+    expect(preview).toHaveAttribute("sandbox", "");
+    expect(preview.getAttribute("srcdoc")).toContain('id="badge"');
+    expect(document.querySelector("#badge")).not.toBeInTheDocument();
     expect(
       screen.getByRole("tree", { name: "SVG object tree" }),
     ).toBeInTheDocument();

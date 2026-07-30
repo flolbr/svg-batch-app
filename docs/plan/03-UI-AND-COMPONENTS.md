@@ -111,7 +111,7 @@ Controls:
 
 Preview:
 
-- render inside an isolated wrapper;
+- render the accepted sanitized SVG inside a capability-free sandboxed iframe;
 - no direct event handlers from imported SVG;
 - show a checker or neutral canvas;
 - indicate overflow and missing mappings;

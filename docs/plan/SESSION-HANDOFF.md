@@ -4,7 +4,8 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. The custom accessible SVG tree is complete.
+No implementation task is active. Isolated live SVG preview rendering is
+complete.
 
 ## What works
 
@@ -143,6 +144,10 @@ No implementation task is active. The custom accessible SVG tree is complete.
   context. Each object exposes an Unmapped status until mapping state exists.
 - SVG-object selection is stored independently in Zustand, drives the mapping
   summary, and resets when a replacement SVG is accepted.
+- The accepted SVG renders live inside an empty-capability sandboxed `srcDoc`
+  iframe. Imported markup never enters the parent application DOM.
+- The isolated preview centers and contains the SVG, ignores pointer
+  interaction, and replaces its document when a new template is accepted.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -150,40 +155,35 @@ No implementation task is active. The custom accessible SVG tree is complete.
 
 ## What remains
 
-Preview rendering and target highlighting remain Phase 3 work.
+Preview target highlighting and navigation controls remain Phase 3 work.
 
 ## Next concrete step
 
 Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
-1. mark “Render the live preview in an isolated container” `[-]`;
-2. render only the accepted SVG string without reusing the live tree DOM;
-3. verify isolation, sizing, and safe replacement behavior.
+1. mark “Highlight the selected SVG object in the preview” `[-]`;
+2. derive preview-only markup from the accepted SVG and selected target ID;
+3. verify highlighting never mutates the accepted template snapshot.
 
 ## Files changed
 
 - `src/App.tsx`
 - `src/App.test.tsx`
-- `src/SvgObjectTree.tsx`
-- `src/SvgObjectTree.test.tsx`
-- `src/SvgObjectTree.module.css`
-- `src/store.ts`
-- `src/store.test.ts`
-- `src/svg/importSvg.ts`
-- `src/svg/importSvg.test.ts`
-- `src/svg/validateSvgTargets.ts`
-- `src/svg/validateSvgTargets.test.ts`
+- `src/SvgPreview.tsx`
+- `src/SvgPreview.test.tsx`
+- `src/SvgPreview.module.css`
 - `docs/plan/00-TODO.md`
+- `docs/plan/03-UI-AND-COMPONENTS.md`
 - `docs/plan/05-SVG-AND-MAPPINGS.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/SvgObjectTree.test.tsx src/store.test.ts src/App.test.tsx`
+- `bun run test -- src/SvgPreview.test.tsx src/App.test.tsx`
 - `bun run build:single`
 - `bun run check`
-- Browser Harness tree search, selection, and keyboard check
+- Browser Harness sandboxed preview check
 
 ## Latest substantive commit
 
-`b37b3ea feat: add accessible SVG object tree`
+Pending commit for isolated live SVG preview rendering.

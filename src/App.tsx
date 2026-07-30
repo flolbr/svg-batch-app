@@ -59,6 +59,7 @@ import {
 import { ColumnFilters } from "./ColumnFilters";
 import { ColumnSettings } from "./ColumnSettings";
 import { SvgObjectTree } from "./SvgObjectTree";
+import { SvgPreview } from "./SvgPreview";
 import type { ColumnPreferences } from "./data/columnPreferences";
 import { filterRows, type ColumnFilter } from "./data/filterRows";
 import { importSpreadsheet } from "./data/importSpreadsheet";
@@ -1275,13 +1276,17 @@ export function App() {
             </div>
 
             <div className="preview-canvas">
-              <div className="preview-document">
-                <IconFileTypeSvg size={52} stroke={1.3} />
-                <Text fw={600}>Preview unavailable</Text>
-                <Text size="sm" c="dimmed">
-                  Upload an SVG template to begin.
-                </Text>
-              </div>
+              {svg ? (
+                <SvgPreview acceptedSvg={svg.acceptedSvg} />
+              ) : (
+                <div className="preview-document">
+                  <IconFileTypeSvg size={52} stroke={1.3} />
+                  <Text fw={600}>Preview unavailable</Text>
+                  <Text size="sm" c="dimmed">
+                    Upload an SVG template to begin.
+                  </Text>
+                </div>
+              )}
             </div>
           </Stack>
         </Paper>

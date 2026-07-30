@@ -16,6 +16,10 @@ read text
 
 Never inject the unsanitized SVG into the application DOM.
 
+The live preview uses only the accepted string in an empty-capability
+sandboxed `srcDoc` iframe. Imported markup never enters the parent application
+DOM, and the iframe ignores pointer interaction.
+
 The local importer parses SVG as XML, requires an SVG namespace root, rejects
 unsupported elements and event attributes, permits only local fragment
 references or embedded image data URLs, and rejects external `url(...)`

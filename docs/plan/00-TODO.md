@@ -193,7 +193,16 @@ Only one implementation item should normally be `[-]`.
     `src/App.tsx`, `src/App.test.tsx`.
   - Tests: `bun run test -- src/SvgObjectTree.test.tsx src/store.test.ts src/App.test.tsx`;
     `bun run check`; Browser Harness tree search, selection, and keyboard check.
-- [ ] Render the live preview in an isolated container.
+- [x] Render the live preview in an isolated container.
+  - The accepted sanitized SVG is rendered only inside an empty-capability
+    sandboxed `srcDoc` iframe and never inserted into the parent application
+    DOM.
+  - The preview centers and contains the SVG, ignores pointer interaction, and
+    replaces its isolated document when a new template is accepted.
+  - Main files: `src/SvgPreview.tsx`, `src/SvgPreview.test.tsx`,
+    `src/SvgPreview.module.css`, `src/App.tsx`, `src/App.test.tsx`.
+  - Tests: `bun run test -- src/SvgPreview.test.tsx src/App.test.tsx`;
+    `bun run check`; Browser Harness sandboxed preview check.
 - [ ] Highlight the selected SVG object in the preview.
 - [ ] Add previous/next selected-row preview controls.
 - [ ] Add zoom and fit controls.
