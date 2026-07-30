@@ -118,4 +118,4 @@ Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending commit for independent row selection.
+`b9f98a4 feat: keep row selection through filters`
