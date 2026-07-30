@@ -202,4 +202,4 @@ Continue `Phase 4 — Mapping engine` in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending current feature commit.
+`8b18178 feat: apply direct text mappings`
