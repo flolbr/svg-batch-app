@@ -90,4 +90,4 @@ Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-`b2fd665 feat: render normalized spreadsheet grid`
+`181e01f feat: virtualize large spreadsheet grids`
