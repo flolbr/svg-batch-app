@@ -166,7 +166,17 @@ Only one implementation item should normally be `[-]`.
     `src/store.test.ts`.
   - Tests: `bun run test -- src/svg/validateSvgTargets.test.ts src/svg/importSvg.test.ts src/store.test.ts src/App.test.tsx`;
     `bun run check`; Browser Harness local SVG target-count check.
-- [ ] Build the SVG object tree from the sanitized DOM.
+- [x] Build the SVG object tree from the sanitized DOM.
+  - Tree nodes preserve document order and nest beneath their nearest
+    addressable ancestor, skipping non-target wrappers and resource content.
+  - Labels prefer Inkscape metadata, `aria-label`, direct child `title`, ID,
+    then tag name. The SVG panel renders the resulting hierarchy as a compact
+    read-only list.
+  - Main files: `src/svg/buildSvgTree.ts`, `src/svg/buildSvgTree.test.ts`,
+    `src/svg/importSvg.ts`, `src/svg/importSvg.test.ts`, `src/App.tsx`,
+    `src/App.test.tsx`, `src/styles.css`, `src/store.test.ts`.
+  - Tests: `bun run test -- src/svg/buildSvgTree.test.ts src/svg/importSvg.test.ts src/store.test.ts src/App.test.tsx`;
+    `bun run check`; Browser Harness nested SVG object-list check.
 - [ ] Implement the custom accessible tree:
   - expand/collapse;
   - single selection;

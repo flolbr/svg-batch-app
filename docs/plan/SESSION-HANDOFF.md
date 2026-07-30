@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. SVG ID and target validation are complete.
+No implementation task is active. SVG object-tree construction is complete.
 
 ## What works
 
@@ -128,6 +128,12 @@ No implementation task is active. SVG ID and target validation are complete.
   excluded, and templates without targets are rejected.
 - Accepted source state includes the validated target list; the SVG panel
   reports its mapping-target count.
+- Accepted source state also includes a read-only object tree in document
+  order, nested beneath the nearest addressable ancestor through non-target
+  wrappers.
+- Object labels prefer retained Inkscape layer metadata, `aria-label`, direct
+  child `title`, ID, then tag name. The SVG panel renders the hierarchy as a
+  compact nested list.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -135,15 +141,15 @@ No implementation task is active. SVG ID and target validation are complete.
 
 ## What remains
 
-SVG object-tree construction and preview remain Phase 3 work.
+Accessible tree interaction and preview remain Phase 3 work.
 
 ## Next concrete step
 
 Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
-1. mark “Build the SVG object tree from the sanitized DOM” `[-]`;
-2. normalize target labels and ancestor relationships;
-3. store and render the read-only tree model without adding interaction yet.
+1. mark “Implement the custom accessible tree” `[-]`;
+2. add expansion, search, and single selection over the stored tree;
+3. implement the documented tree keyboard behavior and mapping-status slots.
 
 ## Files changed
 
@@ -151,6 +157,9 @@ Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 - `src/App.test.tsx`
 - `src/store.ts`
 - `src/store.test.ts`
+- `src/styles.css`
+- `src/svg/buildSvgTree.ts`
+- `src/svg/buildSvgTree.test.ts`
 - `src/svg/importSvg.ts`
 - `src/svg/importSvg.test.ts`
 - `src/svg/validateSvgTargets.ts`
@@ -161,11 +170,11 @@ Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
 ## Tests run
 
-- `bun run test -- src/svg/validateSvgTargets.test.ts src/svg/importSvg.test.ts src/store.test.ts src/App.test.tsx`
+- `bun run test -- src/svg/buildSvgTree.test.ts src/svg/importSvg.test.ts src/store.test.ts src/App.test.tsx`
 - `bun run build:single`
 - `bun run check`
-- Browser Harness local SVG target-count check
+- Browser Harness nested SVG object-list check
 
 ## Latest substantive commit
 
-`7c81e5e feat: validate SVG mapping targets`
+Pending commit for SVG object-tree construction.

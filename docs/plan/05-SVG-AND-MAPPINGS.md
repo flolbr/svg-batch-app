@@ -78,6 +78,10 @@ Use the first available:
 4. `id`;
 5. tag name.
 
+The sanitized import retains the safe Inkscape label metadata needed for this
+priority. Tree construction preserves document order and attaches each target
+to its nearest addressable ancestor, skipping non-target wrappers.
+
 ## Tree model
 
 ```ts
@@ -90,6 +94,10 @@ type SvgTreeNode = {
 ```
 
 The tree is read-only. No drag/drop or rename in the MVP.
+
+The initial tree view is a nested read-only list. Tree roles, selection,
+search, expansion, and keyboard behavior are added by the dedicated accessible
+tree item.
 
 ## Mapping schema
 

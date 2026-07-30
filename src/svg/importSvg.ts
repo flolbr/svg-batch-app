@@ -1,4 +1,5 @@
 import DOMPurify from "dompurify";
+import { buildSvgTree, type SvgTreeNode } from "./buildSvgTree";
 import {
   validateSvgTargets,
   type SvgTarget,
@@ -34,6 +35,7 @@ export type ImportedSvg = {
   fileSize: number;
   acceptedSvg: string;
   targets: SvgTarget[];
+  tree: SvgTreeNode[];
 };
 
 function importError(message: string): Error {
@@ -112,7 +114,7 @@ export async function importSvgFile(file: File): Promise<ImportedSvg> {
   const acceptedSvg = DOMPurify.sanitize(root.outerHTML, {
     USE_PROFILES: { svg: true, svgFilters: true },
     ADD_TAGS: Array.from(supportedElements),
-    ADD_ATTR: ["xlink:href"],
+    ADD_ATTR: ["inkscape:label", "xlink:href", "xmlns:inkscape"],
     // SVG IDs are mapping targets and may legitimately be common names such
     // as "name". The accepted document remains SVG-only and is not injected
     // into the application DOM unsafely.
@@ -123,11 +125,13 @@ export async function importSvgFile(file: File): Promise<ImportedSvg> {
   // the same narrow subset even if DOMPurify configuration changes.
   parseAndValidateSvg(acceptedSvg);
   const targets = validateSvgTargets(acceptedSvg);
+  const tree = buildSvgTree(acceptedSvg);
 
   return {
     fileName: file.name,
     fileSize: file.size,
     acceptedSvg,
     targets,
+    tree,
   };
 }

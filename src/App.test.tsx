@@ -187,8 +187,11 @@ describe("App", () => {
       expect(useAppStore.getState().sources.svg?.fileName).toBe("badge.svg");
     });
     expect(screen.getByText("Sanitized")).toBeInTheDocument();
-    expect(screen.getByText("SVG ready")).toBeInTheDocument();
     expect(screen.getByText("1 mapping target found")).toBeInTheDocument();
+    expect(
+      screen.getByRole("list", { name: "SVG object tree" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("badge")).toBeInTheDocument();
     expect(
       screen.getByRole("textbox", { name: "Search SVG objects" }),
     ).toBeEnabled();

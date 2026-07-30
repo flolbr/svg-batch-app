@@ -9,9 +9,9 @@ function svgFile(source: string, name = "template.svg"): File {
 describe("importSvgFile", () => {
   it("accepts a safe SVG and preserves supported artwork", async () => {
     const file = svgFile(`
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0 0 20 20">
         <defs><linearGradient id="fade"><stop offset="0" /></linearGradient></defs>
-        <g id="layer"><title>Greeting</title><text id="name">Hello <tspan>world</tspan></text></g>
+        <g id="layer" inkscape:label="Design Layer" aria-label="Layer"><title>Greeting</title><text id="name">Hello <tspan>world</tspan></text></g>
         <use href="#layer" />
         <image href="data:image/png;base64,AA==" width="1" height="1" />
         <rect fill="url(#fade)" width="20" height="20" />
@@ -30,6 +30,21 @@ describe("importSvgFile", () => {
     expect(result.targets).toEqual([
       { id: "layer", tagName: "g" },
       { id: "name", tagName: "text" },
+    ]);
+    expect(result.tree).toEqual([
+      {
+        id: "layer",
+        label: "Design Layer",
+        tagName: "g",
+        children: [
+          {
+            id: "name",
+            label: "name",
+            tagName: "text",
+            children: [],
+          },
+        ],
+      },
     ]);
   });
 

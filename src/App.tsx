@@ -81,6 +81,7 @@ import {
 import { createRowSearchIndex, searchRows } from "./data/searchRows";
 import { type PanelWeights, useAppStore } from "./store";
 import { importSvgFile } from "./svg/importSvg";
+import type { SvgTreeNode } from "./svg/buildSvgTree";
 
 const minimumPanelWidths = [360, 300, 360];
 const emptySourceColumns: DataColumn[] = [];
@@ -351,6 +352,30 @@ function DataRow({
         )}
       </Table.Td>
     </Table.Tr>
+  );
+}
+
+function SvgObjectList({
+  nodes,
+  root = false,
+}: {
+  nodes: SvgTreeNode[];
+  root?: boolean;
+}) {
+  return (
+    <ul aria-label={root ? "SVG object tree" : undefined} className="svg-list">
+      {nodes.map((node) => (
+        <li key={node.id}>
+          <Group gap="xs" wrap="nowrap">
+            <Text size="sm">{node.label}</Text>
+            <Badge color="gray" size="xs" variant="light">
+              {node.tagName}
+            </Badge>
+          </Group>
+          {node.children.length > 0 && <SvgObjectList nodes={node.children} />}
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -1165,14 +1190,13 @@ export function App() {
             )}
 
             {svg && (
-              <div className="empty-state">
-                <IconCheck size={34} stroke={1.4} />
-                <Text fw={600}>SVG ready</Text>
-                <Text size="sm" c="dimmed" ta="center">
+              <Stack gap="xs">
+                <Text size="sm" c="dimmed">
                   {svg.targets.length} mapping{" "}
                   {svg.targets.length === 1 ? "target" : "targets"} found
                 </Text>
-              </div>
+                <SvgObjectList nodes={svg.tree} root />
+              </Stack>
             )}
 
             <div className="mapping-placeholder">
