@@ -190,4 +190,4 @@ Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-`181ebfd feat: render isolated SVG preview`
+`ab7410f feat: highlight selected SVG target`
