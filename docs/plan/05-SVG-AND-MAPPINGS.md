@@ -131,6 +131,11 @@ type BaseMapping = {
 };
 ```
 
+The runtime Zod schemas are strict: mapping, target, and column IDs are trimmed
+and non-empty; optional minimum font size is positive; and QR margin is a
+nonnegative integer. Cross-field behavior remains the responsibility of each
+mapping implementation.
+
 ### Direct text
 
 ```ts

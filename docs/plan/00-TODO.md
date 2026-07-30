@@ -239,7 +239,14 @@ Only one implementation item should normally be `[-]`.
 
 ## Phase 4 — Mapping engine
 
-- [ ] Define mapping schemas with Zod.
+- [x] Define mapping schemas with Zod.
+  - Strict discriminated schemas cover text, visibility, exclusive group, QR,
+    and image mappings with shared identifiers and documented option enums.
+    Identifiers are trimmed and required; numeric options enforce their
+    immediate bounds without adding speculative cross-field policy.
+  - Main files: `src/mappings/schema.ts`, `src/mappings/schema.test.ts`.
+  - Tests: `bun run test -- src/mappings/schema.test.ts`; `bunx tsc -b`;
+    `bun run check`.
 - [ ] Implement direct text content mapping.
 - [ ] Implement yes/no visibility mapping.
 - [ ] Implement exclusive child selection by `data-option`, then ID fallback.

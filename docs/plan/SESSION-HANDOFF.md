@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Phase 3 SVG source status is complete.
+No implementation task is active. Phase 4 mapping schemas are complete.
 
 ## What works
 
@@ -161,6 +161,9 @@ No implementation task is active. Phase 3 SVG source status is complete.
 - The SVG panel exposes typed Embedded, Linked, Drive, Unavailable, and
   Modified source badges. Local imports are Embedded, absence is Unavailable,
   and unfinished linked/Drive adapters remain disabled.
+- Strict Zod schemas define text, visibility, exclusive-group, QR, and image
+  mappings through one discriminated union. Shared IDs are trimmed/non-empty,
+  unknown keys are rejected, and immediate numeric bounds are validated.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -168,35 +171,30 @@ No implementation task is active. Phase 3 SVG source status is complete.
 
 ## What remains
 
-Phase 3 is complete. Mapping-domain types are the next phase.
+Direct text content mapping is the next Phase 4 item.
 
 ## Next concrete step
 
-Start the first `Phase 4 — Mapping engine` item in `00-TODO.md`:
+Continue `Phase 4 — Mapping engine` in `00-TODO.md`:
 
-1. mark “Define mapping types” `[-]`;
-2. add the text, image, visibility, group selection, and QR mapping unions from
-   the implementation plan;
-3. keep types independent from React and cover any runtime validation added.
+1. mark “Implement direct text content mapping” `[-]`;
+2. clone accepted SVG input and update only the addressed text target;
+3. return row-level issues rather than throwing for mapping data errors.
 
 ## Files changed
 
-- `src/App.tsx`
-- `src/App.test.tsx`
-- `src/store.test.ts`
-- `src/svg/importSvg.ts`
-- `src/svg/importSvg.test.ts`
+- `src/mappings/schema.ts`
+- `src/mappings/schema.test.ts`
 - `docs/plan/00-TODO.md`
-- `docs/plan/03-UI-AND-COMPONENTS.md`
 - `docs/plan/05-SVG-AND-MAPPINGS.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/svg/importSvg.test.ts src/store.test.ts src/App.test.tsx`
+- `bun run test -- src/mappings/schema.test.ts`
+- `bunx tsc -b`
 - `bun run check`
-- Browser Harness source-status check
 
 ## Latest substantive commit
 
-`54ee93a feat: show SVG source status`
+Pending current feature commit.
