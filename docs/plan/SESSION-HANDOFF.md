@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Local CSV, XLSX, and XLS import is complete.
+No implementation task is active. Worksheet selection is complete.
 
 ## What works
 
@@ -36,6 +36,9 @@ No implementation task is active. Local CSV, XLSX, and XLS import is complete.
   failures through the notification surface.
 - SheetJS keeps the parsed workbook and its worksheet names in transient source
   state. The selected workbook is not persisted.
+- A newly imported workbook selects its first worksheet by default.
+- Multi-worksheet files provide an accessible selector backed by transient
+  Zustand state; single-worksheet files show a disabled selector.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -43,22 +46,21 @@ No implementation task is active. Local CSV, XLSX, and XLS import is complete.
 
 ## What remains
 
-Worksheet selection, row normalization, and the rest of the spreadsheet grid
-remain Phase 2 work. The existing sample grid is still static until those items
-replace it with imported rows.
+Row normalization and the rest of the spreadsheet grid remain Phase 2 work. The
+existing sample grid is still static until those items replace it with imported
+rows.
 
 ## Next concrete step
 
 Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
-1. mark worksheet choice `[-]`;
-2. add a control using the imported workbook's worksheet names;
-3. keep row and header normalization in the following TODO item.
+1. mark row normalization `[-]`;
+2. normalize the selected worksheet's headers, typed values, displayed values,
+   and stable row IDs;
+3. keep TanStack Table rendering in the following TODO item.
 
 ## Files changed
 
-- `src/data/importSpreadsheet.ts`
-- `src/data/importSpreadsheet.test.ts`
 - `src/App.tsx`
 - `src/App.test.tsx`
 - `src/store.ts`
@@ -69,10 +71,10 @@ Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
 ## Tests run
 
-- `bun run test -- src/data/importSpreadsheet.test.ts`
-- `bun run test -- src/data/importSpreadsheet.test.ts src/store.test.ts src/App.test.tsx`
+- `bun run test -- src/store.test.ts`
+- `bun run test -- src/store.test.ts src/App.test.tsx`
 - `bun run check`
 
 ## Latest substantive commit
 
-`5fcab3b feat: import local spreadsheets`
+Pending commit: worksheet selection.

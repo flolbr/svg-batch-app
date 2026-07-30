@@ -5,10 +5,26 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { App } from "./App";
 import { initialPanelWeights, useAppStore } from "./store";
 
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
 describe("App", () => {
   afterEach(cleanup);
 
   beforeEach(() => {
+    Object.defineProperty(globalThis, "ResizeObserver", {
+      configurable: true,
+      value: ResizeObserverMock,
+      writable: true,
+    });
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value() {},
+      writable: true,
+    });
     useAppStore.setState((state) => ({
       sources: { spreadsheet: null, svg: null },
       ui: { ...state.ui, panelWeights: initialPanelWeights },
@@ -104,5 +120,43 @@ describe("App", () => {
     expect(useAppStore.getState().sources.spreadsheet?.sheetNames).toEqual([
       "Sheet1",
     ]);
+    expect(useAppStore.getState().sources.spreadsheet?.selectedSheetName).toBe(
+      "Sheet1",
+    );
+    expect(
+      screen.getByRole("combobox", { name: "Worksheet" }),
+    ).toBeDisabled();
+  });
+
+  it("lets the user choose an imported worksheet", async () => {
+    const user = userEvent.setup();
+    useAppStore.getState().setSpreadsheetSource({
+      fileName: "customers.xlsx",
+      fileSize: 1,
+      sheetNames: ["Customers", "Mapping Guide"],
+      workbook: {
+        SheetNames: ["Customers", "Mapping Guide"],
+        Sheets: {},
+      },
+    });
+
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    const worksheet = screen.getByRole("combobox", { name: "Worksheet" });
+    expect(worksheet).toHaveValue("Customers");
+    expect(worksheet).toBeEnabled();
+
+    await user.click(worksheet);
+    await user.click(
+      screen.getByRole("option", { hidden: true, name: "Mapping Guide" }),
+    );
+
+    expect(useAppStore.getState().sources.spreadsheet?.selectedSheetName).toBe(
+      "Mapping Guide",
+    );
   });
 });

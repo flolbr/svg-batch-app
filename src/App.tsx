@@ -5,6 +5,7 @@ import {
   Checkbox,
   Group,
   Paper,
+  Select,
   Stack,
   Table,
   Text,
@@ -125,6 +126,9 @@ export function App() {
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
   const spreadsheet = useAppStore((state) => state.sources.spreadsheet);
   const setPanelWeights = useAppStore((state) => state.setPanelWeights);
+  const setSelectedWorksheet = useAppStore(
+    (state) => state.setSelectedWorksheet,
+  );
   const setSpreadsheetSource = useAppStore(
     (state) => state.setSpreadsheetSource,
   );
@@ -329,6 +333,22 @@ export function App() {
                   : "No spreadsheet loaded"}
               </Text>
             </Group>
+
+            {spreadsheet && (
+              <Select
+                allowDeselect={false}
+                aria-label="Worksheet"
+                data={spreadsheet.sheetNames}
+                disabled={spreadsheet.sheetNames.length === 1}
+                label="Worksheet"
+                onChange={(sheetName) => {
+                  if (sheetName) {
+                    setSelectedWorksheet(sheetName);
+                  }
+                }}
+                value={spreadsheet.selectedSheetName}
+              />
+            )}
 
             <div className="data-tools">
               <TextInput

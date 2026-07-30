@@ -199,5 +199,7 @@ This avoids embedding large XLSX binaries in the project HTML.
 
 The local file control accepts CSV, XLSX, and XLS files. SheetJS parses the
 selected file into the transient source state and exposes its worksheet names.
-Worksheet choice and normalization happen in their subsequent implementation
-steps; the workbook binary is not added to persisted project data.
+The first worksheet is selected by default, and the user can choose another
+worksheet before normalization. Single-worksheet files show the selection but
+do not offer an unnecessary choice. The workbook binary is not added to
+persisted project data.

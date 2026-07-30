@@ -62,10 +62,34 @@ describe("useAppStore", () => {
     stateBefore.setSpreadsheetSource(spreadsheet);
 
     const stateAfter = useAppStore.getState();
-    expect(stateAfter.sources.spreadsheet).toBe(spreadsheet);
+    expect(stateAfter.sources.spreadsheet).toEqual({
+      ...spreadsheet,
+      selectedSheetName: "Customers",
+    });
     expect(stateAfter.sources.svg).toBe(stateBefore.sources.svg);
     expect(stateAfter.project).toBe(stateBefore.project);
     expect(stateAfter.ui).toBe(stateBefore.ui);
     expect(stateAfter.selection).toBe(stateBefore.selection);
+  });
+
+  it("changes only to a worksheet available in the imported workbook", () => {
+    useAppStore.getState().setSpreadsheetSource({
+      fileName: "customers.xlsx",
+      fileSize: 123,
+      sheetNames: ["Customers", "Mapping Guide"],
+      workbook: {
+        SheetNames: ["Customers", "Mapping Guide"],
+        Sheets: {},
+      },
+    });
+
+    useAppStore.getState().setSelectedWorksheet("Mapping Guide");
+    expect(
+      useAppStore.getState().sources.spreadsheet?.selectedSheetName,
+    ).toBe("Mapping Guide");
+
+    const stateAfterSelection = useAppStore.getState();
+    stateAfterSelection.setSelectedWorksheet("Missing sheet");
+    expect(useAppStore.getState()).toBe(stateAfterSelection);
   });
 });

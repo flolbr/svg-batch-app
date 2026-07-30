@@ -3,6 +3,9 @@ import type { ImportedSpreadsheet } from "./data/importSpreadsheet";
 import type { Project } from "./project/loadProject";
 
 export type PanelWeights = [number, number, number];
+export type SpreadsheetSource = ImportedSpreadsheet & {
+  selectedSheetName: string;
+};
 
 type AppStore = {
   project: Project | null;
@@ -10,7 +13,7 @@ type AppStore = {
     panelWeights: PanelWeights;
   };
   sources: {
-    spreadsheet: ImportedSpreadsheet | null;
+    spreadsheet: SpreadsheetSource | null;
     svg: null;
   };
   selection: {
@@ -20,6 +23,7 @@ type AppStore = {
   };
   setProject: (project: Project) => void;
   setPanelWeights: (panelWeights: PanelWeights) => void;
+  setSelectedWorksheet: (sheetName: string) => void;
   setSpreadsheetSource: (spreadsheet: ImportedSpreadsheet) => void;
 };
 
@@ -40,11 +44,31 @@ export const useAppStore = create<AppStore>()((set) => ({
     svgObjectId: null,
   },
   setProject: (project) => set({ project }),
+  setSelectedWorksheet: (sheetName) =>
+    set((state) => {
+      const spreadsheet = state.sources.spreadsheet;
+      if (!spreadsheet?.sheetNames.includes(sheetName)) {
+        return state;
+      }
+
+      return {
+        sources: {
+          ...state.sources,
+          spreadsheet: {
+            ...spreadsheet,
+            selectedSheetName: sheetName,
+          },
+        },
+      };
+    }),
   setSpreadsheetSource: (spreadsheet) =>
     set((state) => ({
       sources: {
         ...state.sources,
-        spreadsheet,
+        spreadsheet: {
+          ...spreadsheet,
+          selectedSheetName: spreadsheet.sheetNames[0],
+        },
       },
     })),
   setPanelWeights: (panelWeights) =>

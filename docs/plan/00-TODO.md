@@ -55,7 +55,9 @@ Only one implementation item should normally be `[-]`.
 - [x] Import local CSV, XLSX, and XLS files.
   - Main files: `src/data/importSpreadsheet.ts`, `src/store.ts`, `src/App.tsx`.
   - Tests: `bun run test -- src/data/importSpreadsheet.test.ts`; `bun run test -- src/data/importSpreadsheet.test.ts src/store.test.ts src/App.test.tsx`; `bun run check`.
-- [ ] Let the user choose a worksheet.
+- [x] Let the user choose a worksheet.
+  - Main files: `src/store.ts`, `src/App.tsx`, `src/App.test.tsx`.
+  - Tests: `bun run test -- src/store.test.ts`; `bun run test -- src/store.test.ts src/App.test.tsx`; `bun run check`.
 - [ ] Normalize headers, rows, displayed values, and stable row IDs.
 - [ ] Render the grid with TanStack Table.
 - [ ] Add row virtualization only when row count exceeds a clear threshold.
