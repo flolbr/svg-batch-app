@@ -36,7 +36,9 @@ Only one implementation item should normally be `[-]`.
 - [x] Add Mantine theme and a small set of shared CSS variables matching the UI reference.
   - Main files: `src/theme.ts`, `src/main.tsx`, `src/styles.css`, `src/theme.test.ts`.
   - Tests: `bun run test -- src/theme.test.ts src/App.test.tsx`; `bun run check`; Browser Harness at 1920 px and 1000 px.
-- [ ] Add top-level error boundary and toast/notification surface.
+- [x] Add top-level error boundary and toast/notification surface.
+  - Main files: `src/AppErrorBoundary.tsx`, `src/AppErrorBoundary.test.tsx`, `src/main.tsx`, `package.json`, `bun.lock`.
+  - Tests: `bun run test -- src/AppErrorBoundary.test.tsx`; `bun run check`; Browser Harness runtime notification check at 1280 px.
 - [ ] Add initial Zustand store with project, UI, source, and selection slices.
 - [ ] Parse and validate the embedded `#svg-batch-project` JSON at startup.
 
