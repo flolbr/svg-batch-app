@@ -53,6 +53,28 @@ Use these states:
 - `[x]` complete
 - `[!]` blocked, with a brief reason
 
+## Git commits
+
+Commit completed work as development advances.
+
+- Make reasonably sized commits focused on one feature, fix, or coherent implementation step.
+- Prefer several reviewable commits over one large catch-all commit.
+- Do not split work into artificial micro-commits that provide no useful review boundary.
+- Do not mix unrelated refactors, formatting, documentation, and feature work in the same commit.
+- Include required tests and directly related documentation updates in the same commit as the feature they support.
+- Run the relevant tests before committing. Do not knowingly commit a broken build or failing tests.
+- Before committing, inspect `git diff` and `git status` so unrelated or generated files are not included accidentally.
+- Use clear imperative commit messages, for example:
+  - `feat: add spreadsheet row filtering`
+  - `feat: implement SVG text mapping`
+  - `fix: preserve selected rows through filtering`
+  - `docs: update Drive integration plan`
+- Commit after a coherent TODO item or meaningful sub-item is complete, not only at the end of an entire phase.
+- Do not rewrite, squash, amend, or force-push existing commits unless explicitly instructed.
+- If unrelated user changes are present, leave them untouched and commit only files belonging to the current task.
+
+Record the latest commit hash and summary in `docs/plan/SESSION-HANDOFF.md` before ending a session.
+
 ## Context compaction
 
 Long agent sessions may lose earlier context. Keep `docs/plan/SESSION-HANDOFF.md` current.
