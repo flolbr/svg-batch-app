@@ -212,7 +212,14 @@ Only one implementation item should normally be `[-]`.
   - Tests: `bun run test -- src/SvgPreview.test.tsx src/App.test.tsx`;
     `bun run build:single`; `bun run check`; Browser Harness preview highlight
     check.
-- [ ] Add previous/next selected-row preview controls.
+- [x] Add previous/next selected-row preview controls.
+  - Preview navigation follows selected rows in active-worksheet order, keeps
+    hidden selections available through filtering, and reconciles the active
+    row when selection or worksheet state changes.
+  - Main files: `src/App.tsx`, `src/App.test.tsx`, `src/store.ts`,
+    `src/store.test.ts`.
+  - Tests: `bun run test -- src/store.test.ts src/App.test.tsx`;
+    `bun run check`; Browser Harness selected-row navigation check.
 - [ ] Add zoom and fit controls.
 - [ ] Show source status: embedded, linked, Drive, unavailable, modified.
 

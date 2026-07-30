@@ -563,6 +563,55 @@ describe("App", () => {
     ).toBeChecked();
   });
 
+  it("navigates all selected rows even when filtering hides the active row", async () => {
+    const user = userEvent.setup();
+    setMemberSpreadsheet();
+    const sourceRowIds =
+      useAppStore
+        .getState()
+        .sources.spreadsheet?.data.rows.map((row) => row.id) ?? [];
+
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    const previous = screen.getByRole("button", { name: "Previous" });
+    const next = screen.getByRole("button", { name: "Next" });
+    expect(screen.getByText("0 / 0")).toBeInTheDocument();
+    expect(previous).toBeDisabled();
+    expect(next).toBeDisabled();
+
+    await user.click(screen.getByRole("checkbox", { name: "Select row 2" }));
+    await user.click(screen.getByRole("checkbox", { name: "Select row 1" }));
+
+    expect(useAppStore.getState().selection.activeRowId).toBe(sourceRowIds[1]);
+    expect(screen.getByText("2 / 2")).toBeInTheDocument();
+    expect(previous).toBeEnabled();
+    expect(next).toBeDisabled();
+
+    await user.click(previous);
+    expect(useAppStore.getState().selection.activeRowId).toBe(sourceRowIds[0]);
+    expect(screen.getByText("1 / 2")).toBeInTheDocument();
+    await user.click(next);
+
+    await user.type(
+      screen.getByRole("textbox", { name: "Search imported values" }),
+      "chloe",
+    );
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("cell", { name: "Alice Martin" }),
+      ).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByText("2 / 2")).toBeInTheDocument();
+    await user.click(previous);
+    expect(useAppStore.getState().selection.activeRowId).toBe(sourceRowIds[0]);
+    expect(screen.getByText("1 / 2")).toBeInTheDocument();
+  });
+
   it("selects matching and visible rows and clears selection", async () => {
     const user = userEvent.setup();
     setMemberSpreadsheet();

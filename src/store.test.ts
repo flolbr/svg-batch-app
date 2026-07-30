@@ -188,6 +188,7 @@ describe("useAppStore", () => {
     const stateAfterSelection = useAppStore.getState();
     expect(stateAfterSelection.selection).toEqual({
       ...stateBefore.selection,
+      activeRowId: "row-1",
       selectedRowIds: ["row-1"],
     });
     expect(stateAfterSelection.project).toBe(stateBefore.project);
@@ -195,7 +196,67 @@ describe("useAppStore", () => {
     expect(stateAfterSelection.ui).toBe(stateBefore.ui);
 
     stateAfterSelection.toggleRowSelection("row-1");
-    expect(useAppStore.getState().selection.selectedRowIds).toEqual([]);
+    expect(useAppStore.getState().selection).toMatchObject({
+      activeRowId: null,
+      selectedRowIds: [],
+    });
+  });
+
+  it("keeps the active preview row within the current row selection", () => {
+    const store = useAppStore.getState();
+
+    store.selectRows(["row-1", "row-2"]);
+    expect(useAppStore.getState().selection.activeRowId).toBe("row-1");
+
+    useAppStore.getState().setActiveRow("row-2");
+    expect(useAppStore.getState().selection.activeRowId).toBe("row-2");
+
+    useAppStore.getState().deselectRows(["row-2"]);
+    expect(useAppStore.getState().selection.activeRowId).toBe("row-1");
+
+    useAppStore.getState().setActiveRow("not-selected");
+    expect(useAppStore.getState().selection.activeRowId).toBe("row-1");
+
+    useAppStore.getState().clearRowSelection();
+    expect(useAppStore.getState().selection.activeRowId).toBeNull();
+  });
+
+  it("reconciles the active preview row when switching worksheets", () => {
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.aoa_to_sheet([["Name"], ["Ada"]]),
+      "Members",
+    );
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.aoa_to_sheet([["Plan"], ["Basic"]]),
+      "Plans",
+    );
+    useAppStore.getState().setSpreadsheetSource({
+      fileName: "members.xlsx",
+      fileSize: 123,
+      sheetNames: workbook.SheetNames,
+      workbook,
+    });
+
+    const memberRowId =
+      useAppStore.getState().sources.spreadsheet?.data.rows[0].id ?? "";
+    useAppStore.getState().selectRows([memberRowId]);
+    useAppStore.getState().setSelectedWorksheet("Plans");
+    expect(useAppStore.getState().selection).toMatchObject({
+      activeRowId: null,
+      selectedRowIds: [],
+    });
+
+    const planRowId =
+      useAppStore.getState().sources.spreadsheet?.data.rows[0].id ?? "";
+    useAppStore.getState().selectRows([planRowId]);
+    useAppStore.getState().setSelectedWorksheet("Members");
+    expect(useAppStore.getState().selection).toMatchObject({
+      activeRowId: memberRowId,
+      selectedRowIds: [memberRowId],
+    });
   });
 
   it("selects, deselects, and clears row ID sets", () => {

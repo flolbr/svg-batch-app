@@ -388,6 +388,7 @@ export function App() {
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
   const spreadsheet = useAppStore((state) => state.sources.spreadsheet);
   const svg = useAppStore((state) => state.sources.svg);
+  const activeRowId = useAppStore((state) => state.selection.activeRowId);
   const selectedRowIds = useAppStore((state) => state.selection.selectedRowIds);
   const selectedSvgObjectId = useAppStore(
     (state) => state.selection.svgObjectId,
@@ -395,6 +396,7 @@ export function App() {
   const clearRowSelection = useAppStore((state) => state.clearRowSelection);
   const deselectRows = useAppStore((state) => state.deselectRows);
   const selectRows = useAppStore((state) => state.selectRows);
+  const setActiveRow = useAppStore((state) => state.setActiveRow);
   const setManualRows = useAppStore((state) => state.setManualRows);
   const setColumnFilters = useAppStore((state) => state.setColumnFilters);
   const setColumnPreferences = useAppStore(
@@ -503,6 +505,16 @@ export function App() {
     () => new Set(selectedRowIds),
     [selectedRowIds],
   );
+  const previewRowIds = useMemo(
+    () =>
+      allRows
+        .filter((row) => selectedRowIdSet.has(row.id))
+        .map((row) => row.id),
+    [allRows, selectedRowIdSet],
+  );
+  const activePreviewRowIndex = activeRowId
+    ? previewRowIds.indexOf(activeRowId)
+    : -1;
   const dataColumns = useMemo<ColumnDef<SourceRow>[]>(
     () =>
       visibleColumns.map((column) => ({
@@ -1247,15 +1259,26 @@ export function App() {
                 <Button
                   variant="default"
                   leftSection={<IconChevronLeft />}
-                  disabled
+                  disabled={activePreviewRowIndex <= 0}
+                  onClick={() =>
+                    setActiveRow(previewRowIds[activePreviewRowIndex - 1])
+                  }
                 >
                   Previous
                 </Button>
-                <Text size="sm">0 / 0</Text>
+                <Text aria-live="polite" size="sm">
+                  {activePreviewRowIndex + 1} / {previewRowIds.length}
+                </Text>
                 <Button
                   variant="default"
                   rightSection={<IconChevronRight />}
-                  disabled
+                  disabled={
+                    activePreviewRowIndex === -1 ||
+                    activePreviewRowIndex === previewRowIds.length - 1
+                  }
+                  onClick={() =>
+                    setActiveRow(previewRowIds[activePreviewRowIndex + 1])
+                  }
                 >
                   Next
                 </Button>

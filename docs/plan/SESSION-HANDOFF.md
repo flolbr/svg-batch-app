@@ -4,8 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Selected SVG target highlighting is
-complete.
+No implementation task is active. Selected-row preview navigation is complete.
 
 ## What works
 
@@ -151,6 +150,11 @@ complete.
 - Selecting an SVG object adds a preview-only marker with a blue outline and
   drop shadow inside the sandboxed iframe. Changing selection moves the marker,
   while the accepted SVG snapshot remains unchanged.
+- Preview Previous/Next controls navigate selected rows in active-worksheet
+  order and expose the current position. Selected rows hidden by search or
+  filters remain navigable.
+- The active preview row stays within the current selection, falls back to the
+  first selected row when necessary, and reconciles across worksheet changes.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -158,36 +162,32 @@ complete.
 
 ## What remains
 
-Selected-row preview navigation, zoom/fit controls, and source status remain
-Phase 3 work.
+Zoom/fit controls and source status remain Phase 3 work.
 
 ## Next concrete step
 
 Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
-1. mark “Add previous/next selected-row preview controls” `[-]`;
-2. define navigation order from the selected row IDs in the active worksheet;
-3. add focused tests for empty, boundary, and filtered-selection behavior.
+1. mark “Add zoom and fit controls” `[-]`;
+2. apply zoom only to the isolated preview presentation;
+3. cover zoom bounds and fit reset without changing accepted SVG markup.
 
 ## Files changed
 
 - `src/App.tsx`
 - `src/App.test.tsx`
-- `src/SvgPreview.tsx`
-- `src/SvgPreview.test.tsx`
-- `src/SvgPreview.module.css`
+- `src/store.ts`
+- `src/store.test.ts`
 - `docs/plan/00-TODO.md`
 - `docs/plan/03-UI-AND-COMPONENTS.md`
-- `docs/plan/05-SVG-AND-MAPPINGS.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/SvgPreview.test.tsx src/App.test.tsx`
-- `bun run build:single`
+- `bun run test -- src/store.test.ts src/App.test.tsx`
 - `bun run check`
-- Browser Harness sandboxed preview check
+- Browser Harness selected-row navigation check
 
 ## Latest substantive commit
 
-`ab7410f feat: highlight selected SVG target`
+Pending current feature commit.

@@ -59,6 +59,7 @@ type AppStore = {
   setSpreadsheetSource: (spreadsheet: ImportedSpreadsheet) => void;
   setSvgSource: (svg: ImportedSvg) => void;
   setSvgObjectSelection: (id: string | null) => void;
+  setActiveRow: (rowId: RowId | null) => void;
   clearRowSelection: () => void;
   deselectRows: (rowIds: RowId[]) => void;
   selectRows: (rowIds: RowId[]) => void;
@@ -162,6 +163,10 @@ function spreadsheetState(
       : null,
     selection: {
       ...state.selection,
+      activeRowId: reconciledActiveRowId(
+        state.selection.activeRowId,
+        selectedRowIds,
+      ),
       selectedRowIds,
     },
     sources: {
@@ -171,12 +176,27 @@ function spreadsheetState(
   };
 }
 
+function reconciledActiveRowId(
+  activeRowId: RowId | null,
+  selectedRowIds: RowId[],
+): RowId | null {
+  if (activeRowId && selectedRowIds.includes(activeRowId)) {
+    return activeRowId;
+  }
+
+  return selectedRowIds[0] ?? null;
+}
+
 function selectedRowsState(state: AppStore, selectedRowIds: RowId[]) {
   const spreadsheet = state.sources.spreadsheet;
   if (!spreadsheet) {
     return {
       selection: {
         ...state.selection,
+        activeRowId: reconciledActiveRowId(
+          state.selection.activeRowId,
+          selectedRowIds,
+        ),
         selectedRowIds,
       },
     };
@@ -222,6 +242,12 @@ export const useAppStore = create<AppStore>()((set) => ({
         },
         selection: {
           ...state.selection,
+          activeRowId: reconciledActiveRowId(
+            state.selection.activeRowId,
+            spreadsheet.selectedRowIdsBySheet[
+              spreadsheet.selectedSheetName
+            ] ?? [],
+          ),
           selectedRowIds:
             spreadsheet.selectedRowIdsBySheet[
               spreadsheet.selectedSheetName
@@ -302,6 +328,16 @@ export const useAppStore = create<AppStore>()((set) => ({
       selection: {
         ...state.selection,
         svgObjectId,
+      },
+    })),
+  setActiveRow: (rowId) =>
+    set((state) => ({
+      selection: {
+        ...state.selection,
+        activeRowId: reconciledActiveRowId(
+          rowId,
+          state.selection.selectedRowIds,
+        ),
       },
     })),
   setColumnFilters: (filters) =>

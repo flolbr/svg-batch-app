@@ -103,8 +103,9 @@ Use Mantine controls directly.
 
 Controls:
 
-- previous/next selected or matching row;
-- current row indicator;
+- previous/next selected row in active-worksheet order, including selected
+  rows hidden by search or filters;
+- current selected-row position indicator;
 - zoom;
 - fit;
 - highlight selected SVG target.
