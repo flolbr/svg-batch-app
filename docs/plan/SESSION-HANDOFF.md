@@ -244,4 +244,4 @@ Continue `Phase 4 — Mapping engine` in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending `feat: show mapping validity`
+`f718ecf feat: show mapping validity`
