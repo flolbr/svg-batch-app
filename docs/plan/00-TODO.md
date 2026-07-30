@@ -154,7 +154,18 @@ Only one implementation item should normally be `[-]`.
     `src/store.ts`, `src/store.test.ts`, `src/App.tsx`, `src/App.test.tsx`.
   - Tests: `bun run test -- src/svg/importSvg.test.ts src/store.test.ts src/App.test.tsx`;
     `bun run check`; Browser Harness local SVG upload at 1920 px.
-- [ ] Validate unique IDs and supported targets.
+- [x] Validate unique IDs and supported targets.
+  - SVG IDs must be non-empty and globally unique, and local `href`
+    references must resolve before an imported template is accepted.
+  - Mapping targets are ID-bearing visible/container elements in document
+    order. Definitions, masks, clips, gradients, symbols, and their descendants
+    remain resources rather than mapping targets.
+  - Main files: `src/svg/validateSvgTargets.ts`,
+    `src/svg/validateSvgTargets.test.ts`, `src/svg/importSvg.ts`,
+    `src/svg/importSvg.test.ts`, `src/App.tsx`, `src/App.test.tsx`,
+    `src/store.test.ts`.
+  - Tests: `bun run test -- src/svg/validateSvgTargets.test.ts src/svg/importSvg.test.ts src/store.test.ts src/App.test.tsx`;
+    `bun run check`; Browser Harness local SVG target-count check.
 - [ ] Build the SVG object tree from the sanitized DOM.
 - [ ] Implement the custom accessible tree:
   - expand/collapse;

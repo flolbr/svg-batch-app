@@ -27,6 +27,10 @@ describe("importSvgFile", () => {
     );
     expect(result.acceptedSvg).toContain('href="#layer"');
     expect(result.acceptedSvg).toContain('fill="url(#fade)"');
+    expect(result.targets).toEqual([
+      { id: "layer", tagName: "g" },
+      { id: "name", tagName: "text" },
+    ]);
   });
 
   it.each([
@@ -60,6 +64,21 @@ describe("importSvgFile", () => {
       "external paint server",
       '<svg xmlns="http://www.w3.org/2000/svg"><rect fill="url(https://example.com/a.svg#paint)" /></svg>',
       "external url()",
+    ],
+    [
+      "duplicate IDs",
+      '<svg xmlns="http://www.w3.org/2000/svg"><g id="same"/><rect id="same"/></svg>',
+      "duplicate id",
+    ],
+    [
+      "missing references",
+      '<svg xmlns="http://www.w3.org/2000/svg"><use id="copy" href="#missing"/></svg>',
+      "missing local href reference",
+    ],
+    [
+      "no targets",
+      '<svg xmlns="http://www.w3.org/2000/svg"><defs id="resources"/></svg>',
+      "no addressable targets",
     ],
   ])("rejects %s", async (_caseName, source, message) => {
     await expect(importSvgFile(svgFile(source))).rejects.toThrow(message);

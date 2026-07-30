@@ -1169,7 +1169,8 @@ export function App() {
                 <IconCheck size={34} stroke={1.4} />
                 <Text fw={600}>SVG ready</Text>
                 <Text size="sm" c="dimmed" ta="center">
-                  The sanitized template is ready for object discovery.
+                  {svg.targets.length} mapping{" "}
+                  {svg.targets.length === 1 ? "target" : "targets"} found
                 </Text>
               </div>
             )}

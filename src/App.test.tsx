@@ -188,6 +188,7 @@ describe("App", () => {
     });
     expect(screen.getByText("Sanitized")).toBeInTheDocument();
     expect(screen.getByText("SVG ready")).toBeInTheDocument();
+    expect(screen.getByText("1 mapping target found")).toBeInTheDocument();
     expect(
       screen.getByRole("textbox", { name: "Search SVG objects" }),
     ).toBeEnabled();

@@ -61,6 +61,13 @@ type TargetFingerprint = {
 
 Do not silently remap by fuzzy label.
 
+All ID attributes must be non-empty and globally unique. Local `href`
+references must resolve to an existing ID. Accepted mapping targets are
+ID-bearing `g`, text, shape, image, and `use` elements in document order.
+Resource containers (`defs`, clips, masks, gradients, and symbols) and their
+descendants are not exposed as mapping targets. A template without at least one
+addressable target is rejected.
+
 ## Object labels
 
 Use the first available:

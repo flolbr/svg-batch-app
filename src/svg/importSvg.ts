@@ -1,4 +1,8 @@
 import DOMPurify from "dompurify";
+import {
+  validateSvgTargets,
+  type SvgTarget,
+} from "./validateSvgTargets";
 
 const supportedElements = new Set([
   "svg",
@@ -29,6 +33,7 @@ export type ImportedSvg = {
   fileName: string;
   fileSize: number;
   acceptedSvg: string;
+  targets: SvgTarget[];
 };
 
 function importError(message: string): Error {
@@ -117,6 +122,12 @@ export async function importSvgFile(file: File): Promise<ImportedSvg> {
   // Sanitize after parsing, then validate once more so accepted input stays in
   // the same narrow subset even if DOMPurify configuration changes.
   parseAndValidateSvg(acceptedSvg);
+  const targets = validateSvgTargets(acceptedSvg);
 
-  return { fileName: file.name, fileSize: file.size, acceptedSvg };
+  return {
+    fileName: file.name,
+    fileSize: file.size,
+    acceptedSvg,
+    targets,
+  };
 }

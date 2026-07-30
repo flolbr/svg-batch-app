@@ -4,8 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Local SVG import and sanitization are
-complete.
+No implementation task is active. SVG ID and target validation are complete.
 
 ## What works
 
@@ -122,6 +121,13 @@ complete.
 - DOMPurify sanitizes the supported subset, which is validated again before
   the accepted SVG string enters transient source state. The UI exposes the
   source filename and sanitized status.
+- Imported SVG IDs must be non-empty and globally unique, and local fragment
+  links must resolve to an existing ID.
+- ID-bearing groups, text, shapes, images, and `use` elements become mapping
+  targets in document order. Resource containers and their descendants remain
+  excluded, and templates without targets are rejected.
+- Accepted source state includes the validated target list; the SVG panel
+  reports its mapping-target count.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -129,16 +135,15 @@ complete.
 
 ## What remains
 
-SVG target validation, object discovery, and preview remain Phase 3 work.
+SVG object-tree construction and preview remain Phase 3 work.
 
 ## Next concrete step
 
 Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
-1. mark “Validate unique IDs and supported targets” `[-]`;
-2. define target eligibility and duplicate-ID validation over accepted SVG;
-3. reject incompatible templates with actionable errors before building the
-   object tree.
+1. mark “Build the SVG object tree from the sanitized DOM” `[-]`;
+2. normalize target labels and ancestor relationships;
+3. store and render the read-only tree model without adding interaction yet.
 
 ## Files changed
 
@@ -148,17 +153,19 @@ Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 - `src/store.test.ts`
 - `src/svg/importSvg.ts`
 - `src/svg/importSvg.test.ts`
+- `src/svg/validateSvgTargets.ts`
+- `src/svg/validateSvgTargets.test.ts`
 - `docs/plan/00-TODO.md`
 - `docs/plan/05-SVG-AND-MAPPINGS.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/svg/importSvg.test.ts src/store.test.ts src/App.test.tsx`
+- `bun run test -- src/svg/validateSvgTargets.test.ts src/svg/importSvg.test.ts src/store.test.ts src/App.test.tsx`
 - `bun run build:single`
 - `bun run check`
-- Browser Harness local SVG upload at 1920 px
+- Browser Harness local SVG target-count check
 
 ## Latest substantive commit
 
-`2d1b109 feat: import and sanitize local SVGs`
+Pending commit for SVG ID and target validation.
