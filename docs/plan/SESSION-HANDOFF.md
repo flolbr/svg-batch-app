@@ -75,4 +75,4 @@ Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending commit: local spreadsheet import.
+`5fcab3b feat: import local spreadsheets`
