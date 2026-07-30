@@ -168,4 +168,4 @@ Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending commit for SVG ID and target validation.
+`7c81e5e feat: validate SVG mapping targets`
