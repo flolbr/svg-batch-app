@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Phase 4 mapping schemas are complete.
+No implementation task is active. Direct text content mapping is complete.
 
 ## What works
 
@@ -164,6 +164,10 @@ No implementation task is active. Phase 4 mapping schemas are complete.
 - Strict Zod schemas define text, visibility, exclusive-group, QR, and image
   mappings through one discriminated union. Shared IDs are trimmed/non-empty,
   unknown keys are rejected, and immediate numeric bounds are validated.
+- Direct text mapping updates `text` or `tspan` content on a caller-owned SVG
+  clone using displayed row values. Missing data/targets, incompatible tags,
+  and required blanks return structured issues without throwing or mutating
+  the accepted template.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -171,30 +175,31 @@ No implementation task is active. Phase 4 mapping schemas are complete.
 
 ## What remains
 
-Direct text content mapping is the next Phase 4 item.
+Yes/no visibility mapping is the next Phase 4 item.
 
 ## Next concrete step
 
 Continue `Phase 4 — Mapping engine` in `00-TODO.md`:
 
-1. mark “Implement direct text content mapping” `[-]`;
-2. clone accepted SVG input and update only the addressed text target;
-3. return row-level issues rather than throwing for mapping data errors.
+1. mark “Implement yes/no visibility mapping” `[-]`;
+2. normalize configured values and row text by case and whitespace;
+3. cover true, false, empty, and unknown values without throwing.
 
 ## Files changed
 
-- `src/mappings/schema.ts`
-- `src/mappings/schema.test.ts`
+- `src/mappings/textMapping.ts`
+- `src/mappings/textMapping.test.ts`
+- `src/mappings/validation.ts`
 - `docs/plan/00-TODO.md`
 - `docs/plan/05-SVG-AND-MAPPINGS.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/mappings/schema.test.ts`
+- `bun run test -- src/mappings/textMapping.test.ts`
 - `bunx tsc -b`
 - `bun run check`
 
 ## Latest substantive commit
 
-`e948410 feat: define mapping schemas`
+Pending current feature commit.

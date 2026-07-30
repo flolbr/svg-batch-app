@@ -247,7 +247,15 @@ Only one implementation item should normally be `[-]`.
   - Main files: `src/mappings/schema.ts`, `src/mappings/schema.test.ts`.
   - Tests: `bun run test -- src/mappings/schema.test.ts`; `bunx tsc -b`;
     `bun run check`.
-- [ ] Implement direct text content mapping.
+- [x] Implement direct text content mapping.
+  - Direct mapping writes the row's displayed value to a caller-owned cloned
+    `text` or `tspan` target. It reports structured issues for missing columns,
+    missing/incompatible targets, and blank required values without throwing
+    or changing the accepted template.
+  - Main files: `src/mappings/textMapping.ts`,
+    `src/mappings/textMapping.test.ts`, `src/mappings/validation.ts`.
+  - Tests: `bun run test -- src/mappings/textMapping.test.ts`; `bunx tsc -b`;
+    `bun run check`.
 - [ ] Implement yes/no visibility mapping.
 - [ ] Implement exclusive child selection by `data-option`, then ID fallback.
 - [ ] Implement QR generation into a placeholder bounds.

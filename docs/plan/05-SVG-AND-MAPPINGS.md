@@ -150,6 +150,11 @@ Target must be `text` or a supported text container.
 
 Initially support one-line shrink-to-fit. Add wrapping only if required after MVP use.
 
+Direct text mapping operates on a caller-owned SVG clone and replaces the
+target's text content with the row's displayed cell value. Missing columns,
+targets, incompatible target tags, and whitespace-only required values produce
+structured validation issues without mutating the target.
+
 ### Visibility
 
 ```ts
