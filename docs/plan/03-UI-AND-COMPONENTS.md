@@ -22,12 +22,14 @@ Recommended initial widths:
 - SVG tree/mapping: 27%;
 - preview: 35%.
 
-Do not implement draggable panel resizing in the first pass. Fixed CSS grid columns are sufficient.
+On desktop, separators between panels support pointer dragging and left/right
+arrow keys. Keep practical minimum widths for all three panels.
 
 Below 1100 px:
 
 - stack panels;
 - preview first or accessible through tabs;
+- hide the resize separators;
 - keep the bottom action bar reachable.
 
 ## Left panel — Data

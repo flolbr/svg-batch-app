@@ -22,6 +22,7 @@ import {
   IconFileTypeSvg,
   IconFilter,
   IconFolderOpen,
+  IconGripVertical,
   IconHelpCircle,
   IconMinus,
   IconPlus,
@@ -29,6 +30,14 @@ import {
   IconSettings,
   IconUpload,
 } from "@tabler/icons-react";
+import {
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent,
+  type ReactNode,
+  useRef,
+  useState,
+} from "react";
 
 const rows = [
   ["Alice Martin", "Premium", "Paris", "DOC-001"],
@@ -36,12 +45,21 @@ const rows = [
   ["Alicia Morel", "VIP", "Marseille", "DOC-003"],
 ];
 
+const initialPanelWeights = [38, 27, 35];
+const minimumPanelWidths = [360, 300, 360];
+
+type ResizeSession = {
+  dividerIndex: number;
+  startX: number;
+  widths: number[];
+};
+
 function PanelTitle({
   icon,
   children,
 }: {
-  icon: React.ReactNode;
-  children: React.ReactNode;
+  icon: ReactNode;
+  children: ReactNode;
 }) {
   return (
     <Group gap="xs">
@@ -51,7 +69,138 @@ function PanelTitle({
   );
 }
 
+function PanelResizeHandle({
+  dividerIndex,
+  label,
+  onKeyDown,
+  onPointerDown,
+  onPointerMove,
+  onPointerEnd,
+  value,
+}: {
+  dividerIndex: number;
+  label: string;
+  onKeyDown: (
+    dividerIndex: number,
+    event: KeyboardEvent<HTMLDivElement>,
+  ) => void;
+  onPointerDown: (
+    dividerIndex: number,
+    event: PointerEvent<HTMLDivElement>,
+  ) => void;
+  onPointerMove: (event: PointerEvent<HTMLDivElement>) => void;
+  onPointerEnd: (event: PointerEvent<HTMLDivElement>) => void;
+  value: number;
+}) {
+  return (
+    <div
+      aria-label={label}
+      aria-orientation="vertical"
+      aria-valuemax={100}
+      aria-valuemin={0}
+      aria-valuenow={Math.round(value)}
+      className="panel-resizer"
+      onKeyDown={(event) => onKeyDown(dividerIndex, event)}
+      onPointerCancel={onPointerEnd}
+      onPointerDown={(event) => onPointerDown(dividerIndex, event)}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerEnd}
+      role="separator"
+      tabIndex={0}
+    >
+      <span className="panel-resizer-thumb">
+        <IconGripVertical aria-hidden="true" size={14} stroke={1.6} />
+      </span>
+    </div>
+  );
+}
+
 export function App() {
+  const workspaceRef = useRef<HTMLElement>(null);
+  const resizeSession = useRef<ResizeSession | null>(null);
+  const [panelWeights, setPanelWeights] = useState(initialPanelWeights);
+
+  function readPanelWidths() {
+    const panels = workspaceRef.current?.querySelectorAll(".workspace-panel");
+    return panels
+      ? Array.from(panels, (panel) => panel.getBoundingClientRect().width)
+      : [];
+  }
+
+  function resizePanelPair(
+    dividerIndex: number,
+    widths: number[],
+    delta: number,
+  ) {
+    const pairWidth = widths[dividerIndex] + widths[dividerIndex + 1];
+    const minimumLeft = minimumPanelWidths[dividerIndex];
+    const minimumRight = minimumPanelWidths[dividerIndex + 1];
+    const leftWidth = Math.min(
+      Math.max(widths[dividerIndex] + delta, minimumLeft),
+      pairWidth - minimumRight,
+    );
+    const nextWidths = [...widths];
+    nextWidths[dividerIndex] = leftWidth;
+    nextWidths[dividerIndex + 1] = pairWidth - leftWidth;
+    const totalWidth = nextWidths.reduce((total, width) => total + width, 0);
+
+    setPanelWeights(nextWidths.map((width) => width / totalWidth));
+  }
+
+  function startPanelResize(
+    dividerIndex: number,
+    event: PointerEvent<HTMLDivElement>,
+  ) {
+    resizeSession.current = {
+      dividerIndex,
+      startX: event.clientX,
+      widths: readPanelWidths(),
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function continuePanelResize(event: PointerEvent<HTMLDivElement>) {
+    const session = resizeSession.current;
+    if (!session) {
+      return;
+    }
+
+    resizePanelPair(
+      session.dividerIndex,
+      session.widths,
+      event.clientX - session.startX,
+    );
+  }
+
+  function stopPanelResize(event: PointerEvent<HTMLDivElement>) {
+    resizeSession.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }
+
+  function resizePanelWithKeyboard(
+    dividerIndex: number,
+    event: KeyboardEvent<HTMLDivElement>,
+  ) {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+      return;
+    }
+
+    event.preventDefault();
+    const measuredWidths = readPanelWidths();
+    const widths =
+      measuredWidths.reduce((total, width) => total + width, 0) > 0
+        ? measuredWidths
+        : panelWeights.map((weight) => weight * 12);
+    resizePanelPair(
+      dividerIndex,
+      widths,
+      event.key === "ArrowLeft" ? -24 : 24,
+    );
+  }
+
+  const panelTotal = panelWeights.reduce((total, weight) => total + weight, 0);
   return (
     <div className="app-frame">
       <header className="app-header">
@@ -82,7 +231,18 @@ export function App() {
         </Group>
       </header>
 
-      <main className="workspace" aria-label="SVG batch workspace">
+      <main
+        className="workspace"
+        aria-label="SVG batch workspace"
+        ref={workspaceRef}
+        style={
+          {
+            "--data-panel-width": `${panelWeights[0]}fr`,
+            "--objects-panel-width": `${panelWeights[1]}fr`,
+            "--preview-panel-width": `${panelWeights[2]}fr`,
+          } as CSSProperties
+        }
+      >
         <Paper
           component="section"
           aria-labelledby="data-panel-title"
@@ -179,6 +339,16 @@ export function App() {
           </Stack>
         </Paper>
 
+        <PanelResizeHandle
+          dividerIndex={0}
+          label="Resize Data and SVG Objects panels"
+          onKeyDown={resizePanelWithKeyboard}
+          onPointerDown={startPanelResize}
+          onPointerEnd={stopPanelResize}
+          onPointerMove={continuePanelResize}
+          value={(panelWeights[0] / panelTotal) * 100}
+        />
+
         <Paper
           component="section"
           aria-labelledby="objects-panel-title"
@@ -211,6 +381,16 @@ export function App() {
             </div>
           </Stack>
         </Paper>
+
+        <PanelResizeHandle
+          dividerIndex={1}
+          label="Resize SVG Objects and Preview panels"
+          onKeyDown={resizePanelWithKeyboard}
+          onPointerDown={startPanelResize}
+          onPointerEnd={stopPanelResize}
+          onPointerMove={continuePanelResize}
+          value={(panelWeights[1] / panelTotal) * 100}
+        />
 
         <Paper
           component="section"

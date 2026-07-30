@@ -77,13 +77,48 @@ select {
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(360px, 38fr) minmax(300px, 27fr) minmax(
-      360px,
-      35fr
-    );
-  gap: 14px;
+  grid-template-columns:
+    minmax(360px, var(--data-panel-width, 38fr)) 14px
+    minmax(300px, var(--objects-panel-width, 27fr)) 14px
+    minmax(360px, var(--preview-panel-width, 35fr));
   min-height: 0;
   padding: 14px;
+}
+
+.panel-resizer {
+  position: relative;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.panel-resizer-thumb {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  display: grid;
+  width: 14px;
+  height: 44px;
+  color: var(--mantine-color-gray-5);
+  background: var(--app-color-surface);
+  border: 1px solid var(--mantine-color-gray-2);
+  border-radius: var(--mantine-radius-md);
+  box-shadow: var(--app-shadow-panel);
+  transform: translateY(-50%);
+}
+
+.panel-resizer:hover .panel-resizer-thumb,
+.panel-resizer:focus-visible .panel-resizer-thumb {
+  color: var(--app-color-primary);
+  border-color: var(--app-color-primary);
+}
+
+.panel-resizer:focus-visible {
+  outline: none;
+}
+
+.panel-resizer:focus-visible .panel-resizer-thumb {
+  outline: 2px solid var(--app-color-primary);
+  outline-offset: 2px;
 }
 
 .workspace-panel {
@@ -230,6 +265,10 @@ select {
   .workspace {
     grid-template-columns: 1fr;
     overflow: visible;
+  }
+
+  .panel-resizer {
+    display: none;
   }
 
   .preview-panel {

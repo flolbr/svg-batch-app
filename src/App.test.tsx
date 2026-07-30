@@ -1,5 +1,5 @@
 import { MantineProvider } from "@mantine/core";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { App } from "./App";
 
@@ -45,6 +45,30 @@ describe("App", () => {
     );
     expect(projectActions).toContainElement(
       screen.getByRole("button", { name: "Export selected" }),
+    );
+
+    const workspace = screen.getByRole("main", {
+      name: "SVG batch workspace",
+    });
+    const dataAndObjectsResizer = screen.getByRole("separator", {
+      name: "Resize Data and SVG Objects panels",
+    });
+    const objectsAndPreviewResizer = screen.getByRole("separator", {
+      name: "Resize SVG Objects and Preview panels",
+    });
+
+    expect(
+      screen.getAllByRole("separator", { hidden: true }),
+    ).toHaveLength(2);
+    expect(dataAndObjectsResizer).toHaveAttribute("tabindex", "0");
+    expect(objectsAndPreviewResizer).toHaveAttribute("tabindex", "0");
+
+    const initialDataPanelWidth = workspace.style.getPropertyValue(
+      "--data-panel-width",
+    );
+    fireEvent.keyDown(dataAndObjectsResizer, { key: "ArrowRight" });
+    expect(workspace.style.getPropertyValue("--data-panel-width")).not.toBe(
+      initialDataPanelWidth,
     );
   });
 });
