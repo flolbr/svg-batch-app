@@ -96,7 +96,16 @@ Only one implementation item should normally be `[-]`.
     `src/App.tsx`, `src/App.test.tsx`.
   - Tests: `bun run test -- src/data/rowSelection.test.ts src/store.test.ts src/App.test.tsx`;
     `bun run check`.
-- [ ] Add editable manual rows through the final “+ Add row” line.
+- [x] Add editable manual rows through the final “+ Add row” line.
+  - Manual rows are worksheet-scoped and support Tab navigation, Enter to
+    finish a cell edit, tab/newline paste, duplication, and deletion.
+  - Manual rows retain stable IDs, remain separate from immutable imported
+    rows, and participate in search, filters, selection, and footer counts.
+  - Main files: `src/data/manualRows.ts`, `src/data/manualRows.test.ts`,
+    `src/store.ts`, `src/store.test.ts`, `src/App.tsx`, `src/App.test.tsx`,
+    `src/styles.css`.
+  - Tests: `bun run test -- src/data/manualRows.test.ts src/data/searchRows.test.ts src/data/filterRows.test.ts src/store.test.ts src/App.test.tsx`;
+    `bun run check`.
 - [ ] Add edit overrides for imported rows without mutating source rows.
 - [ ] Add visible/exported-column selection.
 - [ ] Persist selected rows, filters, edits, and manual rows.

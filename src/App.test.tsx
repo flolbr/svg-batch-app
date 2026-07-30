@@ -568,6 +568,124 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
+  it("adds and edits manual rows with keyboard controls", async () => {
+    const user = userEvent.setup();
+    setMemberSpreadsheet();
+    const sourceRows = useAppStore.getState().sources.spreadsheet?.data.rows;
+
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Add row" }));
+    const nameInput = screen.getByRole("textbox", {
+      name: "Name for manual row 1",
+    });
+    const cityInput = screen.getByRole("textbox", {
+      name: "City for manual row 1",
+    });
+    expect(nameInput).toHaveFocus();
+
+    await user.type(nameInput, "Zoë Laurent");
+    await user.tab();
+    expect(cityInput).toHaveFocus();
+    await user.type(cityInput, "Berlin");
+    await user.keyboard("{Enter}");
+    expect(cityInput).not.toHaveFocus();
+
+    const manualRows =
+      useAppStore.getState().sources.spreadsheet?.manualRowsBySheet.Members;
+    expect(manualRows).toHaveLength(1);
+    expect(manualRows?.[0].values).toEqual({
+      "col-0": "Zoë Laurent",
+      "col-1": "Berlin",
+    });
+    expect(useAppStore.getState().sources.spreadsheet?.data.rows).toBe(
+      sourceRows,
+    );
+    expect(screen.getByText("3 total rows")).toBeInTheDocument();
+
+    await user.type(
+      screen.getByRole("textbox", { name: "Search imported values" }),
+      "zoe",
+    );
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("cell", { name: "Alice Martin" }),
+      ).not.toBeInTheDocument();
+    });
+    expect(
+      screen.getByRole("textbox", { name: "Name for manual row 1" }),
+    ).toHaveValue("Zoë Laurent");
+    expect(screen.getByText("1 matching · 3 total rows")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Add row" }));
+    expect(
+      screen.getByRole("textbox", { name: "Search imported values" }),
+    ).toHaveValue("");
+    expect(
+      await screen.findByRole("textbox", { name: "Name for manual row 2" }),
+    ).toHaveFocus();
+  });
+
+  it("pastes, duplicates, and deletes manual rows", async () => {
+    const user = userEvent.setup();
+    setMemberSpreadsheet();
+
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Add row" }));
+    const nameInput = screen.getByRole("textbox", {
+      name: "Name for manual row 1",
+    });
+    await user.click(nameInput);
+    await user.paste("Mina\tRome\nNoah\tOslo");
+
+    expect(
+      await screen.findByRole("textbox", { name: "Name for manual row 2" }),
+    ).toHaveValue("Noah");
+    expect(
+      screen.getByRole("textbox", { name: "City for manual row 2" }),
+    ).toHaveValue("Oslo");
+
+    await user.click(
+      screen.getByRole("button", { name: "Duplicate manual row 1" }),
+    );
+    expect(
+      screen.getByRole("textbox", { name: "Name for manual row 2" }),
+    ).toHaveValue("Mina");
+    expect(
+      screen.getByRole("textbox", { name: "Name for manual row 3" }),
+    ).toHaveValue("Noah");
+
+    const duplicatedRowId =
+      useAppStore.getState().sources.spreadsheet?.manualRowsBySheet.Members[1]
+        .id;
+    await user.click(screen.getByRole("checkbox", { name: "Select row 4" }));
+    expect(useAppStore.getState().selection.selectedRowIds).toContain(
+      duplicatedRowId,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Delete manual row 2" }),
+    );
+    expect(
+      screen.queryByRole("textbox", { name: "Name for manual row 3" }),
+    ).not.toBeInTheDocument();
+    expect(
+      useAppStore.getState().sources.spreadsheet?.manualRowsBySheet.Members,
+    ).toHaveLength(2);
+    expect(useAppStore.getState().selection.selectedRowIds).not.toContain(
+      duplicatedRowId,
+    );
+  });
+
   it("renders every row without a scroll region at the virtualization threshold", () => {
     setSpreadsheetRows(ROW_VIRTUALIZATION_THRESHOLD);
 

@@ -184,6 +184,26 @@ select {
   padding-inline: 11px;
 }
 
+.data-table .data-table-manual-cell {
+  padding-block: 3px;
+}
+
+.data-table-manual-cell input {
+  min-width: 100px;
+  padding-inline: 6px;
+  border-radius: 4px;
+}
+
+.data-table-manual-cell input:focus {
+  outline: 2px solid var(--app-color-primary);
+  outline-offset: -2px;
+}
+
+.data-table .data-table-row-kind {
+  width: 104px;
+  min-width: 104px;
+}
+
 .data-table-scroll-virtual th {
   position: sticky;
   z-index: 1;

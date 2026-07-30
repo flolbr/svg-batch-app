@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Bulk row-selection controls are complete.
+No implementation task is active. Editable manual rows are complete.
 
 ## What works
 
@@ -81,7 +81,14 @@ No implementation task is active. Bulk row-selection controls are complete.
 - The grid header checkbox selects or clears the visible range and communicates
   none, some, and all-selected states. The ordinary grid treats all displayed
   results as visible; the virtualized grid uses its current viewport range.
-- Manual-row controls remain disabled until their dedicated Phase 2 item.
+- The final Add row control creates a stable-ID blank manual row for the
+  selected worksheet, clears active search/filters, and focuses its first cell.
+- Manual cells save as typed, support Tab navigation and Enter-to-finish, and
+  accept tab/newline-delimited paste that can append rows.
+- Manual rows can be duplicated or deleted, carry a visible Manual marker, and
+  remain separate from immutable imported rows. They participate in search,
+  filters, virtualization, selection, and counts.
+- Manual rows remain transient until their dedicated persistence item.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -89,35 +96,41 @@ No implementation task is active. Bulk row-selection controls are complete.
 
 ## What remains
 
-Manual rows and the rest of the spreadsheet workflow remain Phase 2 work.
+Imported-row edit overrides and the rest of the spreadsheet workflow remain
+Phase 2 work.
 
 ## Next concrete step
 
 Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
-1. mark “Add editable manual rows through the final ‘+ Add row’ line” `[-]`;
-2. define and test the manual-row data operations;
-3. enable the final add-row line and implement explicit cell editing.
+1. mark “Add edit overrides for imported rows without mutating source rows”
+   `[-]`;
+2. define and test effective-row override operations;
+3. add an explicit imported-row edit action and verify source rows remain
+   unchanged.
 
 ## Files changed
 
 - `src/App.tsx`
 - `src/App.test.tsx`
+- `src/styles.css`
 - `src/store.ts`
 - `src/store.test.ts`
-- `src/data/rowSelection.ts`
-- `src/data/rowSelection.test.ts`
+- `src/data/manualRows.ts`
+- `src/data/manualRows.test.ts`
 - `docs/plan/00-TODO.md`
 - `docs/plan/04-DATA-AND-SEARCH.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/data/rowSelection.test.ts src/store.test.ts src/App.test.tsx`
+- `bun run test -- src/data/manualRows.test.ts src/store.test.ts`
+- `bun run test -- src/App.test.tsx`
+- `bun run test -- src/data/manualRows.test.ts src/data/searchRows.test.ts src/data/filterRows.test.ts src/store.test.ts src/App.test.tsx`
 - `bun run lint`
 - `bun run build:single`
 - `bun run check`
 
 ## Latest substantive commit
 
-`4bfb473 feat: add bulk row selection`
+Pending commit for editable manual rows.

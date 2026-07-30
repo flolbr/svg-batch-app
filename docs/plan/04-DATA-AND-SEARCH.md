@@ -216,6 +216,22 @@ Support:
 
 Do not implement a full spreadsheet editor.
 
+Manual rows are stored separately from immutable imported rows and grouped by
+worksheet. Each receives a generated stable row ID and a value entry for every
+normalized column. The effective table appends them after source rows and
+converts their display strings into the existing `SourceRow` boundary so
+search, structured filters, virtualization, selection, and counts use one
+pipeline. Numeric strings in inferred-number columns provide typed numeric
+values while preserving the entered display string.
+
+Manual cells save as they are typed. Tab follows the native cell-input order
+and Enter finishes the current cell by moving focus out of it. Pasting
+tab/newline-delimited text fills cells from the paste origin and appends manual
+rows when necessary. Manual-row actions duplicate beside the original or
+delete the target; deletion also removes that row ID from selection.
+
+Manual rows remain transient until the dedicated Phase 2 persistence item.
+
 ## Selected columns
 
 Persist separately:

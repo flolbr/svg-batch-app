@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { ImportedSpreadsheet } from "./data/importSpreadsheet";
+import type { ManualRow } from "./data/manualRows";
 import {
   normalizeWorksheet,
   type NormalizedWorksheet,
@@ -15,6 +16,7 @@ import type { Project } from "./project/loadProject";
 export type PanelWeights = [number, number, number];
 export type SpreadsheetSource = ImportedSpreadsheet & {
   data: NormalizedWorksheet;
+  manualRowsBySheet: Record<string, ManualRow[]>;
   selectedSheetName: string;
 };
 
@@ -35,6 +37,7 @@ type AppStore = {
   setProject: (project: Project) => void;
   setPanelWeights: (panelWeights: PanelWeights) => void;
   setSelectedWorksheet: (sheetName: string) => void;
+  setManualRows: (rows: ManualRow[]) => void;
   setSpreadsheetSource: (spreadsheet: ImportedSpreadsheet) => void;
   clearRowSelection: () => void;
   deselectRows: (rowIds: RowId[]) => void;
@@ -91,10 +94,29 @@ export const useAppStore = create<AppStore>()((set) => ({
           data: normalizeWorksheet(
             spreadsheet.workbook.Sheets[spreadsheet.sheetNames[0]] ?? {},
           ),
+          manualRowsBySheet: {},
           selectedSheetName: spreadsheet.sheetNames[0],
         },
       },
     })),
+  setManualRows: (rows) =>
+    set((state) => {
+      const spreadsheet = state.sources.spreadsheet;
+      if (!spreadsheet) return state;
+
+      return {
+        sources: {
+          ...state.sources,
+          spreadsheet: {
+            ...spreadsheet,
+            manualRowsBySheet: {
+              ...spreadsheet.manualRowsBySheet,
+              [spreadsheet.selectedSheetName]: rows,
+            },
+          },
+        },
+      };
+    }),
   clearRowSelection: () =>
     set((state) => ({
       selection: {

@@ -66,6 +66,7 @@ describe("useAppStore", () => {
     expect(stateAfter.sources.spreadsheet).toEqual({
       ...spreadsheet,
       data: { columns: [], rows: [] },
+      manualRowsBySheet: {},
       selectedSheetName: "Customers",
     });
     expect(stateAfter.sources.svg).toBe(stateBefore.sources.svg);
@@ -153,5 +154,39 @@ describe("useAppStore", () => {
 
     useAppStore.getState().clearRowSelection();
     expect(useAppStore.getState().selection.selectedRowIds).toEqual([]);
+  });
+
+  it("keeps manual rows scoped to their worksheet", () => {
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.aoa_to_sheet([["Name"]]),
+      "Members",
+    );
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.aoa_to_sheet([["Plan"]]),
+      "Plans",
+    );
+    useAppStore.getState().setSpreadsheetSource({
+      fileName: "members.xlsx",
+      fileSize: 123,
+      sheetNames: workbook.SheetNames,
+      workbook,
+    });
+
+    useAppStore.getState().setManualRows([
+      { id: "manual-member", values: { "col-0": "Ada" } },
+    ]);
+    useAppStore.getState().setSelectedWorksheet("Plans");
+    useAppStore.getState().setManualRows([
+      { id: "manual-plan", values: { "col-0": "Premium" } },
+    ]);
+
+    const spreadsheet = useAppStore.getState().sources.spreadsheet;
+    expect(spreadsheet?.manualRowsBySheet).toEqual({
+      Members: [{ id: "manual-member", values: { "col-0": "Ada" } }],
+      Plans: [{ id: "manual-plan", values: { "col-0": "Premium" } }],
+    });
   });
 });

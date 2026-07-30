@@ -27,6 +27,7 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconColumns3,
+  IconCopy,
   IconDatabase,
   IconDownload,
   IconEye,
@@ -38,10 +39,12 @@ import {
   IconPlus,
   IconSearch,
   IconSettings,
+  IconTrash,
   IconUpload,
 } from "@tabler/icons-react";
 import {
   type ChangeEvent,
+  type ClipboardEvent,
   type CSSProperties,
   type KeyboardEvent,
   type PointerEvent,
@@ -54,6 +57,15 @@ import {
 import { ColumnFilters } from "./ColumnFilters";
 import { filterRows, type ColumnFilter } from "./data/filterRows";
 import { importSpreadsheet } from "./data/importSpreadsheet";
+import {
+  createManualRow,
+  deleteManualRow,
+  duplicateManualRow,
+  manualRowsToSourceRows,
+  pasteManualCells,
+  updateManualCell,
+  type ManualRow,
+} from "./data/manualRows";
 import type { ColumnId, DataColumn, SourceRow } from "./data/normalizeWorkbook";
 import { getRowSelectionState } from "./data/rowSelection";
 import { createRowSearchIndex, searchRows } from "./data/searchRows";
@@ -62,6 +74,7 @@ import { type PanelWeights, useAppStore } from "./store";
 const minimumPanelWidths = [360, 300, 360];
 const emptySourceColumns: DataColumn[] = [];
 const emptySourceRows: SourceRow[] = [];
+const emptyManualRows: ManualRow[] = [];
 export const ROW_VIRTUALIZATION_THRESHOLD = 200;
 
 type ResizeSession = {
@@ -132,12 +145,34 @@ function PanelResizeHandle({
 }
 
 function DataRow({
+  columns,
+  editingManualRowId,
   isSelected,
+  manualRow,
+  manualRowIndex,
+  onDeleteManualRow,
+  onDuplicateManualRow,
+  onManualCellChange,
+  onManualCellPaste,
+  onManualEditStarted,
   onToggleSelection,
   row,
   virtualIndex,
 }: {
+  columns: DataColumn[];
+  editingManualRowId: string | null;
   isSelected: boolean;
+  manualRow?: ManualRow;
+  manualRowIndex?: number;
+  onDeleteManualRow: (rowId: string) => void;
+  onDuplicateManualRow: (rowId: string) => void;
+  onManualCellChange: (
+    rowId: string,
+    columnId: ColumnId,
+    value: string,
+  ) => void;
+  onManualCellPaste: (rowId: string, columnId: ColumnId, value: string) => void;
+  onManualEditStarted: () => void;
   onToggleSelection: (rowId: string) => void;
   row: Row<SourceRow>;
   virtualIndex?: number;
@@ -156,11 +191,89 @@ function DataRow({
           onChange={() => onToggleSelection(row.original.id)}
         />
       </Table.Td>
-      {row.getVisibleCells().map((cell) => (
-        <Table.Td key={cell.id}>
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </Table.Td>
-      ))}
+      {row.getVisibleCells().map((cell, columnIndex) => {
+        const column = columns[columnIndex];
+        return (
+          <Table.Td
+            className={manualRow ? "data-table-manual-cell" : undefined}
+            key={cell.id}
+          >
+            {manualRow && column ? (
+              <TextInput
+                aria-label={`${column.displayName} for manual row ${(manualRowIndex ?? 0) + 1}`}
+                autoFocus={
+                  editingManualRowId === manualRow.id && columnIndex === 0
+                }
+                onChange={(event) =>
+                  onManualCellChange(
+                    manualRow.id,
+                    column.id,
+                    event.currentTarget.value,
+                  )
+                }
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") event.currentTarget.blur();
+                }}
+                onFocus={() => {
+                  if (
+                    editingManualRowId === manualRow.id &&
+                    columnIndex === 0
+                  ) {
+                    onManualEditStarted();
+                  }
+                }}
+                onPaste={(event: ClipboardEvent<HTMLInputElement>) => {
+                  const pastedText = event.clipboardData.getData("text");
+                  if (pastedText.includes("\t") || pastedText.includes("\n")) {
+                    event.preventDefault();
+                    onManualCellPaste(manualRow.id, column.id, pastedText);
+                  }
+                }}
+                size="xs"
+                value={
+                  manualRow.values[column.id] === null ||
+                  manualRow.values[column.id] === undefined
+                    ? ""
+                    : String(manualRow.values[column.id])
+                }
+                variant="unstyled"
+              />
+            ) : (
+              flexRender(cell.column.columnDef.cell, cell.getContext())
+            )}
+          </Table.Td>
+        );
+      })}
+      <Table.Td className="data-table-row-kind">
+        {manualRow ? (
+          <Group gap={4} wrap="nowrap">
+            <Badge size="xs" variant="light">
+              Manual
+            </Badge>
+            <ActionIcon
+              aria-label={`Duplicate manual row ${(manualRowIndex ?? 0) + 1}`}
+              onClick={() => onDuplicateManualRow(manualRow.id)}
+              size="sm"
+              variant="subtle"
+            >
+              <IconCopy size={14} />
+            </ActionIcon>
+            <ActionIcon
+              aria-label={`Delete manual row ${(manualRowIndex ?? 0) + 1}`}
+              color="red"
+              onClick={() => onDeleteManualRow(manualRow.id)}
+              size="sm"
+              variant="subtle"
+            >
+              <IconTrash size={14} />
+            </ActionIcon>
+          </Group>
+        ) : (
+          <Text c="dimmed" size="xs">
+            Source
+          </Text>
+        )}
+      </Table.Td>
     </Table.Tr>
   );
 }
@@ -170,6 +283,9 @@ export function App() {
   const dataTableScrollRef = useRef<HTMLDivElement>(null);
   const resizeSession = useRef<ResizeSession | null>(null);
   const [isImportingSpreadsheet, setIsImportingSpreadsheet] = useState(false);
+  const [editingManualRowId, setEditingManualRowId] = useState<string | null>(
+    null,
+  );
   const [searchColumn, setSearchColumn] = useState<ColumnId | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [columnFilters, setColumnFilters] = useState<ColumnFilter[]>([]);
@@ -180,6 +296,7 @@ export function App() {
   const clearRowSelection = useAppStore((state) => state.clearRowSelection);
   const deselectRows = useAppStore((state) => state.deselectRows);
   const selectRows = useAppStore((state) => state.selectRows);
+  const setManualRows = useAppStore((state) => state.setManualRows);
   const setPanelWeights = useAppStore((state) => state.setPanelWeights);
   const setSelectedWorksheet = useAppStore(
     (state) => state.setSelectedWorksheet,
@@ -190,6 +307,25 @@ export function App() {
   const toggleRowSelection = useAppStore((state) => state.toggleRowSelection);
   const sourceColumns = spreadsheet?.data.columns ?? emptySourceColumns;
   const sourceRows = spreadsheet?.data.rows ?? emptySourceRows;
+  const manualRows =
+    spreadsheet?.manualRowsBySheet[spreadsheet.selectedSheetName] ??
+    emptyManualRows;
+  const manualSourceRows = useMemo(
+    () => manualRowsToSourceRows(manualRows, sourceColumns),
+    [manualRows, sourceColumns],
+  );
+  const allRows = useMemo(
+    () => [...sourceRows, ...manualSourceRows],
+    [manualSourceRows, sourceRows],
+  );
+  const manualRowsById = useMemo(
+    () => new Map(manualRows.map((row) => [row.id, row])),
+    [manualRows],
+  );
+  const manualRowIndexes = useMemo(
+    () => new Map(manualRows.map((row, index) => [row.id, index])),
+    [manualRows],
+  );
   const activeSearchColumn = sourceColumns.some(
     (column) => column.id === searchColumn,
   )
@@ -198,20 +334,20 @@ export function App() {
   const searchIndex = useMemo(
     () =>
       createRowSearchIndex(
-        sourceRows,
+        allRows,
         sourceColumns.map((column) => column.id),
       ),
-    [sourceColumns, sourceRows],
+    [allRows, sourceColumns],
   );
   const searchedRows = useMemo(
     () =>
       searchRows(
         searchIndex,
-        sourceRows,
+        allRows,
         debouncedSearchQuery,
         activeSearchColumn,
       ),
-    [activeSearchColumn, debouncedSearchQuery, searchIndex, sourceRows],
+    [activeSearchColumn, allRows, debouncedSearchQuery, searchIndex],
   );
   const matchingRows = useMemo(
     () => filterRows(searchedRows, columnFilters),
@@ -278,7 +414,59 @@ export function App() {
 
   useEffect(() => {
     setColumnFilters([]);
+    setEditingManualRowId(null);
   }, [spreadsheet?.data]);
+
+  useEffect(() => {
+    if (!editingManualRowId || !shouldVirtualizeRows) return;
+
+    const rowIndex = dataRows.findIndex(
+      (row) => row.original.id === editingManualRowId,
+    );
+    if (rowIndex !== -1) {
+      rowVirtualizer.scrollToIndex(rowIndex, { align: "center" });
+    }
+  }, [dataRows, editingManualRowId, rowVirtualizer, shouldVirtualizeRows]);
+
+  function addManualRow() {
+    const row = createManualRow(sourceColumns.map((column) => column.id));
+    setSearchQuery("");
+    setColumnFilters([]);
+    setManualRows([...manualRows, row]);
+    setEditingManualRowId(row.id);
+  }
+
+  function changeManualCell(rowId: string, columnId: ColumnId, value: string) {
+    setManualRows(updateManualCell(manualRows, rowId, columnId, value));
+  }
+
+  function pasteIntoManualCells(
+    rowId: string,
+    columnId: ColumnId,
+    value: string,
+  ) {
+    setManualRows(
+      pasteManualCells(
+        manualRows,
+        rowId,
+        columnId,
+        sourceColumns.map((column) => column.id),
+        value,
+      ),
+    );
+  }
+
+  function duplicateRow(rowId: string) {
+    const duplicateId = crypto.randomUUID();
+    setManualRows(duplicateManualRow(manualRows, rowId, () => duplicateId));
+    setEditingManualRowId(duplicateId);
+  }
+
+  function deleteRow(rowId: string) {
+    setManualRows(deleteManualRow(manualRows, rowId));
+    deselectRows([rowId]);
+    if (editingManualRowId === rowId) setEditingManualRowId(null);
+  }
 
   async function handleSpreadsheetFile(event: ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget;
@@ -526,7 +714,7 @@ export function App() {
                 columns={sourceColumns}
                 filters={columnFilters}
                 onChange={setColumnFilters}
-                rows={sourceRows}
+                rows={allRows}
               />
               <Button variant="default" leftSection={<IconColumns3 />}>
                 Columns
@@ -606,6 +794,7 @@ export function App() {
                                 )}
                           </Table.Th>
                         ))}
+                        <Table.Th>Row type</Table.Th>
                       </Table.Tr>
                     ))}
                   </Table.Thead>
@@ -614,7 +803,7 @@ export function App() {
                       <Table.Tr>
                         <Table.Td
                           className="data-table-empty"
-                          colSpan={dataColumns.length + 1}
+                          colSpan={dataColumns.length + 2}
                         >
                           {!spreadsheet
                             ? "Upload a spreadsheet to view its rows."
@@ -636,17 +825,32 @@ export function App() {
                             className="data-table-spacer"
                           >
                             <Table.Td
-                              colSpan={dataColumns.length + 1}
+                              colSpan={dataColumns.length + 2}
                               style={{ height: topSpacerHeight }}
                             />
                           </Table.Tr>
                         )}
                         {virtualRows.map((virtualRow) => (
                           <DataRow
+                            columns={sourceColumns}
+                            editingManualRowId={editingManualRowId}
                             isSelected={selectedRowIdSet.has(
                               dataRows[virtualRow.index].original.id,
                             )}
                             key={dataRows[virtualRow.index].id}
+                            manualRow={manualRowsById.get(
+                              dataRows[virtualRow.index].original.id,
+                            )}
+                            manualRowIndex={manualRowIndexes.get(
+                              dataRows[virtualRow.index].original.id,
+                            )}
+                            onDeleteManualRow={deleteRow}
+                            onDuplicateManualRow={duplicateRow}
+                            onManualCellChange={changeManualCell}
+                            onManualCellPaste={pasteIntoManualCells}
+                            onManualEditStarted={() =>
+                              setEditingManualRowId(null)
+                            }
                             onToggleSelection={toggleRowSelection}
                             row={dataRows[virtualRow.index]}
                             virtualIndex={virtualRow.index}
@@ -658,7 +862,7 @@ export function App() {
                             className="data-table-spacer"
                           >
                             <Table.Td
-                              colSpan={dataColumns.length + 1}
+                              colSpan={dataColumns.length + 2}
                               style={{ height: bottomSpacerHeight }}
                             />
                           </Table.Tr>
@@ -667,8 +871,19 @@ export function App() {
                     ) : (
                       dataRows.map((row) => (
                         <DataRow
+                          columns={sourceColumns}
+                          editingManualRowId={editingManualRowId}
                           isSelected={selectedRowIdSet.has(row.original.id)}
                           key={row.id}
+                          manualRow={manualRowsById.get(row.original.id)}
+                          manualRowIndex={manualRowIndexes.get(row.original.id)}
+                          onDeleteManualRow={deleteRow}
+                          onDuplicateManualRow={duplicateRow}
+                          onManualCellChange={changeManualCell}
+                          onManualCellPaste={pasteIntoManualCells}
+                          onManualEditStarted={() =>
+                            setEditingManualRowId(null)
+                          }
                           onToggleSelection={toggleRowSelection}
                           row={row}
                         />
@@ -679,10 +894,11 @@ export function App() {
               </div>
               <Button
                 className="add-row"
-                disabled
+                disabled={sourceColumns.length === 0}
                 variant="subtle"
                 fullWidth
                 leftSection={<IconPlus />}
+                onClick={addManualRow}
               >
                 Add row
               </Button>
@@ -690,8 +906,8 @@ export function App() {
 
             <Text className="panel-footer" size="sm" c="dimmed">
               {debouncedSearchQuery.trim() || columnFilters.length > 0
-                ? `${matchingRows.length} matching · ${sourceRows.length} total rows`
-                : `${sourceRows.length} total rows`}
+                ? `${matchingRows.length} matching · ${allRows.length} total rows`
+                : `${allRows.length} total rows`}
             </Text>
           </Stack>
         </Paper>
