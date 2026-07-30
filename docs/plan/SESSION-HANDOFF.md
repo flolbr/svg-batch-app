@@ -161,4 +161,4 @@ Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending commit for local SVG import and sanitization.
+`2d1b109 feat: import and sanitize local SVGs`
