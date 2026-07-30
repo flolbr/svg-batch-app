@@ -30,7 +30,6 @@ import {
   IconDownload,
   IconEye,
   IconFileTypeSvg,
-  IconFilter,
   IconFolderOpen,
   IconGripVertical,
   IconHelpCircle,
@@ -51,6 +50,8 @@ import {
   useRef,
   useState,
 } from "react";
+import { ColumnFilters } from "./ColumnFilters";
+import { filterRows, type ColumnFilter } from "./data/filterRows";
 import { importSpreadsheet } from "./data/importSpreadsheet";
 import type { ColumnId, DataColumn, SourceRow } from "./data/normalizeWorkbook";
 import { createRowSearchIndex, searchRows } from "./data/searchRows";
@@ -158,6 +159,7 @@ export function App() {
   const [isImportingSpreadsheet, setIsImportingSpreadsheet] = useState(false);
   const [searchColumn, setSearchColumn] = useState<ColumnId | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [columnFilters, setColumnFilters] = useState<ColumnFilter[]>([]);
   const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 150);
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
   const spreadsheet = useAppStore((state) => state.sources.spreadsheet);
@@ -183,7 +185,7 @@ export function App() {
       ),
     [sourceColumns, sourceRows],
   );
-  const matchingRows = useMemo(
+  const searchedRows = useMemo(
     () =>
       searchRows(
         searchIndex,
@@ -192,6 +194,10 @@ export function App() {
         activeSearchColumn,
       ),
     [activeSearchColumn, debouncedSearchQuery, searchIndex, sourceRows],
+  );
+  const matchingRows = useMemo(
+    () => filterRows(searchedRows, columnFilters),
+    [columnFilters, searchedRows],
   );
   const dataColumns = useMemo<ColumnDef<SourceRow>[]>(
     () =>
@@ -232,7 +238,11 @@ export function App() {
 
   useEffect(() => {
     dataTableScrollRef.current?.scrollTo?.({ top: 0 });
-  }, [activeSearchColumn, debouncedSearchQuery]);
+  }, [activeSearchColumn, columnFilters, debouncedSearchQuery]);
+
+  useEffect(() => {
+    setColumnFilters([]);
+  }, [spreadsheet?.data]);
 
   async function handleSpreadsheetFile(event: ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget;
@@ -476,9 +486,12 @@ export function App() {
             </div>
 
             <Group gap="sm">
-              <Button variant="default" leftSection={<IconFilter />}>
-                Filters
-              </Button>
+              <ColumnFilters
+                columns={sourceColumns}
+                filters={columnFilters}
+                onChange={setColumnFilters}
+                rows={sourceRows}
+              />
               <Button variant="default" leftSection={<IconColumns3 />}>
                 Columns
               </Button>
@@ -526,9 +539,14 @@ export function App() {
                         >
                           {!spreadsheet
                             ? "Upload a spreadsheet to view its rows."
-                            : debouncedSearchQuery.trim()
-                              ? "No rows match your search."
-                              : "This worksheet has no data rows."}
+                            : columnFilters.length > 0 &&
+                                debouncedSearchQuery.trim()
+                              ? "No rows match your search and filters."
+                              : columnFilters.length > 0
+                                ? "No rows match your filters."
+                                : debouncedSearchQuery.trim()
+                                  ? "No rows match your search."
+                                  : "This worksheet has no data rows."}
                         </Table.Td>
                       </Table.Tr>
                     ) : shouldVirtualizeRows ? (
@@ -581,7 +599,7 @@ export function App() {
             </div>
 
             <Text className="panel-footer" size="sm" c="dimmed">
-              {debouncedSearchQuery.trim()
+              {debouncedSearchQuery.trim() || columnFilters.length > 0
                 ? `${matchingRows.length} matching · ${sourceRows.length} total rows`
                 : `${sourceRows.length} total rows`}
             </Text>

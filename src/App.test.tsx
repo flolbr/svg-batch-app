@@ -40,6 +40,28 @@ function setSpreadsheetRows(rowCount: number) {
   });
 }
 
+function setMemberSpreadsheet() {
+  useAppStore.getState().setSpreadsheetSource({
+    fileName: "members.xlsx",
+    fileSize: 1,
+    sheetNames: ["Members"],
+    workbook: {
+      SheetNames: ["Members"],
+      Sheets: {
+        Members: {
+          "!ref": "A1:B3",
+          A1: { t: "s", v: "Name" },
+          B1: { t: "s", v: "City" },
+          A2: { t: "s", v: "Chloé Petit" },
+          B2: { t: "s", v: "Paris" },
+          A3: { t: "s", v: "Alice Martin" },
+          B3: { t: "s", v: "Lyon" },
+        },
+      },
+    },
+  });
+}
+
 describe("App", () => {
   afterEach(() => {
     cleanup();
@@ -315,25 +337,7 @@ describe("App", () => {
 
   it("searches displayed values across all or one selected column", async () => {
     const user = userEvent.setup();
-    useAppStore.getState().setSpreadsheetSource({
-      fileName: "members.xlsx",
-      fileSize: 1,
-      sheetNames: ["Members"],
-      workbook: {
-        SheetNames: ["Members"],
-        Sheets: {
-          Members: {
-            "!ref": "A1:B3",
-            A1: { t: "s", v: "Name" },
-            B1: { t: "s", v: "City" },
-            A2: { t: "s", v: "Chloé Petit" },
-            B2: { t: "s", v: "Paris" },
-            A3: { t: "s", v: "Alice Martin" },
-            B3: { t: "s", v: "Lyon" },
-          },
-        },
-      },
-    });
+    setMemberSpreadsheet();
 
     render(
       <MantineProvider>
@@ -378,6 +382,61 @@ describe("App", () => {
     await user.selectOptions(columnScope, "col-1");
     expect(
       await screen.findByText("No rows match your search."),
+    ).toBeInTheDocument();
+  });
+
+  it("applies and removes distinct-value column filters after search", async () => {
+    const user = userEvent.setup();
+    setMemberSpreadsheet();
+
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Filters" }));
+    await user.click(
+      await screen.findByRole("combobox", { name: "Filter column" }),
+    );
+    const cityOption = screen
+      .getAllByRole("option", { hidden: true, name: "City" })
+      .find((option) => option.tagName === "DIV");
+    expect(cityOption).toBeDefined();
+    await user.click(cityOption!);
+    await user.click(
+      screen.getByRole("checkbox", { hidden: true, name: "Lyon" }),
+    );
+    await user.click(
+      screen.getByRole("button", { hidden: true, name: "Apply filter" }),
+    );
+
+    expect(
+      screen.getByRole("cell", { name: "Chloé Petit" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("cell", { name: "Alice Martin" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("1 matching · 2 total rows")).toBeInTheDocument();
+
+    await user.type(
+      screen.getByRole("textbox", { name: "Search imported values" }),
+      "alice",
+    );
+    expect(
+      await screen.findByText("No rows match your search and filters."),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Filters (1)" }));
+    await user.click(
+      await screen.findByRole("button", {
+        hidden: true,
+        name: "Remove City filter",
+      }),
+    );
+
+    expect(
+      await screen.findByRole("cell", { name: "Alice Martin" }),
     ).toBeInTheDocument();
   });
 

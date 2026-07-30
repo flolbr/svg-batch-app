@@ -159,6 +159,14 @@ fuzzy search match
 AND every structured filter
 ```
 
+The data panel provides one active filter per column. It supports distinct
+displayed values, normalized text contains/equals, inclusive typed-number and
+typed-date ranges, and blank/non-blank displayed values. Multiple column
+filters use AND semantics, retain source order, and feed the same ordinary or
+virtualized table path as search results.
+
+Filters remain transient until the dedicated Phase 2 persistence item.
+
 ## Selection
 
 Persist `selectedRowIds` separately from matching rows.

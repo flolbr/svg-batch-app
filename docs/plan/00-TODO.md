@@ -71,7 +71,13 @@ Only one implementation item should normally be `[-]`.
 - [x] Add fuzzy row-value search across all or selected columns.
   - Main files: `src/data/searchRows.ts`, `src/data/searchRows.test.ts`, `src/App.tsx`, `src/App.test.tsx`.
   - Tests: `bun run test -- src/data/searchRows.test.ts src/App.test.tsx`; `bun run check`.
-- [ ] Add Excel-style per-column filters.
+- [x] Add Excel-style per-column filters.
+  - Supports distinct values, text contains/equals, number ranges, date ranges,
+    and blank/non-blank matching; filters combine with fuzzy search using AND.
+  - Main files: `src/ColumnFilters.tsx`, `src/data/filterRows.ts`,
+    `src/data/filterRows.test.ts`, `src/App.tsx`, `src/App.test.tsx`.
+  - Tests: `bun run test -- src/data/filterRows.test.ts src/data/searchRows.test.ts src/App.test.tsx`;
+    `bun run check`.
 - [ ] Keep filtering and row selection independent.
 - [ ] Add “select all matching”, “select visible page”, and “clear selection”.
 - [ ] Add editable manual rows through the final “+ Add row” line.

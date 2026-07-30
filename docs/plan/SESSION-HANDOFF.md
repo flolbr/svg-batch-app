@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Fuzzy row-value search is complete.
+No implementation task is active. Excel-style per-column filters are complete.
 
 ## What works
 
@@ -61,6 +61,15 @@ No implementation task is active. Fuzzy row-value search is complete.
 - Users can search across all values or one selected normalized column.
 - Matching rows retain source order and feed the existing table and
   virtualization paths; the footer reports matching and total counts.
+- Users can apply one structured filter per column through a Mantine popover:
+  distinct displayed values, normalized text contains/equals, inclusive
+  typed-number and typed-date ranges, or blank/non-blank displayed values.
+- Multiple column filters combine with each other and fuzzy search using AND
+  semantics. Filtered rows retain source order and use the existing ordinary
+  and virtualized table paths.
+- Active filters can be removed individually or cleared together. Filters
+  reset when the imported worksheet data changes and remain transient until
+  the dedicated persistence item.
 - Manual-row controls remain disabled until their dedicated Phase 2 item.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
@@ -69,32 +78,36 @@ No implementation task is active. Fuzzy row-value search is complete.
 
 ## What remains
 
-Structured column filters and the rest of the spreadsheet workflow remain
-Phase 2 work.
+Row-selection behavior and the rest of the spreadsheet workflow remain Phase 2
+work.
 
 ## Next concrete step
 
 Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
-1. mark Excel-style per-column filters `[-]`;
-2. define and test the persisted filter data shapes and matching logic;
-3. combine structured filters with the existing fuzzy-search results.
+1. mark “Keep filtering and row selection independent” `[-]`;
+2. add row selection state and controls without deriving it from matching rows;
+3. verify selected rows remain selected when search or filters hide them.
 
 ## Files changed
 
 - `src/App.tsx`
 - `src/App.test.tsx`
-- `src/data/searchRows.ts`
-- `src/data/searchRows.test.ts`
+- `src/ColumnFilters.tsx`
+- `src/data/filterRows.ts`
+- `src/data/filterRows.test.ts`
 - `docs/plan/00-TODO.md`
 - `docs/plan/04-DATA-AND-SEARCH.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/data/searchRows.test.ts src/App.test.tsx`
+- `bun run test -- src/App.test.tsx`
+- `bun run test -- src/data/filterRows.test.ts src/data/searchRows.test.ts src/App.test.tsx`
+- `bun run lint`
+- `bun run build:single`
 - `bun run check`
 
 ## Latest substantive commit
 
-`12d5e10 feat: add fuzzy spreadsheet search`
+Pending commit for Excel-style per-column filters.
