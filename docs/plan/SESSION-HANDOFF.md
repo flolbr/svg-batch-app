@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Independent row selection is complete.
+No implementation task is active. Bulk row-selection controls are complete.
 
 ## What works
 
@@ -75,6 +75,12 @@ No implementation task is active. Independent row selection is complete.
 - Search and structured filters only change which rows are visible. Hidden
   selected rows remain selected, reappear checked when filters are removed,
   and remain included in the action-bar selected count.
+- The data toolbar can select all matching rows, select the current visible
+  range, or clear the full selection. Adding rows preserves existing hidden
+  selections.
+- The grid header checkbox selects or clears the visible range and communicates
+  none, some, and all-selected states. The ordinary grid treats all displayed
+  results as visible; the virtualized grid uses its current viewport range.
 - Manual-row controls remain disabled until their dedicated Phase 2 item.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
@@ -83,24 +89,20 @@ No implementation task is active. Independent row selection is complete.
 
 ## What remains
 
-Bulk-selection commands and the rest of the spreadsheet workflow remain Phase
-2 work.
+Manual rows and the rest of the spreadsheet workflow remain Phase 2 work.
 
 ## Next concrete step
 
 Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
-1. mark “Add ‘select all matching’, ‘select visible page’, and ‘clear
-   selection’” `[-]`;
-2. add and unit-test the bulk selection commands;
-3. connect the header and toolbar controls with correct checked and
-   indeterminate states.
+1. mark “Add editable manual rows through the final ‘+ Add row’ line” `[-]`;
+2. define and test the manual-row data operations;
+3. enable the final add-row line and implement explicit cell editing.
 
 ## Files changed
 
 - `src/App.tsx`
 - `src/App.test.tsx`
-- `src/styles.css`
 - `src/store.ts`
 - `src/store.test.ts`
 - `src/data/rowSelection.ts`
@@ -118,4 +120,4 @@ Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-`b9f98a4 feat: keep row selection through filters`
+Pending commit for bulk row selection.

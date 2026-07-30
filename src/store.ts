@@ -3,8 +3,13 @@ import type { ImportedSpreadsheet } from "./data/importSpreadsheet";
 import {
   normalizeWorksheet,
   type NormalizedWorksheet,
+  type RowId,
 } from "./data/normalizeWorkbook";
-import { toggleSelectedRow } from "./data/rowSelection";
+import {
+  deselectRows,
+  selectRows,
+  toggleSelectedRow,
+} from "./data/rowSelection";
 import type { Project } from "./project/loadProject";
 
 export type PanelWeights = [number, number, number];
@@ -31,7 +36,10 @@ type AppStore = {
   setPanelWeights: (panelWeights: PanelWeights) => void;
   setSelectedWorksheet: (sheetName: string) => void;
   setSpreadsheetSource: (spreadsheet: ImportedSpreadsheet) => void;
-  toggleRowSelection: (rowId: string) => void;
+  clearRowSelection: () => void;
+  deselectRows: (rowIds: RowId[]) => void;
+  selectRows: (rowIds: RowId[]) => void;
+  toggleRowSelection: (rowId: RowId) => void;
 };
 
 export const initialPanelWeights: PanelWeights = [38, 27, 35];
@@ -85,6 +93,27 @@ export const useAppStore = create<AppStore>()((set) => ({
           ),
           selectedSheetName: spreadsheet.sheetNames[0],
         },
+      },
+    })),
+  clearRowSelection: () =>
+    set((state) => ({
+      selection: {
+        ...state.selection,
+        selectedRowIds: [],
+      },
+    })),
+  deselectRows: (rowIds) =>
+    set((state) => ({
+      selection: {
+        ...state.selection,
+        selectedRowIds: deselectRows(state.selection.selectedRowIds, rowIds),
+      },
+    })),
+  selectRows: (rowIds) =>
+    set((state) => ({
+      selection: {
+        ...state.selection,
+        selectedRowIds: selectRows(state.selection.selectedRowIds, rowIds),
       },
     })),
   toggleRowSelection: (rowId) =>

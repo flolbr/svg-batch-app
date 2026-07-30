@@ -55,6 +55,7 @@ import { ColumnFilters } from "./ColumnFilters";
 import { filterRows, type ColumnFilter } from "./data/filterRows";
 import { importSpreadsheet } from "./data/importSpreadsheet";
 import type { ColumnId, DataColumn, SourceRow } from "./data/normalizeWorkbook";
+import { getRowSelectionState } from "./data/rowSelection";
 import { createRowSearchIndex, searchRows } from "./data/searchRows";
 import { type PanelWeights, useAppStore } from "./store";
 
@@ -176,6 +177,9 @@ export function App() {
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
   const spreadsheet = useAppStore((state) => state.sources.spreadsheet);
   const selectedRowIds = useAppStore((state) => state.selection.selectedRowIds);
+  const clearRowSelection = useAppStore((state) => state.clearRowSelection);
+  const deselectRows = useAppStore((state) => state.deselectRows);
+  const selectRows = useAppStore((state) => state.selectRows);
   const setPanelWeights = useAppStore((state) => state.setPanelWeights);
   const setSelectedWorksheet = useAppStore(
     (state) => state.setSelectedWorksheet,
@@ -247,6 +251,20 @@ export function App() {
   const virtualRows = shouldVirtualizeRows
     ? rowVirtualizer.getVirtualItems()
     : [];
+  const visibleRows = shouldVirtualizeRows
+    ? rowVirtualizer.range
+      ? dataRows.slice(
+          rowVirtualizer.range.startIndex,
+          rowVirtualizer.range.endIndex + 1,
+        )
+      : []
+    : dataRows;
+  const matchingRowIds = matchingRows.map((row) => row.id);
+  const visibleRowIds = visibleRows.map((row) => row.original.id);
+  const visibleSelectionState = getRowSelectionState(
+    selectedRowIds,
+    visibleRowIds,
+  );
   const topSpacerHeight = virtualRows[0]?.start ?? 0;
   const bottomSpacerHeight =
     virtualRows.length > 0
@@ -515,6 +533,33 @@ export function App() {
               </Button>
             </Group>
 
+            <Group gap="xs">
+              <Button
+                disabled={matchingRowIds.length === 0}
+                onClick={() => selectRows(matchingRowIds)}
+                size="compact-sm"
+                variant="light"
+              >
+                Select all matching
+              </Button>
+              <Button
+                disabled={visibleRowIds.length === 0}
+                onClick={() => selectRows(visibleRowIds)}
+                size="compact-sm"
+                variant="default"
+              >
+                Select visible page
+              </Button>
+              <Button
+                disabled={selectedRowIds.length === 0}
+                onClick={clearRowSelection}
+                size="compact-sm"
+                variant="subtle"
+              >
+                Clear selection
+              </Button>
+            </Group>
+
             <div className="data-table">
               <div
                 aria-label="Spreadsheet rows"
@@ -538,7 +583,19 @@ export function App() {
                         <Table.Th
                           aria-label="Row selection"
                           className="data-table-selection"
-                        />
+                        >
+                          <Checkbox
+                            aria-label="Toggle visible page selection"
+                            checked={visibleSelectionState === "all"}
+                            disabled={visibleRowIds.length === 0}
+                            indeterminate={visibleSelectionState === "some"}
+                            onChange={() =>
+                              visibleSelectionState === "all"
+                                ? deselectRows(visibleRowIds)
+                                : selectRows(visibleRowIds)
+                            }
+                          />
+                        </Table.Th>
                         {headerGroup.headers.map((header) => (
                           <Table.Th key={header.id}>
                             {header.isPlaceholder

@@ -192,8 +192,15 @@ which rows are rendered; they never remove hidden IDs from the selection. The
 action bar reports the full selected count, including rows hidden by the
 current search or filters.
 
-Bulk selection and header-checkbox behavior remain in the following Phase 2
-item.
+The selection toolbar can add every matching row, add the current visible
+range, or clear the full selection. Existing hidden selections are preserved
+when rows are added. For the virtualized grid, the visible range is the
+current viewport; for the ordinary grid, it is the full displayed result set.
+
+The header checkbox targets that same visible range. It is unchecked when none
+are selected, indeterminate when some are selected, checked when all are
+selected, and disabled when the range is empty. Clearing an all-selected
+header removes only the visible IDs, preserving selections outside the range.
 
 ## Manual rows
 

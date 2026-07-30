@@ -507,6 +507,67 @@ describe("App", () => {
     ).toBeChecked();
   });
 
+  it("selects matching and visible rows and clears selection", async () => {
+    const user = userEvent.setup();
+    setMemberSpreadsheet();
+    const sourceRowIds =
+      useAppStore
+        .getState()
+        .sources.spreadsheet?.data.rows.map((row) => row.id) ?? [];
+
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    const headerCheckbox = screen.getByRole("checkbox", {
+      name: "Toggle visible page selection",
+    });
+    expect(headerCheckbox).not.toBeChecked();
+
+    await user.click(
+      screen.getByRole("button", { name: "Select visible page" }),
+    );
+    expect(useAppStore.getState().selection.selectedRowIds).toEqual(
+      sourceRowIds,
+    );
+    expect(headerCheckbox).toBeChecked();
+
+    await user.click(screen.getByRole("checkbox", { name: "Select row 1" }));
+    expect(headerCheckbox).toBePartiallyChecked();
+
+    await user.type(
+      screen.getByRole("textbox", { name: "Search imported values" }),
+      "chloe",
+    );
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("cell", { name: "Alice Martin" }),
+      ).not.toBeInTheDocument();
+    });
+    expect(
+      screen.getByRole("cell", { name: "Chloé Petit" }),
+    ).toBeInTheDocument();
+    expect(headerCheckbox).not.toBeChecked();
+
+    await user.click(
+      screen.getByRole("button", { name: "Select all matching" }),
+    );
+    expect(useAppStore.getState().selection.selectedRowIds).toEqual([
+      sourceRowIds[1],
+      sourceRowIds[0],
+    ]);
+    expect(headerCheckbox).toBeChecked();
+
+    await user.click(screen.getByRole("button", { name: "Clear selection" }));
+    expect(useAppStore.getState().selection.selectedRowIds).toEqual([]);
+    expect(headerCheckbox).not.toBeChecked();
+    expect(
+      screen.getByText("0 rows selected · Not validated"),
+    ).toBeInTheDocument();
+  });
+
   it("renders every row without a scroll region at the virtualization threshold", () => {
     setSpreadsheetRows(ROW_VIRTUALIZATION_THRESHOLD);
 
@@ -530,6 +591,7 @@ describe("App", () => {
   });
 
   it("virtualizes rows above the threshold while exposing the logical grid size", async () => {
+    const user = userEvent.setup();
     const rowCount = ROW_VIRTUALIZATION_THRESHOLD + 1;
     setSpreadsheetRows(rowCount);
 
@@ -558,6 +620,15 @@ describe("App", () => {
     expect(
       await screen.findByRole("cell", { name: "Member 1" }),
     ).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "Select visible page" }),
+    );
+    expect(
+      useAppStore.getState().selection.selectedRowIds.length,
+    ).toBeGreaterThan(0);
+    expect(useAppStore.getState().selection.selectedRowIds.length).toBeLessThan(
+      rowCount,
+    );
     const firstVirtualRow = document.querySelector(
       ".data-table tbody tr[aria-rowindex]",
     );

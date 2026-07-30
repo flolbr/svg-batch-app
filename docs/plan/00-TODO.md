@@ -86,7 +86,16 @@ Only one implementation item should normally be `[-]`.
     `src/App.tsx`, `src/App.test.tsx`, `src/styles.css`.
   - Tests: `bun run test -- src/data/rowSelection.test.ts src/store.test.ts src/App.test.tsx`;
     `bun run check`.
-- [ ] Add “select all matching”, “select visible page”, and “clear selection”.
+- [x] Add “select all matching”, “select visible page”, and “clear selection”.
+  - The header checkbox selects or clears the current visible range and exposes
+    checked and indeterminate states.
+  - In virtualized grids, the visible page is the current viewport range;
+    otherwise it is the full displayed result set.
+  - Main files: `src/data/rowSelection.ts`,
+    `src/data/rowSelection.test.ts`, `src/store.ts`, `src/store.test.ts`,
+    `src/App.tsx`, `src/App.test.tsx`.
+  - Tests: `bun run test -- src/data/rowSelection.test.ts src/store.test.ts src/App.test.tsx`;
+    `bun run check`.
 - [ ] Add editable manual rows through the final “+ Add row” line.
 - [ ] Add edit overrides for imported rows without mutating source rows.
 - [ ] Add visible/exported-column selection.

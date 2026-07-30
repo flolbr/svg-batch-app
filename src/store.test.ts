@@ -133,4 +133,25 @@ describe("useAppStore", () => {
     stateAfterSelection.toggleRowSelection("row-1");
     expect(useAppStore.getState().selection.selectedRowIds).toEqual([]);
   });
+
+  it("selects, deselects, and clears row ID sets", () => {
+    const store = useAppStore.getState();
+
+    store.selectRows(["row-1", "row-2"]);
+    useAppStore.getState().selectRows(["row-2", "row-3"]);
+    expect(useAppStore.getState().selection.selectedRowIds).toEqual([
+      "row-1",
+      "row-2",
+      "row-3",
+    ]);
+
+    useAppStore.getState().deselectRows(["row-2"]);
+    expect(useAppStore.getState().selection.selectedRowIds).toEqual([
+      "row-1",
+      "row-3",
+    ]);
+
+    useAppStore.getState().clearRowSelection();
+    expect(useAppStore.getState().selection.selectedRowIds).toEqual([]);
+  });
 });
