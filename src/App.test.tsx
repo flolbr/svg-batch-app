@@ -960,7 +960,7 @@ describe("App", () => {
       screen.getByRole("button", { name: "Reset imported row 1" }),
     );
     expect(
-      screen.getByRole("cell", { name: "Chloé Petit" }),
+      await screen.findByRole("cell", { name: "Chloé Petit" }),
     ).toBeInTheDocument();
     expect(
       useAppStore.getState().sources.spreadsheet?.rowOverridesBySheet.Members,
