@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Visible/exported-column selection is
+No implementation task is active. Phase 2 spreadsheet state persistence is
 complete.
 
 ## What works
@@ -40,14 +40,14 @@ complete.
 - A newly imported workbook selects its first worksheet by default.
 - Multi-worksheet files provide an accessible selector backed by transient
   Zustand state; single-worksheet files show a disabled selector.
-- The selected worksheet is normalized into explicit columns and immutable
-  source rows when imported or changed.
+- Every worksheet is normalized into explicit columns and immutable source
+  rows when a workbook is imported.
 - Headers handle BOMs, whitespace, blanks, and duplicates. Cells retain typed
   values and formatted display strings, including date and leading-zero
   formatting.
 - Row IDs are generated independently from table position. Normalized
-  worksheets are cached so IDs remain stable across worksheet switches during
-  the imported workbook's lifetime.
+  worksheets are retained in validated project data so IDs remain stable
+  across worksheet switches and project reloads.
 - TanStack Table renders normalized worksheet headers and displayed cell values.
 - The grid uses each generated source row ID as its TanStack identity and
   updates when the selected worksheet changes.
@@ -69,9 +69,8 @@ complete.
 - Multiple column filters combine with each other and fuzzy search using AND
   semantics. Filtered rows retain source order and use the existing ordinary
   and virtualized table paths.
-- Active filters can be removed individually or cleared together. Filters
-  reset when the imported worksheet data changes and remain transient until
-  the dedicated persistence item.
+- Active filters can be removed individually or cleared together. Filters are
+  scoped to and persisted with their worksheet.
 - Each rendered row has a leading checkbox backed by its stable row ID in the
   Zustand selection slice.
 - Search and structured filters only change which rows are visible. Hidden
@@ -90,7 +89,7 @@ complete.
 - Manual rows can be duplicated or deleted, carry a visible Manual marker, and
   remain separate from immutable imported rows. They participate in search,
   filters, virtualization, selection, and counts.
-- Manual rows remain transient until their dedicated persistence item.
+- Manual rows are persisted with their worksheet.
 - Imported rows expose an explicit Edit action. Changes are stored as
   worksheet-scoped overrides and merged only in the effective-row pipeline;
   normalized source rows remain unchanged.
@@ -99,8 +98,7 @@ complete.
 - Effective imported values participate in search, structured filters,
   virtualization, selection, and counts. Numeric display edits retain their
   entered form while exposing typed numbers to range filters.
-- Imported-row overrides remain transient until their dedicated persistence
-  item.
+- Imported-row overrides are persisted with their worksheet.
 - The Columns popover exposes independent Visible and Export checkboxes for
   every imported column. Both preferences default to all columns.
 - Column preferences are scoped to each worksheet and survive worksheet
@@ -108,7 +106,14 @@ complete.
 - Visibility only changes the rendered grid. Hidden columns remain available
   to fuzzy search, structured filters, and future mappings.
 - Export selections are recorded for the future export flow. Column
-  preferences remain transient until the dedicated persistence item.
+  preferences are persisted with their worksheet.
+- Selected row IDs are scoped to each worksheet, persisted independently from
+  filtering, and restored when switching worksheets or loading project data.
+- The optional Phase 2 project data block is validated with Zod and contains
+  every normalized worksheet plus its selections, filters, overrides, manual
+  rows, and column preferences.
+- Loading project data reconstructs the complete spreadsheet runtime without
+  the original SheetJS workbook. The workbook object remains transient.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -116,36 +121,39 @@ complete.
 
 ## What remains
 
-Persisting selected rows, filters, row edits, manual rows, and column
-preferences remains Phase 2 work.
+SVG import, sanitization, object discovery, and preview remain Phase 3 work.
 
 ## Next concrete step
 
-Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
+Start the first `Phase 3 — SVG import, tree, and preview` item in
+`00-TODO.md`:
 
-1. mark “Persist selected rows, filters, edits, and manual rows” `[-]`;
-2. define the persisted worksheet-state boundary and validation;
-3. restore the current selection, filters, overrides, manual rows, and column
-   preferences without weakening imported-source immutability.
+1. read `05-SVG-AND-MAPPINGS.md` and mark “Import and sanitize a local SVG”
+   `[-]`;
+2. define and test the untrusted SVG import/sanitization boundary;
+3. connect local SVG import errors and success state to the existing SVG panel.
 
 ## Files changed
 
 - `src/App.tsx`
 - `src/App.test.tsx`
-- `src/ColumnSettings.tsx`
 - `src/store.ts`
 - `src/store.test.ts`
-- `src/data/columnPreferences.ts`
-- `src/data/columnPreferences.test.ts`
+- `src/project/dataProjectState.ts`
+- `src/project/dataProjectState.test.ts`
+- `src/project/loadProject.ts`
+- `src/project/loadProject.test.ts`
 - `docs/plan/00-TODO.md`
 - `docs/plan/04-DATA-AND-SEARCH.md`
+- `docs/plan/07-SINGLE-FILE-PROJECT.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/data/columnPreferences.test.ts src/store.test.ts src/App.test.tsx`
+- `bun run test -- src/project/dataProjectState.test.ts src/project/loadProject.test.ts src/store.test.ts src/App.test.tsx`
+- `bun run build:single`
 - `bun run check`
 
 ## Latest substantive commit
 
-`153b600 feat: add column visibility preferences`
+Pending commit for persisted spreadsheet project state.

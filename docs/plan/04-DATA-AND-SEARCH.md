@@ -118,9 +118,9 @@ the current imported-row edit. Returning a cell to its original displayed
 value removes that cell override; restoring every cell removes the row
 override.
 
-Normalized worksheet results are cached for the lifetime of an imported
-workbook so their generated row IDs remain stable across worksheet switches.
-Overrides remain transient until the dedicated Phase 2 persistence item.
+Every worksheet is normalized when a workbook is imported so its generated
+row IDs remain stable across worksheet switches and in the persisted project
+snapshot. Overrides are persisted per worksheet.
 
 ## Search
 
@@ -179,7 +179,7 @@ typed-date ranges, and blank/non-blank displayed values. Multiple column
 filters use AND semantics, retain source order, and feed the same ordinary or
 virtualized table path as search results.
 
-Filters remain transient until the dedicated Phase 2 persistence item.
+Filters are persisted per worksheet.
 
 ## Selection
 
@@ -244,7 +244,7 @@ tab/newline-delimited text fills cells from the paste origin and appends manual
 rows when necessary. Manual-row actions duplicate beside the original or
 delete the target; deletion also removes that row ID from selection.
 
-Manual rows remain transient until the dedicated Phase 2 persistence item.
+Manual rows are persisted per worksheet.
 
 ## Selected columns
 
@@ -262,13 +262,15 @@ rendering; hiding a column does not remove it from search, structured filters,
 or future mapping. Export selection records which columns future export flows
 will include.
 
-The preferences remain transient until the dedicated Phase 2 persistence item.
-All imported columns remain mappable unless intentionally disabled because of
-unsupported data.
+The preferences are persisted per worksheet. All imported columns remain
+mappable unless intentionally disabled because of unsupported data.
 
 ## Workbook snapshot
 
-For a self-contained project, persist normalized data rather than the binary workbook.
+For a self-contained project, persist normalized data rather than the binary
+workbook. The validated snapshot includes every worksheet's normalized data,
+selected row IDs, structured filters, overrides, manual rows, and column
+preferences.
 
 Optional source metadata:
 

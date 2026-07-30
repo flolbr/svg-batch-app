@@ -85,6 +85,7 @@ describe("App", () => {
       },
     );
     useAppStore.setState((state) => ({
+      project: null,
       selection: {
         activeRowId: null,
         selectedRowIds: [],

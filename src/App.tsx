@@ -86,6 +86,7 @@ const emptySourceColumns: DataColumn[] = [];
 const emptySourceRows: SourceRow[] = [];
 const emptyManualRows: ManualRow[] = [];
 const emptyRowOverrides: RowOverride[] = [];
+const emptyColumnFilters: ColumnFilter[] = [];
 const emptyColumnPreferences: ColumnPreferences = {
   visible: [],
   exported: [],
@@ -365,7 +366,6 @@ export function App() {
   );
   const [searchColumn, setSearchColumn] = useState<ColumnId | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [columnFilters, setColumnFilters] = useState<ColumnFilter[]>([]);
   const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 150);
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
   const spreadsheet = useAppStore((state) => state.sources.spreadsheet);
@@ -374,6 +374,7 @@ export function App() {
   const deselectRows = useAppStore((state) => state.deselectRows);
   const selectRows = useAppStore((state) => state.selectRows);
   const setManualRows = useAppStore((state) => state.setManualRows);
+  const setColumnFilters = useAppStore((state) => state.setColumnFilters);
   const setColumnPreferences = useAppStore(
     (state) => state.setColumnPreferences,
   );
@@ -388,6 +389,9 @@ export function App() {
   const toggleRowSelection = useAppStore((state) => state.toggleRowSelection);
   const sourceColumns = spreadsheet?.data.columns ?? emptySourceColumns;
   const sourceRows = spreadsheet?.data.rows ?? emptySourceRows;
+  const columnFilters =
+    spreadsheet?.columnFiltersBySheet[spreadsheet.selectedSheetName] ??
+    emptyColumnFilters;
   const columnPreferences =
     spreadsheet?.columnPreferencesBySheet[spreadsheet.selectedSheetName] ??
     emptyColumnPreferences;
@@ -525,7 +529,6 @@ export function App() {
   }, [activeSearchColumn, columnFilters, debouncedSearchQuery]);
 
   useEffect(() => {
-    setColumnFilters([]);
     setEditingManualRowId(null);
     setEditingSourceRowId(null);
   }, [spreadsheet?.data]);

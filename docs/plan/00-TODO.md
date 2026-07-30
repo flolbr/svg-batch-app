@@ -127,7 +127,20 @@ Only one implementation item should normally be `[-]`.
     `src/store.ts`, `src/store.test.ts`, `src/App.tsx`, `src/App.test.tsx`.
   - Tests: `bun run test -- src/data/columnPreferences.test.ts src/store.test.ts src/App.test.tsx`;
     `bun run check`.
-- [ ] Persist selected rows, filters, edits, and manual rows.
+- [x] Persist selected rows, filters, edits, and manual rows.
+  - Implementation includes the normalized worksheet snapshot and existing
+    column preferences so restored row IDs and worksheet state remain valid.
+  - Every worksheet is normalized at import. Validated project data stores
+    worksheet-scoped selections, filters, overrides, manual rows, and column
+    preferences without storing the parsed workbook.
+  - Loading project data restores the complete Data panel state and worksheet
+    switching without requiring the original spreadsheet file.
+  - Main files: `src/project/dataProjectState.ts`,
+    `src/project/dataProjectState.test.ts`, `src/project/loadProject.ts`,
+    `src/project/loadProject.test.ts`, `src/store.ts`, `src/store.test.ts`,
+    `src/App.tsx`, `src/App.test.tsx`.
+  - Tests: `bun run test -- src/project/dataProjectState.test.ts src/project/loadProject.test.ts src/store.test.ts src/App.test.tsx`;
+    `bun run check`.
 
 ## Phase 3 — SVG import, tree, and preview
 

@@ -37,6 +37,37 @@ describe("loadEmbeddedProject", () => {
     });
   });
 
+  it("parses validated persisted spreadsheet state", () => {
+    const project = {
+      schemaVersion: 1,
+      projectId: "project-1",
+      name: "Badges",
+      data: {
+        fileName: "members.csv",
+        fileSize: 24,
+        sheetNames: ["Members"],
+        selectedSheetName: "Members",
+        worksheets: {
+          Members: {
+            data: { columns: [], rows: [] },
+            selectedRowIds: [],
+            filters: [],
+            rowOverrides: [],
+            manualRows: [],
+            columnPreferences: { visible: [], exported: [] },
+          },
+        },
+      },
+    };
+
+    expect(
+      loadEmbeddedProject(projectDocument(JSON.stringify(project))),
+    ).toEqual({
+      success: true,
+      project,
+    });
+  });
+
   it("reports a missing project block", () => {
     expect(loadEmbeddedProject(projectDocument())).toEqual({
       success: false,

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { dataProjectStateSchema } from "./dataProjectState";
 
 const projectSchema = z
   .object({
@@ -7,6 +8,7 @@ const projectSchema = z
     }),
     projectId: z.string().trim().min(1, "Project ID is required."),
     name: z.string().trim().min(1, "Project name is required."),
+    data: dataProjectStateSchema.optional(),
   })
   .strict();
 

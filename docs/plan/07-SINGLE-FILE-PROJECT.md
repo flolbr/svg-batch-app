@@ -38,15 +38,35 @@ type Project = {
   template?: TemplateProjectState;
   data?: DataProjectState;
   mappings: Mapping[];
-  selection: SelectionState;
-  filters: PersistedFilterState;
-  columnPreferences: ColumnPreferences;
   assets: ProjectAsset[];
   exportSettings: ExportSettings;
   sources: PersistedSourceReference[];
   audit: ProjectAudit;
 };
 ```
+
+The Phase 2 data boundary is:
+
+```ts
+type DataProjectState = {
+  fileName: string;
+  fileSize: number;
+  sheetNames: string[];
+  selectedSheetName: string;
+  worksheets: Record<string, {
+    data: NormalizedWorksheet;
+    selectedRowIds: RowId[];
+    filters: ColumnFilter[];
+    rowOverrides: RowOverride[];
+    manualRows: ManualRow[];
+    columnPreferences: ColumnPreferences;
+  }>;
+};
+```
+
+The parsed workbook remains transient. Every worksheet is normalized at import
+so a project can restore the Data panel and switch worksheets without the
+original file.
 
 Validate with Zod at load.
 

@@ -1,8 +1,21 @@
 import * as XLSX from "xlsx";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { initialPanelWeights, useAppStore } from "./store";
 
 describe("useAppStore", () => {
+  beforeEach(() => {
+    useAppStore.setState({
+      project: null,
+      selection: {
+        activeRowId: null,
+        selectedRowIds: [],
+        svgObjectId: null,
+      },
+      sources: { spreadsheet: null, svg: null },
+      ui: { panelWeights: initialPanelWeights },
+    });
+  });
+
   it("starts with empty project, source, and selection slices and default UI weights", () => {
     const state = useAppStore.getState();
 
@@ -48,7 +61,7 @@ describe("useAppStore", () => {
     expect(stateAfter.selection).toBe(stateBefore.selection);
   });
 
-  it("stores an imported workbook without changing unrelated slices", () => {
+  it("stores every normalized worksheet and clears prior row selection", () => {
     const stateBefore = useAppStore.getState();
     const spreadsheet = {
       fileName: "customers.xlsx",
@@ -65,21 +78,28 @@ describe("useAppStore", () => {
     const stateAfter = useAppStore.getState();
     expect(stateAfter.sources.spreadsheet).toEqual({
       ...spreadsheet,
+      columnFiltersBySheet: {},
       columnPreferencesBySheet: {
         Customers: { visible: [], exported: [] },
+        "Mapping Guide": { visible: [], exported: [] },
       },
       data: { columns: [], rows: [] },
       manualRowsBySheet: {},
       normalizedDataBySheet: {
         Customers: { columns: [], rows: [] },
+        "Mapping Guide": { columns: [], rows: [] },
       },
       rowOverridesBySheet: {},
+      selectedRowIdsBySheet: {},
       selectedSheetName: "Customers",
     });
     expect(stateAfter.sources.svg).toBe(stateBefore.sources.svg);
     expect(stateAfter.project).toBe(stateBefore.project);
     expect(stateAfter.ui).toBe(stateBefore.ui);
-    expect(stateAfter.selection).toBe(stateBefore.selection);
+    expect(stateAfter.selection).toEqual({
+      ...stateBefore.selection,
+      selectedRowIds: [],
+    });
   });
 
   it("changes only to a worksheet available in the imported workbook", () => {
@@ -271,6 +291,10 @@ describe("useAppStore", () => {
         visible: ["col-0", "col-1"],
         exported: ["col-0", "col-1"],
       },
+      Plans: {
+        visible: ["col-0"],
+        exported: ["col-0"],
+      },
     });
 
     useAppStore.getState().setColumnPreferences({
@@ -288,6 +312,109 @@ describe("useAppStore", () => {
     ).toEqual({
       Members: { visible: ["col-0"], exported: ["col-1"] },
       Plans: { visible: [], exported: ["col-0"] },
+    });
+  });
+
+  it("persists and restores every worksheet's data workflow state", () => {
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.aoa_to_sheet([
+        ["Name", "City"],
+        ["Ada", "London"],
+      ]),
+      "Members",
+    );
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.aoa_to_sheet([["Plan"], ["Basic"]]),
+      "Plans",
+    );
+    useAppStore.getState().setProject({
+      schemaVersion: 1,
+      projectId: "project-1",
+      name: "Badges",
+    });
+    useAppStore.getState().setSpreadsheetSource({
+      fileName: "members.xlsx",
+      fileSize: 123,
+      sheetNames: workbook.SheetNames,
+      workbook,
+    });
+
+    const memberRowId =
+      useAppStore.getState().sources.spreadsheet?.data.rows[0].id ?? "";
+    useAppStore.getState().setColumnFilters([
+      {
+        type: "text",
+        columnId: "col-1",
+        operator: "equals",
+        value: "London",
+      },
+    ]);
+    useAppStore
+      .getState()
+      .setManualRows([
+        { id: "manual-member", values: { "col-0": "Grace", "col-1": null } },
+      ]);
+    useAppStore
+      .getState()
+      .setRowOverrides([
+        { rowId: memberRowId, values: { "col-0": "Augusta" } },
+      ]);
+    useAppStore.getState().setColumnPreferences({
+      visible: ["col-0"],
+      exported: ["col-1"],
+    });
+    useAppStore.getState().selectRows([memberRowId, "manual-member"]);
+    useAppStore.getState().setSelectedWorksheet("Plans");
+
+    const persistedProject = useAppStore.getState().project;
+    expect(persistedProject?.data?.worksheets.Members.selectedRowIds).toEqual([
+      memberRowId,
+      "manual-member",
+    ]);
+    expect(persistedProject?.data?.selectedSheetName).toBe("Plans");
+
+    useAppStore.setState({
+      project: null,
+      selection: {
+        activeRowId: null,
+        selectedRowIds: [],
+        svgObjectId: null,
+      },
+      sources: { spreadsheet: null, svg: null },
+    });
+    useAppStore.getState().setProject(persistedProject!);
+
+    const restored = useAppStore.getState().sources.spreadsheet;
+    expect(restored?.workbook).toBeUndefined();
+    expect(restored?.selectedSheetName).toBe("Plans");
+    expect(useAppStore.getState().selection.selectedRowIds).toEqual([]);
+
+    useAppStore.getState().setSelectedWorksheet("Members");
+    expect(useAppStore.getState().selection.selectedRowIds).toEqual([
+      memberRowId,
+      "manual-member",
+    ]);
+    expect(restored?.normalizedDataBySheet.Members.rows[0].id).toBe(memberRowId);
+    expect(restored?.columnFiltersBySheet.Members).toEqual([
+      {
+        type: "text",
+        columnId: "col-1",
+        operator: "equals",
+        value: "London",
+      },
+    ]);
+    expect(restored?.manualRowsBySheet.Members).toEqual([
+      { id: "manual-member", values: { "col-0": "Grace", "col-1": null } },
+    ]);
+    expect(restored?.rowOverridesBySheet.Members).toEqual([
+      { rowId: memberRowId, values: { "col-0": "Augusta" } },
+    ]);
+    expect(restored?.columnPreferencesBySheet.Members).toEqual({
+      visible: ["col-0"],
+      exported: ["col-1"],
     });
   });
 });
