@@ -61,6 +61,26 @@ describe("useAppStore", () => {
     expect(stateAfter.selection).toBe(stateBefore.selection);
   });
 
+  it("stores an accepted SVG without changing unrelated state", () => {
+    const stateBefore = useAppStore.getState();
+    const svg = {
+      fileName: "badge.svg",
+      fileSize: 123,
+      acceptedSvg: '<svg xmlns="http://www.w3.org/2000/svg" />',
+    };
+
+    stateBefore.setSvgSource(svg);
+
+    const stateAfter = useAppStore.getState();
+    expect(stateAfter.sources.svg).toEqual(svg);
+    expect(stateAfter.sources.spreadsheet).toBe(
+      stateBefore.sources.spreadsheet,
+    );
+    expect(stateAfter.project).toBe(stateBefore.project);
+    expect(stateAfter.selection).toBe(stateBefore.selection);
+    expect(stateAfter.ui).toBe(stateBefore.ui);
+  });
+
   it("stores every normalized worksheet and clears prior row selection", () => {
     const stateBefore = useAppStore.getState();
     const spreadsheet = {

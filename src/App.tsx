@@ -80,6 +80,7 @@ import {
 } from "./data/rowOverrides";
 import { createRowSearchIndex, searchRows } from "./data/searchRows";
 import { type PanelWeights, useAppStore } from "./store";
+import { importSvgFile } from "./svg/importSvg";
 
 const minimumPanelWidths = [360, 300, 360];
 const emptySourceColumns: DataColumn[] = [];
@@ -358,6 +359,7 @@ export function App() {
   const dataTableScrollRef = useRef<HTMLDivElement>(null);
   const resizeSession = useRef<ResizeSession | null>(null);
   const [isImportingSpreadsheet, setIsImportingSpreadsheet] = useState(false);
+  const [isImportingSvg, setIsImportingSvg] = useState(false);
   const [editingManualRowId, setEditingManualRowId] = useState<string | null>(
     null,
   );
@@ -369,6 +371,7 @@ export function App() {
   const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 150);
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
   const spreadsheet = useAppStore((state) => state.sources.spreadsheet);
+  const svg = useAppStore((state) => state.sources.svg);
   const selectedRowIds = useAppStore((state) => state.selection.selectedRowIds);
   const clearRowSelection = useAppStore((state) => state.clearRowSelection);
   const deselectRows = useAppStore((state) => state.deselectRows);
@@ -386,6 +389,7 @@ export function App() {
   const setSpreadsheetSource = useAppStore(
     (state) => state.setSpreadsheetSource,
   );
+  const setSvgSource = useAppStore((state) => state.setSvgSource);
   const toggleRowSelection = useAppStore((state) => state.toggleRowSelection);
   const sourceColumns = spreadsheet?.data.columns ?? emptySourceColumns;
   const sourceRows = spreadsheet?.data.rows ?? emptySourceRows;
@@ -632,6 +636,33 @@ export function App() {
       });
     } finally {
       setIsImportingSpreadsheet(false);
+    }
+  }
+
+  async function handleSvgFile(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file) return;
+
+    setIsImportingSvg(true);
+    try {
+      const importedSvg = await importSvgFile(file);
+      setSvgSource(importedSvg);
+      notifications.show({
+        color: "green",
+        message: "The SVG passed the supported-feature and resource checks.",
+        title: `${importedSvg.fileName} imported`,
+      });
+    } catch (error) {
+      notifications.show({
+        color: "red",
+        message:
+          error instanceof Error ? error.message : "The SVG could not be read.",
+        title: "SVG import failed",
+      });
+    } finally {
+      setIsImportingSvg(false);
     }
   }
 
@@ -1091,19 +1122,57 @@ export function App() {
             <div id="objects-panel-title">
               <PanelTitle icon={<IconBox size={20} />}>SVG Objects</PanelTitle>
             </div>
+            <Group gap="sm">
+              <Button
+                component="label"
+                leftSection={<IconFileTypeSvg />}
+                loading={isImportingSvg}
+                variant="outline"
+              >
+                Import local SVG
+                <input
+                  accept=".svg,image/svg+xml"
+                  aria-label="Choose an SVG file"
+                  hidden
+                  onChange={handleSvgFile}
+                  type="file"
+                />
+              </Button>
+              {svg && (
+                <Badge color="green" variant="light">
+                  Sanitized
+                </Badge>
+              )}
+            </Group>
+            <Text size="sm" c={svg ? "blue" : "dimmed"} fw={svg ? 600 : 400}>
+              {svg ? svg.fileName : "No SVG loaded"}
+            </Text>
             <TextInput
               aria-label="Search SVG objects"
+              disabled={!svg}
               placeholder="Search objects..."
               leftSection={<IconSearch size={16} />}
             />
 
-            <div className="empty-state">
-              <IconBox size={34} stroke={1.4} />
-              <Text fw={600}>No SVG loaded</Text>
-              <Text size="sm" c="dimmed" ta="center">
-                Import an SVG to inspect its objects and configure mappings.
-              </Text>
-            </div>
+            {!svg && (
+              <div className="empty-state">
+                <IconBox size={34} stroke={1.4} />
+                <Text fw={600}>No SVG loaded</Text>
+                <Text size="sm" c="dimmed" ta="center">
+                  Import an SVG to inspect its objects and configure mappings.
+                </Text>
+              </div>
+            )}
+
+            {svg && (
+              <div className="empty-state">
+                <IconCheck size={34} stroke={1.4} />
+                <Text fw={600}>SVG ready</Text>
+                <Text size="sm" c="dimmed" ta="center">
+                  The sanitized template is ready for object discovery.
+                </Text>
+              </div>
+            )}
 
             <div className="mapping-placeholder">
               <Text fw={600}>Mapping configuration</Text>

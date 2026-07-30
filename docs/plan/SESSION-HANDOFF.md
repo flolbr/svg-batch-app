@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Phase 2 spreadsheet state persistence is
+No implementation task is active. Local SVG import and sanitization are
 complete.
 
 ## What works
@@ -114,6 +114,14 @@ complete.
   rows, and column preferences.
 - Loading project data reconstructs the complete spreadsheet runtime without
   the original SheetJS workbook. The workbook object remains transient.
+- The SVG panel accepts local `.svg` files and reports import success or failure
+  through the existing notification surface.
+- SVG input is parsed as XML and rejected when malformed, rooted outside the
+  SVG namespace, or using unsupported elements, event handlers, unsafe links,
+  or external resources.
+- DOMPurify sanitizes the supported subset, which is validated again before
+  the accepted SVG string enters transient source state. The UI exposes the
+  source filename and sanitized status.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -121,17 +129,16 @@ complete.
 
 ## What remains
 
-SVG import, sanitization, object discovery, and preview remain Phase 3 work.
+SVG target validation, object discovery, and preview remain Phase 3 work.
 
 ## Next concrete step
 
-Start the first `Phase 3 — SVG import, tree, and preview` item in
-`00-TODO.md`:
+Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
-1. read `05-SVG-AND-MAPPINGS.md` and mark “Import and sanitize a local SVG”
-   `[-]`;
-2. define and test the untrusted SVG import/sanitization boundary;
-3. connect local SVG import errors and success state to the existing SVG panel.
+1. mark “Validate unique IDs and supported targets” `[-]`;
+2. define target eligibility and duplicate-ID validation over accepted SVG;
+3. reject incompatible templates with actionable errors before building the
+   object tree.
 
 ## Files changed
 
@@ -139,21 +146,19 @@ Start the first `Phase 3 — SVG import, tree, and preview` item in
 - `src/App.test.tsx`
 - `src/store.ts`
 - `src/store.test.ts`
-- `src/project/dataProjectState.ts`
-- `src/project/dataProjectState.test.ts`
-- `src/project/loadProject.ts`
-- `src/project/loadProject.test.ts`
+- `src/svg/importSvg.ts`
+- `src/svg/importSvg.test.ts`
 - `docs/plan/00-TODO.md`
-- `docs/plan/04-DATA-AND-SEARCH.md`
-- `docs/plan/07-SINGLE-FILE-PROJECT.md`
+- `docs/plan/05-SVG-AND-MAPPINGS.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/project/dataProjectState.test.ts src/project/loadProject.test.ts src/store.test.ts src/App.test.tsx`
+- `bun run test -- src/svg/importSvg.test.ts src/store.test.ts src/App.test.tsx`
 - `bun run build:single`
 - `bun run check`
+- Browser Harness local SVG upload at 1920 px
 
 ## Latest substantive commit
 
-`81d2a9e feat: persist spreadsheet project state`
+Pending commit for local SVG import and sanitization.

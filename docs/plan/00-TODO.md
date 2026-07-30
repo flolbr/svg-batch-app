@@ -144,7 +144,16 @@ Only one implementation item should normally be `[-]`.
 
 ## Phase 3 — SVG import, tree, and preview
 
-- [ ] Import and sanitize a local SVG.
+- [x] Import and sanitize a local SVG.
+  - Local SVG files are parsed as XML, rejected when malformed or outside the
+    supported element/resource subset, and sanitized with DOMPurify before
+    their accepted string enters application state.
+  - The SVG panel reports sanitized source status and keeps the previous source
+    unchanged when an import fails.
+  - Main files: `src/svg/importSvg.ts`, `src/svg/importSvg.test.ts`,
+    `src/store.ts`, `src/store.test.ts`, `src/App.tsx`, `src/App.test.tsx`.
+  - Tests: `bun run test -- src/svg/importSvg.test.ts src/store.test.ts src/App.test.tsx`;
+    `bun run check`; Browser Harness local SVG upload at 1920 px.
 - [ ] Validate unique IDs and supported targets.
 - [ ] Build the SVG object tree from the sanitized DOM.
 - [ ] Implement the custom accessible tree:

@@ -16,6 +16,12 @@ read text
 
 Never inject the unsanitized SVG into the application DOM.
 
+The local importer parses SVG as XML, requires an SVG namespace root, rejects
+unsupported elements and event attributes, permits only local fragment
+references or embedded image data URLs, and rejects external `url(...)`
+resources. DOMPurify sanitizes the accepted subset, which is parsed and
+validated again before its string enters source state.
+
 ## Supported SVG subset
 
 Support common:

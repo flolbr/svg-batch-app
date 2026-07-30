@@ -20,6 +20,7 @@ import {
 import type { RowOverride } from "./data/rowOverrides";
 import type { DataProjectState } from "./project/dataProjectState";
 import type { Project } from "./project/loadProject";
+import type { ImportedSvg } from "./svg/importSvg";
 
 export type PanelWeights = [number, number, number];
 export type SpreadsheetSource = Omit<ImportedSpreadsheet, "workbook"> & {
@@ -41,7 +42,7 @@ type AppStore = {
   };
   sources: {
     spreadsheet: SpreadsheetSource | null;
-    svg: null;
+    svg: ImportedSvg | null;
   };
   selection: {
     activeRowId: string | null;
@@ -56,6 +57,7 @@ type AppStore = {
   setColumnPreferences: (preferences: ColumnPreferences) => void;
   setRowOverrides: (overrides: RowOverride[]) => void;
   setSpreadsheetSource: (spreadsheet: ImportedSpreadsheet) => void;
+  setSvgSource: (svg: ImportedSvg) => void;
   clearRowSelection: () => void;
   deselectRows: (rowIds: RowId[]) => void;
   selectRows: (rowIds: RowId[]) => void;
@@ -283,6 +285,13 @@ export const useAppStore = create<AppStore>()((set) => ({
         [],
       );
     }),
+  setSvgSource: (svg) =>
+    set((state) => ({
+      sources: {
+        ...state.sources,
+        svg,
+      },
+    })),
   setColumnFilters: (filters) =>
     set((state) => {
       const spreadsheet = state.sources.spreadsheet;

@@ -164,6 +164,35 @@ describe("App", () => {
     );
   });
 
+  it("imports and reports a sanitized local SVG", async () => {
+    const user = userEvent.setup();
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    await user.upload(
+      screen.getByLabelText("Choose an SVG file"),
+      new File(
+        [
+          '<svg xmlns="http://www.w3.org/2000/svg"><g id="badge"><text>Hello</text></g></svg>',
+        ],
+        "badge.svg",
+        { type: "image/svg+xml" },
+      ),
+    );
+
+    await waitFor(() => {
+      expect(useAppStore.getState().sources.svg?.fileName).toBe("badge.svg");
+    });
+    expect(screen.getByText("Sanitized")).toBeInTheDocument();
+    expect(screen.getByText("SVG ready")).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "Search SVG objects" }),
+    ).toBeEnabled();
+  });
+
   it("imports a local spreadsheet and reports the available worksheets", async () => {
     const user = userEvent.setup();
     render(

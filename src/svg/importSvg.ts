@@ -1,0 +1,122 @@
+import DOMPurify from "dompurify";
+
+const supportedElements = new Set([
+  "svg",
+  "g",
+  "text",
+  "tspan",
+  "title",
+  "desc",
+  "path",
+  "rect",
+  "circle",
+  "ellipse",
+  "line",
+  "polyline",
+  "polygon",
+  "defs",
+  "clippath",
+  "mask",
+  "lineargradient",
+  "radialgradient",
+  "stop",
+  "image",
+  "use",
+  "symbol",
+]);
+
+export type ImportedSvg = {
+  fileName: string;
+  fileSize: number;
+  acceptedSvg: string;
+};
+
+function importError(message: string): Error {
+  return new Error(`SVG import rejected: ${message}`);
+}
+
+function isLocalReference(value: string): boolean {
+  return /^#[^\s]+$/.test(value);
+}
+
+function isEmbeddedImage(value: string): boolean {
+  return /^data:image\//i.test(value);
+}
+
+function validateResourceUrls(element: Element): void {
+  for (const attribute of Array.from(element.attributes)) {
+    const value = attribute.value.trim();
+    const name = attribute.localName.toLowerCase();
+
+    if (/^on/i.test(attribute.name)) {
+      throw importError(
+        `event handler attribute "${attribute.name}" is not supported`,
+      );
+    }
+
+    if (name === "href") {
+      const isSafeImage =
+        element.localName.toLowerCase() === "image" && isEmbeddedImage(value);
+      if (!isLocalReference(value) && !isSafeImage) {
+        throw importError(`unsafe href on <${element.localName}>`);
+      }
+    }
+
+    for (const match of value.matchAll(/url\(\s*(['"]?)(.*?)\1\s*\)/gi)) {
+      if (!isLocalReference(match[2].trim())) {
+        throw importError(`external url() resource in "${attribute.name}"`);
+      }
+    }
+  }
+}
+
+function parseAndValidateSvg(source: string): Element {
+  const document = new DOMParser().parseFromString(source, "image/svg+xml");
+  if (
+    document.documentElement.localName.toLowerCase() === "parsererror" ||
+    document.getElementsByTagName("parsererror").length > 0
+  ) {
+    throw importError("the file is not well-formed XML");
+  }
+
+  const root = document.documentElement;
+  if (
+    root.localName.toLowerCase() !== "svg" ||
+    root.namespaceURI !== "http://www.w3.org/2000/svg"
+  ) {
+    throw importError("the document root must be an SVG element");
+  }
+
+  for (const element of Array.from(document.getElementsByTagName("*"))) {
+    const name = element.localName.toLowerCase();
+    if (
+      element.namespaceURI !== "http://www.w3.org/2000/svg" ||
+      !supportedElements.has(name)
+    ) {
+      throw importError(`unsupported element <${element.localName}>`);
+    }
+    validateResourceUrls(element);
+  }
+
+  return root;
+}
+
+export async function importSvgFile(file: File): Promise<ImportedSvg> {
+  const source = await file.text();
+  const root = parseAndValidateSvg(source);
+  const acceptedSvg = DOMPurify.sanitize(root.outerHTML, {
+    USE_PROFILES: { svg: true, svgFilters: true },
+    ADD_TAGS: Array.from(supportedElements),
+    ADD_ATTR: ["xlink:href"],
+    // SVG IDs are mapping targets and may legitimately be common names such
+    // as "name". The accepted document remains SVG-only and is not injected
+    // into the application DOM unsafely.
+    SANITIZE_DOM: false,
+  });
+
+  // Sanitize after parsing, then validate once more so accepted input stays in
+  // the same narrow subset even if DOMPurify configuration changes.
+  parseAndValidateSvg(acceptedSvg);
+
+  return { fileName: file.name, fileSize: file.size, acceptedSvg };
+}
