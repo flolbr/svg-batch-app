@@ -208,4 +208,4 @@ Continue `Phase 4 — Mapping engine` in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending current feature commit.
+`c26072f feat: apply visibility mappings`
