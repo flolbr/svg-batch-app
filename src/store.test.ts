@@ -5,6 +5,7 @@ import { initialPanelWeights, useAppStore } from "./store";
 describe("useAppStore", () => {
   beforeEach(() => {
     useAppStore.setState({
+      mappings: [],
       project: null,
       selection: {
         activeRowId: null,
@@ -19,6 +20,7 @@ describe("useAppStore", () => {
   it("starts with empty project, source, and selection slices and default UI weights", () => {
     const state = useAppStore.getState();
 
+    expect(state.mappings).toEqual([]);
     expect(state.project).toBeNull();
     expect(state.ui).toEqual({ panelWeights: [38, 27, 35] });
     expect(state.sources).toEqual({ spreadsheet: null, svg: null });
@@ -63,6 +65,13 @@ describe("useAppStore", () => {
 
   it("stores an accepted SVG without changing unrelated state", () => {
     useAppStore.getState().setSvgObjectSelection("old-target");
+    useAppStore.getState().setMapping({
+      id: "mapping-old-target",
+      targetId: "old-target",
+      columnId: "col-0",
+      type: "text",
+      fit: "keep",
+    });
     const stateBefore = useAppStore.getState();
     const svg = {
       fileName: "badge.svg",
@@ -84,6 +93,7 @@ describe("useAppStore", () => {
 
     const stateAfter = useAppStore.getState();
     expect(stateAfter.sources.svg).toEqual(svg);
+    expect(stateAfter.mappings).toEqual([]);
     expect(stateAfter.sources.spreadsheet).toBe(
       stateBefore.sources.spreadsheet,
     );
@@ -96,6 +106,68 @@ describe("useAppStore", () => {
 
     stateAfter.setSvgObjectSelection("badge");
     expect(useAppStore.getState().selection.svgObjectId).toBe("badge");
+  });
+
+  it("adds, replaces, and removes one mapping per SVG target", () => {
+    const store = useAppStore.getState();
+    const sourcesBefore = store.sources;
+    const selectionBefore = store.selection;
+
+    store.setMapping({
+      id: "mapping-name",
+      targetId: "name",
+      columnId: "col-0",
+      type: "text",
+      fit: "keep",
+    });
+    useAppStore.getState().setMapping({
+      id: "mapping-photo",
+      targetId: "photo",
+      columnId: "col-1",
+      type: "image",
+      fit: "contain",
+      emptyBehavior: "error",
+    });
+    useAppStore.getState().setMapping({
+      id: "mapping-name",
+      targetId: "name",
+      columnId: "col-2",
+      type: "text",
+      fit: "truncate",
+      required: true,
+    });
+
+    expect(useAppStore.getState().mappings).toEqual([
+      {
+        id: "mapping-name",
+        targetId: "name",
+        columnId: "col-2",
+        type: "text",
+        fit: "truncate",
+        required: true,
+      },
+      {
+        id: "mapping-photo",
+        targetId: "photo",
+        columnId: "col-1",
+        type: "image",
+        fit: "contain",
+        emptyBehavior: "error",
+      },
+    ]);
+    expect(useAppStore.getState().sources).toBe(sourcesBefore);
+    expect(useAppStore.getState().selection).toBe(selectionBefore);
+
+    useAppStore.getState().removeMapping("name");
+    expect(
+      useAppStore.getState().mappings.map((mapping) => mapping.targetId),
+    ).toEqual(["photo"]);
+
+    const stateBeforeMissingRemoval = useAppStore.getState();
+    useAppStore.getState().removeMapping("missing");
+    expect(useAppStore.getState().mappings).toEqual(
+      stateBeforeMissingRemoval.mappings,
+    );
   });
 
   it("stores every normalized worksheet and clears prior row selection", () => {
@@ -475,6 +547,7 @@ describe("useAppStore", () => {
     expect(persistedProject?.data?.selectedSheetName).toBe("Plans");
 
     useAppStore.setState({
+      mappings: [],
       project: null,
       selection: {
         activeRowId: null,

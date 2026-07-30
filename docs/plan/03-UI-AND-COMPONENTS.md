@@ -99,6 +99,15 @@ Mapping editor:
 
 Use Mantine controls directly.
 
+The selected target owns at most one mapping in the current editor. Mapping
+type choices are limited to structurally compatible targets: text and
+visibility for text containers; exclusive group, QR, and visibility for
+groups; image and visibility for image targets; and visibility for other
+addressable elements. Creating a mapping starts with the active worksheet's
+first column, while the column selector includes every source column even when
+it is hidden from the grid. Switching worksheets does not silently discard a
+mapping whose column is absent; validation reports that incompatibility.
+
 ## Right panel — Preview
 
 Controls:

@@ -246,12 +246,18 @@ select {
   border-radius: 8px;
 }
 
+.mapping-editor-region,
 .mapping-placeholder {
   margin-top: auto;
   padding: 14px;
   background: #f7f9fc;
   border: 1px solid #e0e5eb;
   border-radius: 8px;
+}
+
+.mapping-editor-region {
+  max-height: 390px;
+  overflow: auto;
 }
 
 .preview-canvas {

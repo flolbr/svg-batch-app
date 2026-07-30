@@ -58,6 +58,7 @@ import {
 } from "react";
 import { ColumnFilters } from "./ColumnFilters";
 import { ColumnSettings } from "./ColumnSettings";
+import { MappingEditor } from "./MappingEditor";
 import { SvgObjectTree } from "./SvgObjectTree";
 import { SvgPreview } from "./SvgPreview";
 import type { ColumnPreferences } from "./data/columnPreferences";
@@ -400,6 +401,7 @@ export function App() {
   const [previewZoomPercent, setPreviewZoomPercent] = useState(100);
   const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 150);
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
+  const mappings = useAppStore((state) => state.mappings);
   const spreadsheet = useAppStore((state) => state.sources.spreadsheet);
   const svg = useAppStore((state) => state.sources.svg);
   const activeRowId = useAppStore((state) => state.selection.activeRowId);
@@ -412,6 +414,7 @@ export function App() {
   const selectRows = useAppStore((state) => state.selectRows);
   const setActiveRow = useAppStore((state) => state.setActiveRow);
   const setManualRows = useAppStore((state) => state.setManualRows);
+  const setMapping = useAppStore((state) => state.setMapping);
   const setColumnFilters = useAppStore((state) => state.setColumnFilters);
   const setColumnPreferences = useAppStore(
     (state) => state.setColumnPreferences,
@@ -425,6 +428,7 @@ export function App() {
     (state) => state.setSpreadsheetSource,
   );
   const setSvgSource = useAppStore((state) => state.setSvgSource);
+  const removeMapping = useAppStore((state) => state.removeMapping);
   const setSvgObjectSelection = useAppStore(
     (state) => state.setSvgObjectSelection,
   );
@@ -440,6 +444,9 @@ export function App() {
   const selectedSvgNode = useMemo(
     () => findSvgNode(svg?.tree ?? [], selectedSvgObjectId),
     [selectedSvgObjectId, svg?.tree],
+  );
+  const selectedMapping = mappings.find(
+    (mapping) => mapping.targetId === selectedSvgObjectId,
   );
   const svgSourceStatus =
     svgSourceStatusPresentation[svg?.sourceStatus ?? "unavailable"];
@@ -1249,14 +1256,24 @@ export function App() {
               </Stack>
             )}
 
-            <div className="mapping-placeholder">
-              <Text fw={600}>Mapping configuration</Text>
-              <Text size="sm" c="dimmed">
-                {selectedSvgNode
-                  ? `${selectedSvgNode.label} · ${selectedSvgNode.tagName} · Unmapped`
-                  : "Select an SVG object to configure its mapping."}
-              </Text>
-            </div>
+            {selectedSvgNode ? (
+              <div className="mapping-editor-region">
+                <MappingEditor
+                  columns={sourceColumns}
+                  mapping={selectedMapping}
+                  onChange={setMapping}
+                  onRemove={() => removeMapping(selectedSvgNode.id)}
+                  target={selectedSvgNode}
+                />
+              </div>
+            ) : (
+              <div className="mapping-placeholder">
+                <Text fw={600}>Mapping configuration</Text>
+                <Text size="sm" c="dimmed">
+                  Select an SVG object to configure its mapping.
+                </Text>
+              </div>
+            )}
           </Stack>
         </Paper>
 

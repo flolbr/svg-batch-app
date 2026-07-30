@@ -86,6 +86,7 @@ describe("App", () => {
       },
     );
     useAppStore.setState((state) => ({
+      mappings: [],
       project: null,
       selection: {
         activeRowId: null,
@@ -211,7 +212,10 @@ describe("App", () => {
     ).toBeInTheDocument();
     await user.click(screen.getByRole("treeitem", { name: /badge/ }));
     expect(useAppStore.getState().selection.svgObjectId).toBe("badge");
-    expect(screen.getByText("badge · g · Unmapped")).toBeInTheDocument();
+    expect(screen.getByText("badge (g #badge)")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Import or select spreadsheet data/),
+    ).toBeInTheDocument();
     await waitFor(() => {
       expect(preview.getAttribute("srcdoc")).toContain(
         'id="badge" data-svg-batch-highlight="true"',
@@ -251,6 +255,64 @@ describe("App", () => {
     expect(
       screen.getByRole("textbox", { name: "Search SVG objects" }),
     ).toBeEnabled();
+  });
+
+  it("configures and removes a mapping for the selected SVG object", async () => {
+    const user = userEvent.setup();
+    setMemberSpreadsheet();
+    useAppStore.getState().setSvgSource({
+      acceptedSvg:
+        '<svg xmlns="http://www.w3.org/2000/svg"><text id="member-name">Name</text></svg>',
+      fileName: "badge.svg",
+      fileSize: 1,
+      sourceStatus: "embedded",
+      targets: [{ id: "member-name", tagName: "text" }],
+      tree: [
+        {
+          children: [],
+          id: "member-name",
+          label: "Member name",
+          tagName: "text",
+        },
+      ],
+    });
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    await user.click(screen.getByRole("treeitem", { name: /Member name/ }));
+    await user.click(screen.getByRole("combobox", { name: "Mapping type" }));
+    fireEvent.click(screen.getByRole("option", { name: "Text", hidden: true }));
+
+    expect(useAppStore.getState().mappings).toEqual([
+      {
+        id: "mapping-member-name",
+        targetId: "member-name",
+        columnId: "col-0",
+        type: "text",
+        fit: "keep",
+        required: undefined,
+      },
+    ]);
+    expect(screen.getByText("Mapping configured.")).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("combobox", { name: "Spreadsheet column" }),
+    );
+    const cityMappingOption = screen
+      .getAllByRole("option", { name: "City", hidden: true })
+      .find((option) => option.hasAttribute("data-combobox-option"));
+    expect(cityMappingOption).toBeDefined();
+    fireEvent.click(cityMappingOption!);
+    expect(useAppStore.getState().mappings[0].columnId).toBe("col-1");
+
+    await user.click(screen.getByRole("button", { name: "Remove mapping" }));
+    expect(useAppStore.getState().mappings).toEqual([]);
+    expect(
+      screen.queryByRole("button", { name: "Remove mapping" }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows every SVG source status without enabling future adapters", () => {

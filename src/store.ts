@@ -18,6 +18,7 @@ import {
   toggleSelectedRow,
 } from "./data/rowSelection";
 import type { RowOverride } from "./data/rowOverrides";
+import type { Mapping, Mappings } from "./mappings/schema";
 import type { DataProjectState } from "./project/dataProjectState";
 import type { Project } from "./project/loadProject";
 import type { ImportedSvg } from "./svg/importSvg";
@@ -36,6 +37,7 @@ export type SpreadsheetSource = Omit<ImportedSpreadsheet, "workbook"> & {
 };
 
 type AppStore = {
+  mappings: Mappings;
   project: Project | null;
   ui: {
     panelWeights: PanelWeights;
@@ -53,11 +55,13 @@ type AppStore = {
   setPanelWeights: (panelWeights: PanelWeights) => void;
   setSelectedWorksheet: (sheetName: string) => void;
   setManualRows: (rows: ManualRow[]) => void;
+  setMapping: (mapping: Mapping) => void;
   setColumnFilters: (filters: ColumnFilter[]) => void;
   setColumnPreferences: (preferences: ColumnPreferences) => void;
   setRowOverrides: (overrides: RowOverride[]) => void;
   setSpreadsheetSource: (spreadsheet: ImportedSpreadsheet) => void;
   setSvgSource: (svg: ImportedSvg) => void;
+  removeMapping: (targetId: string) => void;
   setSvgObjectSelection: (id: string | null) => void;
   setActiveRow: (rowId: RowId | null) => void;
   clearRowSelection: () => void;
@@ -216,6 +220,7 @@ function selectedRowsState(state: AppStore, selectedRowIds: RowId[]) {
 }
 
 export const useAppStore = create<AppStore>()((set) => ({
+  mappings: [],
   project: null,
   ui: {
     panelWeights: initialPanelWeights,
@@ -314,6 +319,7 @@ export const useAppStore = create<AppStore>()((set) => ({
     }),
   setSvgSource: (svg) =>
     set((state) => ({
+      mappings: [],
       selection: {
         ...state.selection,
         svgObjectId: null,
@@ -322,6 +328,25 @@ export const useAppStore = create<AppStore>()((set) => ({
         ...state.sources,
         svg,
       },
+    })),
+  setMapping: (mapping) =>
+    set((state) => {
+      const existingIndex = state.mappings.findIndex(
+        (candidate) => candidate.targetId === mapping.targetId,
+      );
+      if (existingIndex === -1) {
+        return { mappings: [...state.mappings, mapping] };
+      }
+
+      const mappings = [...state.mappings];
+      mappings[existingIndex] = mapping;
+      return { mappings };
+    }),
+  removeMapping: (targetId) =>
+    set((state) => ({
+      mappings: state.mappings.filter(
+        (mapping) => mapping.targetId !== targetId,
+      ),
     })),
   setSvgObjectSelection: (svgObjectId) =>
     set((state) => ({

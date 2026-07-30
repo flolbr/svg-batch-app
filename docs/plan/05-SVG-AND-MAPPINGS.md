@@ -136,6 +136,14 @@ and non-empty; optional minimum font size is positive; and QR margin is a
 nonnegative integer. Cross-field behavior remains the responsibility of each
 mapping implementation.
 
+The mapping editor keeps one runtime mapping per SVG target in Zustand and
+uses the selected worksheet's complete normalized column list. It offers only
+structurally compatible mapping types, preserves shared fields when the type
+changes, and replaces type-specific fields with explicit defaults. Importing a
+replacement SVG clears mappings tied to the previous template. Worksheet
+changes retain mappings so the shared validation flow can report missing
+columns instead of silently deleting configuration.
+
 ### Direct text
 
 ```ts

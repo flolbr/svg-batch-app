@@ -1,10 +1,11 @@
 # Session handoff
 
-Last updated: 2026-07-30
+Last updated: 2026-07-31
 
 ## Current task
 
-No implementation task is active. Text fitting is complete.
+No implementation task is active. The mapping editor UI and column selector
+are complete.
 
 ## What works
 
@@ -186,6 +187,12 @@ No implementation task is active. Text fitting is complete.
 - Text mappings support keep, shrink, truncate, and validation-error fitting.
   Measurement is injected for deterministic preview/export reuse; shrink
   respects minimum font size, and truncation is Unicode-safe.
+- Selecting an SVG object exposes a controlled Mantine mapping editor with
+  target-compatible mapping types, all active-worksheet source columns,
+  required state, type-specific options, inline schema feedback, and removal.
+- Runtime mappings are one-per-target in Zustand. Mapping type changes preserve
+  shared fields, worksheet changes retain mappings for later validation, and
+  replacing the SVG clears mappings tied to the previous template.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -193,31 +200,40 @@ No implementation task is active. Text fitting is complete.
 
 ## What remains
 
-The mapping editor UI and column selector are the next Phase 4 item.
+Showing mapping validity in the SVG tree is the next Phase 4 item.
 
 ## Next concrete step
 
 Continue `Phase 4 — Mapping engine` in `00-TODO.md`:
 
-1. mark “Add mapping editor UI and column selector” `[-]`;
-2. add the smallest usable mapping editor for the existing mapping schemas;
-3. connect target and worksheet-column selection without adding speculative
-   mapping abstractions.
+1. mark “Show mapping validity in the SVG tree” `[-]`;
+2. derive mapped, warning, and error status from the current mappings, SVG
+   targets, and active worksheet columns;
+3. render the status accessibly without coupling the tree to Zustand.
 
 ## Files changed
 
-- `src/mappings/textFitting.ts`
-- `src/mappings/textFitting.test.ts`
-- `src/mappings/textMapping.ts`
-- `src/mappings/textMapping.test.ts`
+- `src/MappingEditor.tsx`
+- `src/MappingEditor.test.tsx`
+- `src/App.tsx`
+- `src/App.test.tsx`
+- `src/store.ts`
+- `src/store.test.ts`
+- `src/styles.css`
 - `docs/plan/00-TODO.md`
+- `docs/plan/03-UI-AND-COMPONENTS.md`
 - `docs/plan/05-SVG-AND-MAPPINGS.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
+- `bun run test -- src/MappingEditor.test.tsx src/store.test.ts
+  src/App.test.tsx`
 - `bun run check`
+- Browser Harness at 1920 px with the membership demo CSV/SVG: created a text
+  mapping, chose the Note column, switched to shrink fitting, exposed minimum
+  font size, and removed the mapping.
 
 ## Latest substantive commit
 
-`edf4f8c feat: add text fitting`
+Pending `feat: add mapping editor`

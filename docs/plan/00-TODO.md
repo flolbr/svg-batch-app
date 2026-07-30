@@ -1,6 +1,6 @@
 # 00 — TODO
 
-Last updated: 2026-07-30
+Last updated: 2026-07-31
 
 ## Status legend
 
@@ -318,7 +318,19 @@ Only one implementation item should normally be `[-]`.
     `src/mappings/textFitting.test.ts`, `src/mappings/textMapping.ts`,
     `src/mappings/textMapping.test.ts`.
   - Tests: `bun run check`.
-- [ ] Add mapping editor UI and column selector.
+- [x] Add mapping editor UI and column selector.
+  - The selected SVG target exposes one controlled mapping with compatible
+    mapping types, the active worksheet's full column list, required state,
+    type-specific options, schema feedback, and explicit removal.
+  - Mappings live in a small Zustand array keyed by target ID. Replacing the
+    SVG clears them; changing worksheets preserves them so missing columns can
+    be surfaced by validation rather than silently discarded.
+  - Main files: `src/MappingEditor.tsx`, `src/MappingEditor.test.tsx`,
+    `src/store.ts`, `src/store.test.ts`, `src/App.tsx`, `src/App.test.tsx`,
+    `src/styles.css`.
+  - Tests: `bun run test -- src/MappingEditor.test.tsx src/store.test.ts
+    src/App.test.tsx`; `bun run check`; Browser Harness mapping create, column,
+    fit, and removal checks with the membership demo fixtures.
 - [ ] Show mapping validity in the SVG tree.
 - [ ] Add mapping application unit tests.
 
