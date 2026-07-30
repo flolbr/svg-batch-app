@@ -77,4 +77,4 @@ Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending commit: worksheet selection.
+`ea68b0d feat: add worksheet selection`
