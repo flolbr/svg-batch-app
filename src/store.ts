@@ -58,6 +58,7 @@ type AppStore = {
   setRowOverrides: (overrides: RowOverride[]) => void;
   setSpreadsheetSource: (spreadsheet: ImportedSpreadsheet) => void;
   setSvgSource: (svg: ImportedSvg) => void;
+  setSvgObjectSelection: (id: string | null) => void;
   clearRowSelection: () => void;
   deselectRows: (rowIds: RowId[]) => void;
   selectRows: (rowIds: RowId[]) => void;
@@ -287,9 +288,20 @@ export const useAppStore = create<AppStore>()((set) => ({
     }),
   setSvgSource: (svg) =>
     set((state) => ({
+      selection: {
+        ...state.selection,
+        svgObjectId: null,
+      },
       sources: {
         ...state.sources,
         svg,
+      },
+    })),
+  setSvgObjectSelection: (svgObjectId) =>
+    set((state) => ({
+      selection: {
+        ...state.selection,
+        svgObjectId,
       },
     })),
   setColumnFilters: (filters) =>

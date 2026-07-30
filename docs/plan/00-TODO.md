@@ -177,12 +177,22 @@ Only one implementation item should normally be `[-]`.
     `src/App.test.tsx`, `src/styles.css`, `src/store.test.ts`.
   - Tests: `bun run test -- src/svg/buildSvgTree.test.ts src/svg/importSvg.test.ts src/store.test.ts src/App.test.tsx`;
     `bun run check`; Browser Harness nested SVG object-list check.
-- [ ] Implement the custom accessible tree:
+- [x] Implement the custom accessible tree:
   - expand/collapse;
   - single selection;
   - search;
   - mapping status;
   - keyboard navigation.
+  - The semantic tree uses roving focus, `aria-expanded`/`aria-selected`,
+    ancestor-preserving accent-insensitive search, and the documented arrow
+    and Enter behavior. Mapping status is explicitly Unmapped until mappings
+    exist.
+  - SVG-object selection lives in Zustand and resets when the source changes.
+  - Main files: `src/SvgObjectTree.tsx`, `src/SvgObjectTree.test.tsx`,
+    `src/SvgObjectTree.module.css`, `src/store.ts`, `src/store.test.ts`,
+    `src/App.tsx`, `src/App.test.tsx`.
+  - Tests: `bun run test -- src/SvgObjectTree.test.tsx src/store.test.ts src/App.test.tsx`;
+    `bun run check`; Browser Harness tree search, selection, and keyboard check.
 - [ ] Render the live preview in an isolated container.
 - [ ] Highlight the selected SVG object in the preview.
 - [ ] Add previous/next selected-row preview controls.

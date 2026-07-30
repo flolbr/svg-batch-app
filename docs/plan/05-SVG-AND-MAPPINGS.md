@@ -95,9 +95,11 @@ type SvgTreeNode = {
 
 The tree is read-only. No drag/drop or rename in the MVP.
 
-The initial tree view is a nested read-only list. Tree roles, selection,
-search, expansion, and keyboard behavior are added by the dedicated accessible
-tree item.
+The custom tree uses semantic tree/treeitem/group roles, roving focus,
+`aria-expanded` and `aria-selected`, click or Enter selection, and standard
+arrow-key navigation. Search is case- and accent-insensitive, hides
+nonmatching branches while preserving ancestor context, and exposes matching
+descendants. Each target currently reports Unmapped status.
 
 ## Mapping schema
 

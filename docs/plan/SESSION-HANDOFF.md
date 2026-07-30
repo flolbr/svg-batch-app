@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. SVG object-tree construction is complete.
+No implementation task is active. The custom accessible SVG tree is complete.
 
 ## What works
 
@@ -134,6 +134,15 @@ No implementation task is active. SVG object-tree construction is complete.
 - Object labels prefer retained Inkscape layer metadata, `aria-label`, direct
   child `title`, ID, then tag name. The SVG panel renders the hierarchy as a
   compact nested list.
+- The SVG object tree exposes semantic tree, treeitem, and group roles with
+  roving focus, expansion controls, single selection, and
+  `aria-expanded`/`aria-selected` state.
+- Up/Down navigate visible objects, Right expands or enters a branch, Left
+  collapses or returns to the parent, and Enter selects.
+- Object search is case- and accent-insensitive and preserves matching ancestor
+  context. Each object exposes an Unmapped status until mapping state exists.
+- SVG-object selection is stored independently in Zustand, drives the mapping
+  summary, and resets when a replacement SVG is accepted.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -141,25 +150,25 @@ No implementation task is active. SVG object-tree construction is complete.
 
 ## What remains
 
-Accessible tree interaction and preview remain Phase 3 work.
+Preview rendering and target highlighting remain Phase 3 work.
 
 ## Next concrete step
 
 Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
-1. mark “Implement the custom accessible tree” `[-]`;
-2. add expansion, search, and single selection over the stored tree;
-3. implement the documented tree keyboard behavior and mapping-status slots.
+1. mark “Render the live preview in an isolated container” `[-]`;
+2. render only the accepted SVG string without reusing the live tree DOM;
+3. verify isolation, sizing, and safe replacement behavior.
 
 ## Files changed
 
 - `src/App.tsx`
 - `src/App.test.tsx`
+- `src/SvgObjectTree.tsx`
+- `src/SvgObjectTree.test.tsx`
+- `src/SvgObjectTree.module.css`
 - `src/store.ts`
 - `src/store.test.ts`
-- `src/styles.css`
-- `src/svg/buildSvgTree.ts`
-- `src/svg/buildSvgTree.test.ts`
 - `src/svg/importSvg.ts`
 - `src/svg/importSvg.test.ts`
 - `src/svg/validateSvgTargets.ts`
@@ -170,11 +179,11 @@ Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
 ## Tests run
 
-- `bun run test -- src/svg/buildSvgTree.test.ts src/svg/importSvg.test.ts src/store.test.ts src/App.test.tsx`
+- `bun run test -- src/SvgObjectTree.test.tsx src/store.test.ts src/App.test.tsx`
 - `bun run build:single`
 - `bun run check`
-- Browser Harness nested SVG object-list check
+- Browser Harness tree search, selection, and keyboard check
 
 ## Latest substantive commit
 
-`1ddd447 feat: build SVG object tree`
+Pending commit for the custom accessible SVG tree.

@@ -254,19 +254,6 @@ select {
   border-radius: 8px;
 }
 
-.svg-list {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  padding-left: 20px;
-  list-style: none;
-}
-
-.svg-list .svg-list {
-  margin-top: 8px;
-  border-left: 1px solid #dce2ea;
-}
-
 .preview-canvas {
   display: grid;
   flex: 1;

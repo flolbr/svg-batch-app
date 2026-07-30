@@ -189,9 +189,19 @@ describe("App", () => {
     expect(screen.getByText("Sanitized")).toBeInTheDocument();
     expect(screen.getByText("1 mapping target found")).toBeInTheDocument();
     expect(
-      screen.getByRole("list", { name: "SVG object tree" }),
+      screen.getByRole("tree", { name: "SVG object tree" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("badge")).toBeInTheDocument();
+    await user.click(screen.getByRole("treeitem", { name: /badge/ }));
+    expect(useAppStore.getState().selection.svgObjectId).toBe("badge");
+    expect(screen.getByText("badge · g · Unmapped")).toBeInTheDocument();
+
+    await user.type(
+      screen.getByRole("textbox", { name: "Search SVG objects" }),
+      "missing",
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "No SVG objects match",
+    );
     expect(
       screen.getByRole("textbox", { name: "Search SVG objects" }),
     ).toBeEnabled();

@@ -58,6 +58,7 @@ import {
 } from "react";
 import { ColumnFilters } from "./ColumnFilters";
 import { ColumnSettings } from "./ColumnSettings";
+import { SvgObjectTree } from "./SvgObjectTree";
 import type { ColumnPreferences } from "./data/columnPreferences";
 import { filterRows, type ColumnFilter } from "./data/filterRows";
 import { importSpreadsheet } from "./data/importSpreadsheet";
@@ -355,28 +356,16 @@ function DataRow({
   );
 }
 
-function SvgObjectList({
-  nodes,
-  root = false,
-}: {
-  nodes: SvgTreeNode[];
-  root?: boolean;
-}) {
-  return (
-    <ul aria-label={root ? "SVG object tree" : undefined} className="svg-list">
-      {nodes.map((node) => (
-        <li key={node.id}>
-          <Group gap="xs" wrap="nowrap">
-            <Text size="sm">{node.label}</Text>
-            <Badge color="gray" size="xs" variant="light">
-              {node.tagName}
-            </Badge>
-          </Group>
-          {node.children.length > 0 && <SvgObjectList nodes={node.children} />}
-        </li>
-      ))}
-    </ul>
-  );
+function findSvgNode(
+  nodes: SvgTreeNode[],
+  id: string | null,
+): SvgTreeNode | undefined {
+  if (!id) return undefined;
+  for (const node of nodes) {
+    if (node.id === id) return node;
+    const child = findSvgNode(node.children, id);
+    if (child) return child;
+  }
 }
 
 export function App() {
@@ -393,11 +382,15 @@ export function App() {
   );
   const [searchColumn, setSearchColumn] = useState<ColumnId | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [svgSearchQuery, setSvgSearchQuery] = useState("");
   const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 150);
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
   const spreadsheet = useAppStore((state) => state.sources.spreadsheet);
   const svg = useAppStore((state) => state.sources.svg);
   const selectedRowIds = useAppStore((state) => state.selection.selectedRowIds);
+  const selectedSvgObjectId = useAppStore(
+    (state) => state.selection.svgObjectId,
+  );
   const clearRowSelection = useAppStore((state) => state.clearRowSelection);
   const deselectRows = useAppStore((state) => state.deselectRows);
   const selectRows = useAppStore((state) => state.selectRows);
@@ -415,6 +408,9 @@ export function App() {
     (state) => state.setSpreadsheetSource,
   );
   const setSvgSource = useAppStore((state) => state.setSvgSource);
+  const setSvgObjectSelection = useAppStore(
+    (state) => state.setSvgObjectSelection,
+  );
   const toggleRowSelection = useAppStore((state) => state.toggleRowSelection);
   const sourceColumns = spreadsheet?.data.columns ?? emptySourceColumns;
   const sourceRows = spreadsheet?.data.rows ?? emptySourceRows;
@@ -424,6 +420,10 @@ export function App() {
   const columnPreferences =
     spreadsheet?.columnPreferencesBySheet[spreadsheet.selectedSheetName] ??
     emptyColumnPreferences;
+  const selectedSvgNode = useMemo(
+    () => findSvgNode(svg?.tree ?? [], selectedSvgObjectId),
+    [selectedSvgObjectId, svg?.tree],
+  );
   const visibleColumns = useMemo(
     () =>
       sourceColumns.filter((column) =>
@@ -673,6 +673,7 @@ export function App() {
     setIsImportingSvg(true);
     try {
       const importedSvg = await importSvgFile(file);
+      setSvgSearchQuery("");
       setSvgSource(importedSvg);
       notifications.show({
         color: "green",
@@ -1177,6 +1178,10 @@ export function App() {
               disabled={!svg}
               placeholder="Search objects..."
               leftSection={<IconSearch size={16} />}
+              onChange={(event) =>
+                setSvgSearchQuery(event.currentTarget.value)
+              }
+              value={svgSearchQuery}
             />
 
             {!svg && (
@@ -1195,14 +1200,21 @@ export function App() {
                   {svg.targets.length} mapping{" "}
                   {svg.targets.length === 1 ? "target" : "targets"} found
                 </Text>
-                <SvgObjectList nodes={svg.tree} root />
+                <SvgObjectTree
+                  nodes={svg.tree}
+                  onSelect={setSvgObjectSelection}
+                  query={svgSearchQuery}
+                  selectedId={selectedSvgObjectId}
+                />
               </Stack>
             )}
 
             <div className="mapping-placeholder">
               <Text fw={600}>Mapping configuration</Text>
               <Text size="sm" c="dimmed">
-                Select an SVG object to configure its mapping.
+                {selectedSvgNode
+                  ? `${selectedSvgNode.label} · ${selectedSvgNode.tagName} · Unmapped`
+                  : "Select an SVG object to configure its mapping."}
               </Text>
             </div>
           </Stack>
