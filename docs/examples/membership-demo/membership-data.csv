@@ -1,0 +1,10 @@
+﻿Document ID,Customer Name,Customer Type,City,Show Badge,QR Content,Member Since,Note
+DOC-001,Alice Martin,premium,Paris,yes,https://example.test/member/DOC-001,2024-05-12,Founding member
+DOC-002,Bob Smith,standard,Lyon,no,https://example.test/member/DOC-002,2025-01-08,Annual plan
+DOC-003,Alicia Morel,vip,Marseille,yes,https://example.test/member/DOC-003,2023-11-21,Priority support
+DOC-004,David Leroy,standard,Toulouse,yes,https://example.test/member/DOC-004,2025-03-17,Referred by partner
+DOC-005,Emma Dubois,premium,Bordeaux,no,https://example.test/member/DOC-005,2024-08-02,Quarterly billing
+DOC-006,Noah Bernard,vip,Nantes,yes,https://example.test/member/DOC-006,2022-09-30,Lifetime member
+DOC-007,Chloé Petit,premium,Lille,yes,https://example.test/member/DOC-007,2024-12-14,Accent search sample
+DOC-008,Lucas Robert,standard,Nice,no,https://example.test/member/DOC-008,2025-06-05,
+DOC-009,Inès Fontaine,vip,Strasbourg,yes,https://example.test/member/DOC-009,2023-04-19,VIP renewal due

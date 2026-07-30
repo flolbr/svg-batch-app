@@ -35,3 +35,9 @@ The core app must work from a local `file://` HTML document. Google Drive featur
 The intended layout and visual density are shown in:
 
 [`docs/plan/assets/ui-reference.png`](docs/plan/assets/ui-reference.png)
+
+## Development example
+
+The self-contained membership fixture set is documented in:
+
+[`docs/examples/membership-demo/`](docs/examples/membership-demo/)

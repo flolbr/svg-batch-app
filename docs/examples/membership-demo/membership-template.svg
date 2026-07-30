@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="1200"
+  height="800"
+  viewBox="0 0 1200 800"
+  role="img"
+  aria-labelledby="template-title template-description"
+>
+  <title id="template-title">Membership certificate sample template</title>
+  <desc id="template-description">A safe SVG fixture for spreadsheet-driven text, visibility, group selection, and QR mapping.</desc>
+
+  <defs id="template-defs">
+    <linearGradient id="header-gradient" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#173b6c"/>
+      <stop offset="1" stop-color="#245b9b"/>
+    </linearGradient>
+  </defs>
+
+  <rect id="page-background" x="0" y="0" width="1200" height="800" fill="#f8fafc"/>
+  <rect id="page-border" x="28" y="28" width="1144" height="744" rx="24" fill="none" stroke="#173b6c" stroke-width="4"/>
+  <rect id="header-band" x="32" y="32" width="1136" height="150" rx="20" fill="url(#header-gradient)"/>
+
+  <g id="heading-group" aria-label="Heading">
+    <text id="certificate-title" x="600" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="50" font-weight="700" fill="#ffffff">MEMBERSHIP CERTIFICATE</text>
+    <text id="certificate-subtitle" x="600" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#dbeafe">Spreadsheet-driven sample template</text>
+  </g>
+
+  <text id="presented-label" x="600" y="245" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" letter-spacing="3" fill="#64748b">PRESENTED TO</text>
+  <text id="customer-name" x="600" y="330" text-anchor="middle" font-family="Arial, sans-serif" font-size="58" font-weight="700" fill="#0f172a">Customer Name</text>
+  <text id="customer-city" x="600" y="375" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#475569">City</text>
+
+  <g id="membership-tier" aria-label="Membership tier options">
+    <g id="tier-standard" data-option="standard">
+      <rect x="450" y="420" width="300" height="72" rx="36" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/>
+      <text x="600" y="466" text-anchor="middle" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#334155">STANDARD</text>
+    </g>
+    <g id="tier-premium" data-option="premium" display="none">
+      <rect x="450" y="420" width="300" height="72" rx="36" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+      <text x="600" y="466" text-anchor="middle" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#92400e">PREMIUM</text>
+    </g>
+    <g id="tier-vip" data-option="vip" display="none">
+      <rect x="450" y="420" width="300" height="72" rx="36" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+      <text x="600" y="466" text-anchor="middle" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#5b21b6">VIP</text>
+    </g>
+  </g>
+
+  <g id="member-badge" aria-label="Optional member badge">
+    <circle cx="890" cy="455" r="54" fill="#dcfce7" stroke="#15803d" stroke-width="3"/>
+    <path d="M890 416 L901 440 L927 443 L908 461 L913 487 L890 474 L867 487 L872 461 L853 443 L879 440 Z" fill="#16a34a"/>
+  </g>
+
+  <g id="details-group" font-family="Arial, sans-serif">
+    <text x="150" y="585" font-size="16" font-weight="700" fill="#64748b">DOCUMENT ID</text>
+    <text id="document-id" x="150" y="620" font-size="24" fill="#0f172a">DOC-000</text>
+
+    <text x="450" y="585" font-size="16" font-weight="700" fill="#64748b">MEMBER SINCE</text>
+    <text id="member-since" x="450" y="620" font-size="24" fill="#0f172a">2026-01-01</text>
+
+    <text x="150" y="685" font-size="16" font-weight="700" fill="#64748b">NOTE</text>
+    <text id="member-note" x="150" y="720" font-size="21" fill="#334155">Optional note</text>
+  </g>
+
+  <g id="qr-placeholder" aria-label="QR code placeholder">
+    <rect x="930" y="575" width="150" height="150" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="2" stroke-dasharray="8 6"/>
+    <text x="1005" y="645" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#64748b">QR</text>
+    <text x="1005" y="674" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#94a3b8">placeholder</text>
+  </g>
+</svg>

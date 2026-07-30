@@ -39,10 +39,11 @@ Use displayed values for direct text mappings by default. Preserve typed values 
 
 On import:
 
-1. trim headers;
-2. replace blank headers with `Column 1`, `Column 2`, etc.;
-3. keep duplicate display names but generate unique IDs;
-4. never use the header string as the persistent column ID.
+1. strip a UTF-8 BOM before reading the first header;
+2. trim headers;
+3. replace blank headers with `Column 1`, `Column 2`, etc.;
+4. keep duplicate display names but generate unique IDs;
+5. never use the header string as the persistent column ID.
 
 Example:
 

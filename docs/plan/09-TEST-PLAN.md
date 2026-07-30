@@ -36,7 +36,14 @@ Do not test Mantine internals.
 
 ## Integration fixtures
 
-Create:
+Use [`../examples/membership-demo/`](../examples/membership-demo/) as the
+canonical end-to-end fixture for local spreadsheet import, worksheet choice,
+SVG import, core mappings, preview, search, selection, filename choice, and
+export. Its CSV and XLSX customer data must normalize to equivalent displayed
+rows. `expected-mappings.json` records expected intent by source header; it is
+not an app-importable persisted mapping schema.
+
+Keep small, narrow edge-case fixtures under:
 
 ```text
 test/fixtures/
@@ -52,6 +59,9 @@ test/fixtures/
     incompatible-update.svg
 ```
 
+Spreadsheet import coverage must include the membership CSV's UTF-8 BOM and
+blank note cell, plus the XLSX's secondary `Mapping Guide` worksheet.
+
 ## Browser smoke flows
 
 At minimum:
@@ -59,13 +69,15 @@ At minimum:
 ### Local project
 
 1. open built HTML with no network;
-2. import SVG and CSV;
-3. map one text and one QR;
-4. select two rows;
-5. export ZIP;
-6. save project HTML;
-7. reopen saved HTML;
-8. confirm data and mappings restore.
+2. import the membership SVG and CSV or XLSX fixture;
+3. map at least one text target and the QR target;
+4. preview one standard, premium, and VIP row;
+5. confirm the `DOC-002` badge is hidden;
+6. search for `chloe` and confirm `Chloé Petit` matches;
+7. select two rows and export a ZIP using `Document ID` filenames;
+8. save project HTML;
+9. reopen saved HTML;
+10. confirm data and mappings restore.
 
 ### Linked local SVG
 

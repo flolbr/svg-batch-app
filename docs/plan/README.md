@@ -18,3 +18,7 @@ Read in this order:
 Visual reference:
 
 ![UI reference](assets/ui-reference.png)
+
+End-to-end development fixtures:
+
+- [`../examples/membership-demo/`](../examples/membership-demo/)

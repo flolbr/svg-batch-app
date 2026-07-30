@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "template": "membership-template.svg",
+  "dataFiles": ["membership-data.csv", "membership-data.xlsx"],
+  "filenameColumn": "Document ID",
+  "mappings": [
+    {
+      "targetId": "customer-name",
+      "column": "Customer Name",
+      "type": "text",
+      "fit": "shrink",
+      "minimumFontSize": 24
+    },
+    {
+      "targetId": "customer-city",
+      "column": "City",
+      "type": "text",
+      "fit": "keep"
+    },
+    {
+      "targetId": "membership-tier",
+      "column": "Customer Type",
+      "type": "exclusive-group",
+      "matchAttribute": "data-option"
+    },
+    {
+      "targetId": "member-badge",
+      "column": "Show Badge",
+      "type": "visibility",
+      "trueValues": ["yes"],
+      "falseValues": ["no"]
+    },
+    {
+      "targetId": "document-id",
+      "column": "Document ID",
+      "type": "text",
+      "fit": "keep"
+    },
+    {
+      "targetId": "member-since",
+      "column": "Member Since",
+      "type": "text",
+      "fit": "keep"
+    },
+    {
+      "targetId": "member-note",
+      "column": "Note",
+      "type": "text",
+      "fit": "shrink",
+      "minimumFontSize": 14
+    },
+    {
+      "targetId": "qr-placeholder",
+      "column": "QR Content",
+      "type": "qr",
+      "errorCorrection": "M",
+      "marginModules": 4
+    }
+  ]
+}
