@@ -48,4 +48,4 @@ Start the next `Phase 1 — Application shell` item in `00-TODO.md`:
 
 ## Latest implementation commit
 
-Pending commit for the three-panel application shell.
+`a639a34 feat: add three-panel application shell`
