@@ -158,14 +158,38 @@ select {
 }
 
 .data-table {
-  overflow-x: auto;
   border: 1px solid #dfe4eb;
   border-radius: 8px;
+}
+
+.data-table-scroll {
+  max-height: 400px;
+  overflow: auto;
 }
 
 .data-table table {
   min-width: 570px;
   font-size: 13px;
+}
+
+.data-table th,
+.data-table td {
+  height: 40px;
+  white-space: nowrap;
+}
+
+.data-table-scroll-virtual th {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  background: var(--app-color-surface);
+}
+
+.data-table .data-table-spacer,
+.data-table .data-table-spacer td {
+  height: 0;
+  padding: 0;
+  border: 0;
 }
 
 .data-table-empty {

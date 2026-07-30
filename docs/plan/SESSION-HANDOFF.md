@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. TanStack Table grid rendering is complete.
+No implementation task is active. Thresholded row virtualization is complete.
 
 ## What works
 
@@ -50,6 +50,11 @@ No implementation task is active. TanStack Table grid rendering is complete.
 - The grid uses each generated source row ID as its TanStack identity and
   updates when the selected worksheet changes.
 - Empty sources and worksheets show an explicit message instead of sample data.
+- Worksheets with up to 200 rows keep the ordinary TanStack Table rendering
+  path; larger worksheets use TanStack Virtual.
+- The virtual grid mounts only the viewport plus eight overscan rows, keeps
+  headers sticky, exposes logical row counts/indexes, and supports keyboard
+  focus and scrolling through the full result set.
 - Manual-row controls remain disabled until their dedicated Phase 2 item.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
@@ -58,15 +63,16 @@ No implementation task is active. TanStack Table grid rendering is complete.
 
 ## What remains
 
-Virtualization and the rest of the spreadsheet workflow remain Phase 2 work.
+Fuzzy row-value search and the rest of the spreadsheet workflow remain Phase 2
+work.
 
 ## Next concrete step
 
 Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
-1. mark row virtualization `[-]`;
-2. add virtualization only above a documented row-count threshold;
-3. keep the small-table path unvirtualized.
+1. mark fuzzy row-value search `[-]`;
+2. implement normalized multi-term search across all or selected columns;
+3. keep search results compatible with the existing virtualized row model.
 
 ## Files changed
 

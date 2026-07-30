@@ -1,8 +1,8 @@
 import { MantineProvider } from "@mantine/core";
 import userEvent from "@testing-library/user-event";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { App } from "./App";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { App, ROW_VIRTUALIZATION_THRESHOLD } from "./App";
 import { initialPanelWeights, useAppStore } from "./store";
 
 class ResizeObserverMock {
@@ -11,8 +11,34 @@ class ResizeObserverMock {
   disconnect() {}
 }
 
+function setSpreadsheetRows(rowCount: number) {
+  useAppStore.getState().setSpreadsheetSource({
+    fileName: "many-members.xlsx",
+    fileSize: 1,
+    sheetNames: ["Members"],
+    workbook: {
+      SheetNames: ["Members"],
+      Sheets: {
+        Members: {
+          "!ref": `A1:A${rowCount + 1}`,
+          A1: { t: "s", v: "Name" },
+          ...Object.fromEntries(
+            Array.from({ length: rowCount }, (_, index) => [
+              `A${index + 2}`,
+              { t: "s", v: `Member ${index + 1}` },
+            ]),
+          ),
+        },
+      },
+    },
+  });
+}
+
 describe("App", () => {
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+  });
 
   beforeEach(() => {
     Object.defineProperty(globalThis, "ResizeObserver", {
@@ -25,6 +51,11 @@ describe("App", () => {
       value() {},
       writable: true,
     });
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockImplementation(
+      function (this: HTMLElement) {
+        return this.classList.contains("data-table-scroll-virtual") ? 400 : 0;
+      },
+    );
     useAppStore.setState((state) => ({
       sources: { spreadsheet: null, svg: null },
       ui: { ...state.ui, panelWeights: initialPanelWeights },
@@ -273,6 +304,81 @@ describe("App", () => {
     expect(screen.getByRole("cell", { name: "Premium" })).toBeInTheDocument();
     expect(
       screen.queryByRole("cell", { name: "Alice" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders every row without a scroll region at the virtualization threshold", () => {
+    setSpreadsheetRows(ROW_VIRTUALIZATION_THRESHOLD);
+
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    expect(
+      screen.queryByRole("region", { name: "Spreadsheet rows" }),
+    ).not.toBeInTheDocument();
+    expect(document.querySelectorAll(".data-table tbody tr")).toHaveLength(
+      ROW_VIRTUALIZATION_THRESHOLD,
+    );
+    expect(
+      screen.getByRole("cell", {
+        name: `Member ${ROW_VIRTUALIZATION_THRESHOLD}`,
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("virtualizes rows above the threshold while exposing the logical grid size", async () => {
+    const rowCount = ROW_VIRTUALIZATION_THRESHOLD + 1;
+    setSpreadsheetRows(rowCount);
+
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    const rowsRegion = screen.getByRole("region", {
+      name: "Spreadsheet rows",
+    });
+    rowsRegion.focus();
+
+    expect(rowsRegion).toHaveFocus();
+    expect(rowsRegion).toHaveAttribute("tabindex", "0");
+    expect(screen.getByRole("table")).toHaveAttribute(
+      "aria-rowcount",
+      String(rowCount + 1),
+    );
+    expect(
+      document.querySelectorAll(".data-table tbody tr[data-index]").length,
+    ).toBeLessThan(
+      rowCount / 2,
+    );
+    expect(
+      await screen.findByRole("cell", { name: "Member 1" }),
+    ).toBeInTheDocument();
+    const firstVirtualRow = document.querySelector(
+      ".data-table tbody tr[aria-rowindex]",
+    );
+    expect(firstVirtualRow).not.toBeNull();
+    expect(firstVirtualRow).toHaveAttribute(
+      "aria-rowindex",
+      String(Number(firstVirtualRow?.getAttribute("data-index")) + 2),
+    );
+
+    Object.defineProperty(rowsRegion, "scrollTop", {
+      configurable: true,
+      value: (rowCount - 10) * 40,
+      writable: true,
+    });
+    fireEvent.scroll(rowsRegion);
+
+    expect(
+      await screen.findByRole("cell", { name: `Member ${rowCount}` }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("cell", { name: "Member 1" }),
     ).not.toBeInTheDocument();
   });
 });

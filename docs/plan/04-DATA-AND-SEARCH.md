@@ -46,9 +46,14 @@ rows. Cells use `displayedValues`, while the typed `values` remain available for
 later sorting and filters. TanStack row identity uses the generated source row
 ID rather than the current table position.
 
-The initial grid is deliberately not virtualized. Empty imports and worksheets
-show an explicit empty state, and row selection and manual-row controls remain
-separate follow-up items.
+Rows up to and including 200 use the ordinary table path. Larger result sets
+use TanStack Virtual with 40 px rows, eight overscan rows, stable source row
+keys, and a scroll viewport capped at 400 px. The virtual table reports its
+logical row count and logical row indexes for assistive technology, while the
+scroll region remains keyboard focusable.
+
+Empty imports and worksheets show an explicit empty state. Row selection and
+manual-row controls remain separate follow-up items.
 
 ## Header normalization
 

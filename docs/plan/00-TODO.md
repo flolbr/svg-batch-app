@@ -64,7 +64,10 @@ Only one implementation item should normally be `[-]`.
 - [x] Render the grid with TanStack Table.
   - Main files: `src/App.tsx`, `src/App.test.tsx`, `src/styles.css`.
   - Tests: `bun run test -- src/App.test.tsx`; `bun run check`.
-- [ ] Add row virtualization only when row count exceeds a clear threshold.
+- [x] Add row virtualization only when row count exceeds a clear threshold.
+  - Rows up to 200 use the ordinary table path; larger result sets use TanStack Virtual.
+  - Main files: `src/App.tsx`, `src/App.test.tsx`, `src/styles.css`.
+  - Tests: `bun run test -- src/App.test.tsx`; `bun run check`.
 - [ ] Add fuzzy row-value search across all or selected columns.
 - [ ] Add Excel-style per-column filters.
 - [ ] Keep filtering and row selection independent.

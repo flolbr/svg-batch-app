@@ -16,8 +16,10 @@ import {
   type ColumnDef,
   flexRender,
   getCoreRowModel,
+  type Row,
   useReactTable,
 } from "@tanstack/react-table";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   IconBox,
   IconChevronLeft,
@@ -52,6 +54,7 @@ import type { SourceRow } from "./data/normalizeWorkbook";
 import { type PanelWeights, useAppStore } from "./store";
 
 const minimumPanelWidths = [360, 300, 360];
+export const ROW_VIRTUALIZATION_THRESHOLD = 200;
 
 type ResizeSession = {
   dividerIndex: number;
@@ -120,8 +123,32 @@ function PanelResizeHandle({
   );
 }
 
+function DataRow({
+  row,
+  virtualIndex,
+}: {
+  row: Row<SourceRow>;
+  virtualIndex?: number;
+}) {
+  return (
+    <Table.Tr
+      aria-rowindex={
+        virtualIndex === undefined ? undefined : virtualIndex + 2
+      }
+      data-index={virtualIndex}
+    >
+      {row.getVisibleCells().map((cell) => (
+        <Table.Td key={cell.id}>
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </Table.Td>
+      ))}
+    </Table.Tr>
+  );
+}
+
 export function App() {
   const workspaceRef = useRef<HTMLElement>(null);
+  const dataTableScrollRef = useRef<HTMLDivElement>(null);
   const resizeSession = useRef<ResizeSession | null>(null);
   const [isImportingSpreadsheet, setIsImportingSpreadsheet] = useState(false);
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
@@ -148,6 +175,27 @@ export function App() {
     getCoreRowModel: getCoreRowModel(),
     getRowId: (row) => row.id,
   });
+  const dataRows = dataTable.getRowModel().rows;
+  const shouldVirtualizeRows =
+    dataRows.length > ROW_VIRTUALIZATION_THRESHOLD;
+  const rowVirtualizer = useVirtualizer({
+    count: dataRows.length,
+    enabled: shouldVirtualizeRows,
+    estimateSize: () => 40,
+    getItemKey: (index) => dataRows[index]?.id ?? index,
+    getScrollElement: () => dataTableScrollRef.current,
+    initialRect: { height: 400, width: 0 },
+    overscan: 8,
+  });
+  const virtualRows = shouldVirtualizeRows
+    ? rowVirtualizer.getVirtualItems()
+    : [];
+  const topSpacerHeight = virtualRows[0]?.start ?? 0;
+  const bottomSpacerHeight =
+    virtualRows.length > 0
+      ? rowVirtualizer.getTotalSize() -
+        virtualRows[virtualRows.length - 1].end
+      : 0;
 
   async function handleSpreadsheetFile(event: ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget;
@@ -387,51 +435,88 @@ export function App() {
             </Group>
 
             <div className="data-table">
-              <Table striped highlightOnHover>
-                <Table.Thead>
-                  {dataTable.getHeaderGroups().map((headerGroup) => (
-                    <Table.Tr key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <Table.Th key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                        </Table.Th>
-                      ))}
-                    </Table.Tr>
-                  ))}
-                </Table.Thead>
-                <Table.Tbody>
-                  {dataTable.getRowModel().rows.length > 0 ? (
-                    dataTable.getRowModel().rows.map((row) => (
-                      <Table.Tr key={row.id}>
-                        {row.getVisibleCells().map((cell) => (
-                          <Table.Td key={cell.id}>
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </Table.Td>
+              <div
+                aria-label="Spreadsheet rows"
+                className={
+                  shouldVirtualizeRows
+                    ? "data-table-scroll data-table-scroll-virtual"
+                    : "data-table-scroll"
+                }
+                ref={dataTableScrollRef}
+                role={shouldVirtualizeRows ? "region" : undefined}
+                tabIndex={shouldVirtualizeRows ? 0 : undefined}
+              >
+                <Table
+                  aria-rowcount={dataRows.length + 1}
+                  striped
+                  highlightOnHover
+                >
+                  <Table.Thead>
+                    {dataTable.getHeaderGroups().map((headerGroup) => (
+                      <Table.Tr key={headerGroup.id}>
+                        {headerGroup.headers.map((header) => (
+                          <Table.Th key={header.id}>
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext(),
+                                )}
+                          </Table.Th>
                         ))}
                       </Table.Tr>
-                    ))
-                  ) : (
-                    <Table.Tr>
-                      <Table.Td
-                        className="data-table-empty"
-                        colSpan={Math.max(dataColumns.length, 1)}
-                      >
-                        {spreadsheet
-                          ? "This worksheet has no data rows."
-                          : "Upload a spreadsheet to view its rows."}
-                      </Table.Td>
-                    </Table.Tr>
-                  )}
-                </Table.Tbody>
-              </Table>
+                    ))}
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {dataRows.length === 0 ? (
+                      <Table.Tr>
+                        <Table.Td
+                          className="data-table-empty"
+                          colSpan={Math.max(dataColumns.length, 1)}
+                        >
+                          {spreadsheet
+                            ? "This worksheet has no data rows."
+                            : "Upload a spreadsheet to view its rows."}
+                        </Table.Td>
+                      </Table.Tr>
+                    ) : shouldVirtualizeRows ? (
+                      <>
+                        {topSpacerHeight > 0 && (
+                          <Table.Tr
+                            aria-hidden="true"
+                            className="data-table-spacer"
+                          >
+                            <Table.Td
+                              colSpan={dataColumns.length}
+                              style={{ height: topSpacerHeight }}
+                            />
+                          </Table.Tr>
+                        )}
+                        {virtualRows.map((virtualRow) => (
+                          <DataRow
+                            key={dataRows[virtualRow.index].id}
+                            row={dataRows[virtualRow.index]}
+                            virtualIndex={virtualRow.index}
+                          />
+                        ))}
+                        {bottomSpacerHeight > 0 && (
+                          <Table.Tr
+                            aria-hidden="true"
+                            className="data-table-spacer"
+                          >
+                            <Table.Td
+                              colSpan={dataColumns.length}
+                              style={{ height: bottomSpacerHeight }}
+                            />
+                          </Table.Tr>
+                        )}
+                      </>
+                    ) : (
+                      dataRows.map((row) => <DataRow key={row.id} row={row} />)
+                    )}
+                  </Table.Tbody>
+                </Table>
+              </div>
               <Button
                 className="add-row"
                 disabled
