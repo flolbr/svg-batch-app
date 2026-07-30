@@ -236,4 +236,4 @@ Continue `Phase 4 — Mapping engine` in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending `feat: add mapping editor`
+`c88aea9 feat: add mapping editor`
