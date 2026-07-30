@@ -186,4 +186,4 @@ Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending commit for the custom accessible SVG tree.
+`b37b3ea feat: add accessible SVG object tree`
