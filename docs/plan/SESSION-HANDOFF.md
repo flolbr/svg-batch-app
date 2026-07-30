@@ -156,4 +156,4 @@ Start the first `Phase 3 — SVG import, tree, and preview` item in
 
 ## Latest substantive commit
 
-Pending commit for persisted spreadsheet project state.
+`81d2a9e feat: persist spreadsheet project state`
