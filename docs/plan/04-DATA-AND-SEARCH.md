@@ -35,6 +35,10 @@ type RowOverride = {
 
 Use displayed values for direct text mappings by default. Preserve typed values for sorting and filters.
 
+The selected worksheet is normalized when it is imported or changed. Keep the
+result in source state so React rendering, sorting, and filtering do not
+regenerate row IDs.
+
 ## Header normalization
 
 On import:
@@ -199,6 +203,8 @@ This avoids embedding large XLSX binaries in the project HTML.
 
 The local file control accepts CSV, XLSX, and XLS files. SheetJS parses the
 selected file into the transient source state and exposes its worksheet names.
+CSV values are parsed as raw text so date-like strings and leading zeroes are
+not coerced before normalization.
 The first worksheet is selected by default, and the user can choose another
 worksheet before normalization. Single-worksheet files show the selection but
 do not offer an unnecessary choice. The workbook binary is not added to

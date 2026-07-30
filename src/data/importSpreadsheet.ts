@@ -30,7 +30,10 @@ export async function importSpreadsheet(
 
   try {
     const data = await file.arrayBuffer();
-    const workbook = XLSX.read(data, { type: "array" });
+    const workbook = XLSX.read(data, {
+      raw: extension === "csv",
+      type: "array",
+    });
 
     if (workbook.SheetNames.length === 0) {
       throw new Error("No worksheets were found.");

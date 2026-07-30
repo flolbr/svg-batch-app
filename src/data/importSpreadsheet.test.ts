@@ -4,6 +4,7 @@ import * as XLSX from "xlsx";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { importSpreadsheet } from "./importSpreadsheet";
+import { normalizeWorksheet } from "./normalizeWorkbook";
 
 function spreadsheetFile(
   name: string,
@@ -84,6 +85,7 @@ describe("importSpreadsheet", () => {
     );
 
     expect(rows[0]?.[0]).toBe("Document ID");
+    expect(rows[1]?.[6]).toBe("2024-05-12");
     expect(rows[8]?.[0]).toBe("DOC-008");
     expect(rows[8]?.[7]).toBeNull();
   });
@@ -94,6 +96,26 @@ describe("importSpreadsheet", () => {
     );
 
     expect(result.sheetNames).toEqual(["Customers", "Mapping Guide"]);
+  });
+
+  it("normalizes the canonical CSV and XLSX customer sheets equivalently", async () => {
+    const [csv, xlsx] = await Promise.all([
+      importSpreadsheet(membershipFixture("membership-data.csv")),
+      importSpreadsheet(membershipFixture("membership-data.xlsx")),
+    ]);
+    let rowNumber = 0;
+    const createRowId = () => `row-${++rowNumber}`;
+    const normalizedCsv = normalizeWorksheet(
+      csv.workbook.Sheets.Sheet1,
+      createRowId,
+    );
+    rowNumber = 0;
+    const normalizedXlsx = normalizeWorksheet(
+      xlsx.workbook.Sheets.Customers,
+      createRowId,
+    );
+
+    expect(normalizedCsv).toEqual(normalizedXlsx);
   });
 
   it("rejects unsupported file extensions", async () => {

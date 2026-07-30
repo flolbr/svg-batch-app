@@ -1,9 +1,14 @@
 import { create } from "zustand";
 import type { ImportedSpreadsheet } from "./data/importSpreadsheet";
+import {
+  normalizeWorksheet,
+  type NormalizedWorksheet,
+} from "./data/normalizeWorkbook";
 import type { Project } from "./project/loadProject";
 
 export type PanelWeights = [number, number, number];
 export type SpreadsheetSource = ImportedSpreadsheet & {
+  data: NormalizedWorksheet;
   selectedSheetName: string;
 };
 
@@ -47,7 +52,10 @@ export const useAppStore = create<AppStore>()((set) => ({
   setSelectedWorksheet: (sheetName) =>
     set((state) => {
       const spreadsheet = state.sources.spreadsheet;
-      if (!spreadsheet?.sheetNames.includes(sheetName)) {
+      if (
+        !spreadsheet?.sheetNames.includes(sheetName) ||
+        spreadsheet.selectedSheetName === sheetName
+      ) {
         return state;
       }
 
@@ -56,6 +64,9 @@ export const useAppStore = create<AppStore>()((set) => ({
           ...state.sources,
           spreadsheet: {
             ...spreadsheet,
+            data: normalizeWorksheet(
+              spreadsheet.workbook.Sheets[sheetName] ?? {},
+            ),
             selectedSheetName: sheetName,
           },
         },
@@ -67,6 +78,9 @@ export const useAppStore = create<AppStore>()((set) => ({
         ...state.sources,
         spreadsheet: {
           ...spreadsheet,
+          data: normalizeWorksheet(
+            spreadsheet.workbook.Sheets[spreadsheet.sheetNames[0]] ?? {},
+          ),
           selectedSheetName: spreadsheet.sheetNames[0],
         },
       },

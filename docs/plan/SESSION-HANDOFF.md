@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Worksheet selection is complete.
+No implementation task is active. Worksheet normalization is complete.
 
 ## What works
 
@@ -39,6 +39,13 @@ No implementation task is active. Worksheet selection is complete.
 - A newly imported workbook selects its first worksheet by default.
 - Multi-worksheet files provide an accessible selector backed by transient
   Zustand state; single-worksheet files show a disabled selector.
+- The selected worksheet is normalized into explicit columns and immutable
+  source rows when imported or changed.
+- Headers handle BOMs, whitespace, blanks, and duplicates. Cells retain typed
+  values and formatted display strings, including date and leading-zero
+  formatting.
+- Row IDs are generated independently from table position and remain stable
+  while the selected worksheet stays active.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -46,23 +53,24 @@ No implementation task is active. Worksheet selection is complete.
 
 ## What remains
 
-Row normalization and the rest of the spreadsheet grid remain Phase 2 work. The
-existing sample grid is still static until those items replace it with imported
-rows.
+Grid rendering and the rest of the spreadsheet workflow remain Phase 2 work.
+The existing sample grid is still static until the next item replaces it with
+normalized imported rows.
 
 ## Next concrete step
 
 Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
-1. mark row normalization `[-]`;
-2. normalize the selected worksheet's headers, typed values, displayed values,
-   and stable row IDs;
-3. keep TanStack Table rendering in the following TODO item.
+1. mark TanStack Table rendering `[-]`;
+2. replace the static sample table with the normalized columns and rows;
+3. keep virtualization in the following TODO item.
 
 ## Files changed
 
-- `src/App.tsx`
-- `src/App.test.tsx`
+- `src/data/importSpreadsheet.ts`
+- `src/data/importSpreadsheet.test.ts`
+- `src/data/normalizeWorkbook.ts`
+- `src/data/normalizeWorkbook.test.ts`
 - `src/store.ts`
 - `src/store.test.ts`
 - `docs/plan/00-TODO.md`
@@ -71,10 +79,10 @@ Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
 ## Tests run
 
-- `bun run test -- src/store.test.ts`
-- `bun run test -- src/store.test.ts src/App.test.tsx`
+- `bun run test -- src/data/importSpreadsheet.test.ts`
+- `bun run test -- src/data/normalizeWorkbook.test.ts src/data/importSpreadsheet.test.ts src/store.test.ts src/App.test.tsx`
 - `bun run check`
 
 ## Latest substantive commit
 
-`ea68b0d feat: add worksheet selection`
+Pending commit: worksheet normalization.
