@@ -97,4 +97,4 @@ Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-`181e01f feat: virtualize large spreadsheet grids`
+`12d5e10 feat: add fuzzy spreadsheet search`
