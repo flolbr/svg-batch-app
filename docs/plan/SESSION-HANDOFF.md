@@ -133,4 +133,4 @@ Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending commit for editable manual rows.
+`1d09ddb feat: add editable manual rows`
