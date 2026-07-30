@@ -190,4 +190,4 @@ Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending current feature commit.
+`721c048 feat: navigate selected preview rows`
