@@ -305,11 +305,19 @@ Only one implementation item should normally be `[-]`.
     src/mappings/qrMapping.test.ts src/mappings/groupMapping.test.ts
     src/mappings/visibilityMapping.test.ts src/mappings/textMapping.test.ts`;
     `bunx tsc -b`; `bun run check`.
-- [ ] Add text fitting:
+- [x] Add text fitting:
   - keep size;
   - shrink to fit;
   - truncate;
   - validation error.
+  - Text measurement is injected so preview and export can share the same
+    deterministic fitting behavior. Shrink respects the configured minimum,
+    truncate is Unicode-safe, and unresolved overflow returns a structured
+    issue.
+  - Main files: `src/mappings/textFitting.ts`,
+    `src/mappings/textFitting.test.ts`, `src/mappings/textMapping.ts`,
+    `src/mappings/textMapping.test.ts`.
+  - Tests: `bun run check`.
 - [ ] Add mapping editor UI and column selector.
 - [ ] Show mapping validity in the SVG tree.
 - [ ] Add mapping application unit tests.

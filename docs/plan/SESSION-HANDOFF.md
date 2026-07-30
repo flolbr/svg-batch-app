@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Image replacement mapping is complete.
+No implementation task is active. Text fitting is complete.
 
 ## What works
 
@@ -183,6 +183,9 @@ No implementation task is active. Image replacement mapping is complete.
   stretch fit while preserving geometry. Direct values accept embedded raster
   data only; an explicit validated resolver boundary supports later
   local/Drive/HTTPS assets without enabling those adapters now.
+- Text mappings support keep, shrink, truncate, and validation-error fitting.
+  Measurement is injected for deterministic preview/export reuse; shrink
+  respects minimum font size, and truncation is Unicode-safe.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -190,34 +193,31 @@ No implementation task is active. Image replacement mapping is complete.
 
 ## What remains
 
-Text fitting is the next Phase 4 item.
+The mapping editor UI and column selector are the next Phase 4 item.
 
 ## Next concrete step
 
 Continue `Phase 4 — Mapping engine` in `00-TODO.md`:
 
-1. mark “Add text fitting” `[-]`;
-2. implement keep, shrink, truncate, and validation-error behavior for
-   one-line text targets;
-3. keep measurement injectable/deterministic for unit tests and shared
-   preview/export use.
+1. mark “Add mapping editor UI and column selector” `[-]`;
+2. add the smallest usable mapping editor for the existing mapping schemas;
+3. connect target and worksheet-column selection without adding speculative
+   mapping abstractions.
 
 ## Files changed
 
-- `src/mappings/imageMapping.ts`
-- `src/mappings/imageMapping.test.ts`
+- `src/mappings/textFitting.ts`
+- `src/mappings/textFitting.test.ts`
+- `src/mappings/textMapping.ts`
+- `src/mappings/textMapping.test.ts`
 - `docs/plan/00-TODO.md`
 - `docs/plan/05-SVG-AND-MAPPINGS.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/mappings/imageMapping.test.ts
-  src/mappings/qrMapping.test.ts src/mappings/groupMapping.test.ts
-  src/mappings/visibilityMapping.test.ts src/mappings/textMapping.test.ts`
-- `bunx tsc -b`
 - `bun run check`
 
 ## Latest substantive commit
 
-`0dfc128 feat: apply image mappings`
+Pending `feat: add text fitting`

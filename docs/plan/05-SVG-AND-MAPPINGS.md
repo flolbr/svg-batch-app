@@ -155,6 +155,15 @@ target's text content with the row's displayed cell value. Missing columns,
 targets, incompatible target tags, and whitespace-only required values produce
 structured validation issues without mutating the target.
 
+`keep` applies the displayed value without measuring it. The other modes use an
+injected metrics provider so preview and export can supply the same available
+width, font size, and text measurement function. `shrink` reduces the font size
+proportionally and respects `minFontSize`; overflow at that minimum is reported
+as a structured issue. `truncate` keeps the longest Unicode-safe prefix that
+fits with an ellipsis, or uses an empty string when the ellipsis itself cannot
+fit. `error` preserves the full value and reports overflow. Missing or invalid
+metrics and measurement failures leave the target unchanged.
+
 ### Visibility
 
 ```ts
