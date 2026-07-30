@@ -168,9 +168,9 @@ select {
   font-size: 13px;
 }
 
-.data-table th:first-child,
-.data-table td:first-child {
-  width: 44px;
+.data-table-empty {
+  color: var(--app-color-muted);
+  text-align: center;
 }
 
 .add-row {

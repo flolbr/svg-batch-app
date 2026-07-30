@@ -2,7 +2,6 @@ import {
   ActionIcon,
   Badge,
   Button,
-  Checkbox,
   Group,
   Paper,
   Select,
@@ -13,6 +12,12 @@ import {
   Title,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import {
+  type ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import {
   IconBox,
   IconChevronLeft,
@@ -38,17 +43,13 @@ import {
   type KeyboardEvent,
   type PointerEvent,
   type ReactNode,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import { importSpreadsheet } from "./data/importSpreadsheet";
+import type { SourceRow } from "./data/normalizeWorkbook";
 import { type PanelWeights, useAppStore } from "./store";
-
-const rows = [
-  ["Alice Martin", "Premium", "Paris", "DOC-001"],
-  ["Bob Smith", "Standard", "Lyon", "DOC-002"],
-  ["Alicia Morel", "VIP", "Marseille", "DOC-003"],
-];
 
 const minimumPanelWidths = [360, 300, 360];
 
@@ -132,6 +133,21 @@ export function App() {
   const setSpreadsheetSource = useAppStore(
     (state) => state.setSpreadsheetSource,
   );
+  const dataColumns = useMemo<ColumnDef<SourceRow>[]>(
+    () =>
+      spreadsheet?.data.columns.map((column) => ({
+        accessorFn: (row) => row.displayedValues[column.id],
+        header: column.displayName,
+        id: column.id,
+      })) ?? [],
+    [spreadsheet],
+  );
+  const dataTable = useReactTable({
+    columns: dataColumns,
+    data: spreadsheet?.data.rows ?? [],
+    getCoreRowModel: getCoreRowModel(),
+    getRowId: (row) => row.id,
+  });
 
   async function handleSpreadsheetFile(event: ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget;
@@ -373,34 +389,52 @@ export function App() {
             <div className="data-table">
               <Table striped highlightOnHover>
                 <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th>
-                      <Checkbox aria-label="Select all rows" />
-                    </Table.Th>
-                    <Table.Th>Name</Table.Th>
-                    <Table.Th>Type</Table.Th>
-                    <Table.Th>City</Table.Th>
-                    <Table.Th>Document ID</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {rows.map((row, index) => (
-                    <Table.Tr key={row[3]}>
-                      <Table.Td>
-                        <Checkbox
-                          aria-label={`Select ${row[0]}`}
-                          defaultChecked={index !== 1}
-                        />
-                      </Table.Td>
-                      {row.map((cell) => (
-                        <Table.Td key={cell}>{cell}</Table.Td>
+                  {dataTable.getHeaderGroups().map((headerGroup) => (
+                    <Table.Tr key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <Table.Th key={header.id}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext(),
+                              )}
+                        </Table.Th>
                       ))}
                     </Table.Tr>
                   ))}
+                </Table.Thead>
+                <Table.Tbody>
+                  {dataTable.getRowModel().rows.length > 0 ? (
+                    dataTable.getRowModel().rows.map((row) => (
+                      <Table.Tr key={row.id}>
+                        {row.getVisibleCells().map((cell) => (
+                          <Table.Td key={cell.id}>
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
+                          </Table.Td>
+                        ))}
+                      </Table.Tr>
+                    ))
+                  ) : (
+                    <Table.Tr>
+                      <Table.Td
+                        className="data-table-empty"
+                        colSpan={Math.max(dataColumns.length, 1)}
+                      >
+                        {spreadsheet
+                          ? "This worksheet has no data rows."
+                          : "Upload a spreadsheet to view its rows."}
+                      </Table.Td>
+                    </Table.Tr>
+                  )}
                 </Table.Tbody>
               </Table>
               <Button
                 className="add-row"
+                disabled
                 variant="subtle"
                 fullWidth
                 leftSection={<IconPlus />}
@@ -410,7 +444,7 @@ export function App() {
             </div>
 
             <Text className="panel-footer" size="sm" c="dimmed">
-              2 selected · 3 matching · 3 total
+              {spreadsheet?.data.rows.length ?? 0} total rows
             </Text>
           </Stack>
         </Paper>

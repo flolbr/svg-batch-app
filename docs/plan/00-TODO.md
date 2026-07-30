@@ -61,7 +61,9 @@ Only one implementation item should normally be `[-]`.
 - [x] Normalize headers, rows, displayed values, and stable row IDs.
   - Main files: `src/data/normalizeWorkbook.ts`, `src/data/importSpreadsheet.ts`, `src/store.ts`.
   - Tests: `bun run test -- src/data/normalizeWorkbook.test.ts src/data/importSpreadsheet.test.ts src/store.test.ts src/App.test.tsx`; `bun run check`.
-- [ ] Render the grid with TanStack Table.
+- [x] Render the grid with TanStack Table.
+  - Main files: `src/App.tsx`, `src/App.test.tsx`, `src/styles.css`.
+  - Tests: `bun run test -- src/App.test.tsx`; `bun run check`.
 - [ ] Add row virtualization only when row count exceeds a clear threshold.
 - [ ] Add fuzzy row-value search across all or selected columns.
 - [ ] Add Excel-style per-column filters.

@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Worksheet normalization is complete.
+No implementation task is active. TanStack Table grid rendering is complete.
 
 ## What works
 
@@ -46,6 +46,11 @@ No implementation task is active. Worksheet normalization is complete.
   formatting.
 - Row IDs are generated independently from table position and remain stable
   while the selected worksheet stays active.
+- TanStack Table renders normalized worksheet headers and displayed cell values.
+- The grid uses each generated source row ID as its TanStack identity and
+  updates when the selected worksheet changes.
+- Empty sources and worksheets show an explicit message instead of sample data.
+- Manual-row controls remain disabled until their dedicated Phase 2 item.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -53,34 +58,28 @@ No implementation task is active. Worksheet normalization is complete.
 
 ## What remains
 
-Grid rendering and the rest of the spreadsheet workflow remain Phase 2 work.
-The existing sample grid is still static until the next item replaces it with
-normalized imported rows.
+Virtualization and the rest of the spreadsheet workflow remain Phase 2 work.
 
 ## Next concrete step
 
 Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
-1. mark TanStack Table rendering `[-]`;
-2. replace the static sample table with the normalized columns and rows;
-3. keep virtualization in the following TODO item.
+1. mark row virtualization `[-]`;
+2. add virtualization only above a documented row-count threshold;
+3. keep the small-table path unvirtualized.
 
 ## Files changed
 
-- `src/data/importSpreadsheet.ts`
-- `src/data/importSpreadsheet.test.ts`
-- `src/data/normalizeWorkbook.ts`
-- `src/data/normalizeWorkbook.test.ts`
-- `src/store.ts`
-- `src/store.test.ts`
+- `src/App.tsx`
+- `src/App.test.tsx`
+- `src/styles.css`
 - `docs/plan/00-TODO.md`
 - `docs/plan/04-DATA-AND-SEARCH.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/data/importSpreadsheet.test.ts`
-- `bun run test -- src/data/normalizeWorkbook.test.ts src/data/importSpreadsheet.test.ts src/store.test.ts src/App.test.tsx`
+- `bun run test -- src/App.test.tsx`
 - `bun run check`
 
 ## Latest substantive commit

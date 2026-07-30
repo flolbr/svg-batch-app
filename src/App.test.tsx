@@ -159,4 +159,120 @@ describe("App", () => {
       "Mapping Guide",
     );
   });
+
+  it("renders normalized headers and displayed worksheet values in the grid", () => {
+    useAppStore.getState().setSpreadsheetSource({
+      fileName: "members.xlsx",
+      fileSize: 1,
+      sheetNames: ["Members"],
+      workbook: {
+        SheetNames: ["Members"],
+        Sheets: {
+          Members: {
+            "!ref": "A1:B2",
+            A1: { t: "s", v: "Name" },
+            B1: { t: "s", v: "Member ID" },
+            A2: { t: "s", v: "Alice" },
+            B2: { t: "n", v: 123, w: "00123" },
+          },
+        },
+      },
+    });
+
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    expect(
+      screen.getByRole("columnheader", { name: "Name" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: "Member ID" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "Alice" })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "00123" })).toBeInTheDocument();
+  });
+
+  it("renders stable duplicate display headers", () => {
+    useAppStore.getState().setSpreadsheetSource({
+      fileName: "duplicate-headers.xlsx",
+      fileSize: 1,
+      sheetNames: ["Members"],
+      workbook: {
+        SheetNames: ["Members"],
+        Sheets: {
+          Members: {
+            "!ref": "A1:B2",
+            A1: { t: "s", v: "Name" },
+            B1: { t: "s", v: "Name" },
+            A2: { t: "s", v: "Alice" },
+            B2: { t: "s", v: "Ally" },
+          },
+        },
+      },
+    });
+
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    expect(
+      screen.getByRole("columnheader", { name: "Name" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: "Name (2)" }),
+    ).toBeInTheDocument();
+  });
+
+  it("updates grid headers and values when the worksheet changes", async () => {
+    const user = userEvent.setup();
+    useAppStore.getState().setSpreadsheetSource({
+      fileName: "members.xlsx",
+      fileSize: 1,
+      sheetNames: ["Members", "Plans"],
+      workbook: {
+        SheetNames: ["Members", "Plans"],
+        Sheets: {
+          Members: {
+            "!ref": "A1:A2",
+            A1: { t: "s", v: "Name" },
+            A2: { t: "s", v: "Alice" },
+          },
+          Plans: {
+            "!ref": "A1:A2",
+            A1: { t: "s", v: "Plan" },
+            A2: { t: "s", v: "Premium" },
+          },
+        },
+      },
+    });
+
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    expect(
+      screen.getByRole("columnheader", { name: "Name" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "Alice" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("combobox", { name: "Worksheet" }));
+    await user.click(
+      screen.getByRole("option", { hidden: true, name: "Plans" }),
+    );
+
+    expect(
+      screen.getByRole("columnheader", { name: "Plan" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "Premium" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("cell", { name: "Alice" }),
+    ).not.toBeInTheDocument();
+  });
 });

@@ -39,6 +39,17 @@ The selected worksheet is normalized when it is imported or changed. Keep the
 result in source state so React rendering, sorting, and filtering do not
 regenerate row IDs.
 
+## Grid rendering
+
+TanStack Table renders the selected worksheet's normalized columns and source
+rows. Cells use `displayedValues`, while the typed `values` remain available for
+later sorting and filters. TanStack row identity uses the generated source row
+ID rather than the current table position.
+
+The initial grid is deliberately not virtualized. Empty imports and worksheets
+show an explicit empty state, and row selection and manual-row controls remain
+separate follow-up items.
+
 ## Header normalization
 
 On import:
