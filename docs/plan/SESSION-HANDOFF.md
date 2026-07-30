@@ -143,4 +143,4 @@ Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending commit for imported-row edit overrides.
+`6e5d0b3 feat: add imported row overrides`
