@@ -279,7 +279,18 @@ Only one implementation item should normally be `[-]`.
   - Tests: `bun run test -- src/mappings/groupMapping.test.ts
     src/mappings/visibilityMapping.test.ts src/mappings/textMapping.test.ts`;
     `bunx tsc -b`; `bun run check`.
-- [ ] Implement QR generation into a placeholder bounds.
+- [x] Implement QR generation into a placeholder bounds.
+  - QR mapping reads finite positive bounds from the target group's first
+    direct rectangle, centers a square code, applies the configured quiet-zone
+    margin and error correction, and replaces placeholder children with a
+    crisp white vector background plus one black vector path.
+  - Empty, required, missing, incompatible, invalid-bounds, and generation
+    failures return structured issues without partial replacement.
+  - Main files: `src/mappings/qrMapping.ts`,
+    `src/mappings/qrMapping.test.ts`.
+  - Tests: `bun run test -- src/mappings/qrMapping.test.ts
+    src/mappings/groupMapping.test.ts src/mappings/visibilityMapping.test.ts
+    src/mappings/textMapping.test.ts`; `bun run build:single`; `bun run check`.
 - [ ] Implement image replacement mapping.
 - [ ] Add text fitting:
   - keep size;

@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Exclusive child-group mapping is complete.
+No implementation task is active. Vector QR mapping is complete.
 
 ## What works
 
@@ -175,6 +175,10 @@ No implementation task is active. Exclusive child-group mapping is complete.
   `data-option` with ID fallback, supports explicit ID mode, and preserves
   non-candidates/nested descendants. Error paths do not partially hide
   options.
+- QR mapping derives bounds from a target group's first direct rectangle,
+  centers a square matrix with configured margin/error correction, and
+  replaces placeholder children with crisp white/black vector geometry.
+  Invalid or failed generation leaves the placeholder unchanged.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -182,31 +186,32 @@ No implementation task is active. Exclusive child-group mapping is complete.
 
 ## What remains
 
-QR generation into placeholder bounds is the next Phase 4 item.
+Image replacement mapping is the next Phase 4 item.
 
 ## Next concrete step
 
 Continue `Phase 4 — Mapping engine` in `00-TODO.md`:
 
-1. mark “Implement QR generation into a placeholder bounds” `[-]`;
-2. derive target bounds and replace placeholder content with vector QR paths;
-3. cover error correction, margin, empty behavior, and invalid bounds.
+1. mark “Implement image replacement mapping” `[-]`;
+2. replace supported image targets using contain, cover, or stretch geometry;
+3. cover empty behavior, missing assets, and unsafe image values.
 
 ## Files changed
 
-- `src/mappings/groupMapping.ts`
-- `src/mappings/groupMapping.test.ts`
+- `src/mappings/qrMapping.ts`
+- `src/mappings/qrMapping.test.ts`
 - `docs/plan/00-TODO.md`
 - `docs/plan/05-SVG-AND-MAPPINGS.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/mappings/groupMapping.test.ts
-  src/mappings/visibilityMapping.test.ts src/mappings/textMapping.test.ts`
-- `bunx tsc -b`
+- `bun run test -- src/mappings/qrMapping.test.ts
+  src/mappings/groupMapping.test.ts src/mappings/visibilityMapping.test.ts
+  src/mappings/textMapping.test.ts`
+- `bun run build:single`
 - `bun run check`
 
 ## Latest substantive commit
 
-`b0c46a0 feat: apply exclusive group mappings`
+Pending current feature commit.

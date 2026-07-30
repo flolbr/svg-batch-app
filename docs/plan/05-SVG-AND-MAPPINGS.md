@@ -207,6 +207,12 @@ type QrMapping = BaseMapping & {
 
 The target supplies bounds. Replace its visual content with vector QR paths.
 
+The QR target is a group whose first direct rectangle supplies finite positive
+numeric bounds. Output is a centered square with the configured quiet-zone
+margin: a white vector background and one black module path inside a
+`crispEdges` transformed group. Invalid bounds or generation failures leave
+the placeholder intact and return an issue.
+
 ### Image replacement
 
 ```ts
