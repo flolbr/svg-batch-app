@@ -4,8 +4,8 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. The fixed three-panel application shell is
-complete.
+No implementation task is active. The Mantine application theme and shared
+shell variables are complete.
 
 ## What works
 
@@ -14,38 +14,42 @@ complete.
 - Static empty and sample states that establish the intended UI density.
 - Responsive layout below 1100 px with Preview first and a sticky action bar.
 - Accessible headings and labelled project action region.
+- Shared Mantine brand palette, typography, and radius defaults.
+- Shared shell variables for neutral surfaces, borders, text, blue accents, and
+  panel shadow.
 
 ## What remains
 
 Product behavior is not implemented yet. The controls and sample data in the
-shell are static.
+themed shell are static.
 
 ## Next concrete step
 
 Start the next `Phase 1 — Application shell` item in `00-TODO.md`:
 
-1. mark the Mantine theme item `[-]`;
-2. add the small shared theme and CSS variables from the UI reference;
-3. keep the completed layout behavior unchanged.
+1. mark the top-level error boundary and notification surface item `[-]`;
+2. add the smallest error boundary and Mantine notification setup that covers
+   recoverable application feedback;
+3. keep feature-specific notification behavior deferred to its feature.
 
 ## Files changed
 
-- `src/App.tsx`
+- `src/theme.ts`
+- `src/theme.test.ts`
+- `src/main.tsx`
 - `src/styles.css`
-- `src/App.test.tsx`
 - `docs/plan/00-TODO.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/App.test.tsx`
-- `bun run build:single`
+- `bun run test -- src/theme.test.ts src/App.test.tsx`
 - `bun run check`
-- Browser Harness at 1920 px: three side-by-side panels, persistent action bar,
+- Browser Harness at 1920 px: brand blue applied, three side-by-side panels, no
+  horizontal overflow.
+- Browser Harness at 1000 px: Preview-first stacked panels, sticky action bar,
   no horizontal overflow.
-- Browser Harness at 1000 px: Preview-first stacked panels, sticky reachable
-  action bar, no horizontal overflow.
 
 ## Latest implementation commit
 
-`a639a34 feat: add three-panel application shell`
+`5fb7aed feat: add Mantine application theme`
