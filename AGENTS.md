@@ -69,7 +69,7 @@ Commit completed work as development advances.
   - `feat: implement SVG text mapping`
   - `fix: preserve selected rows through filtering`
   - `docs: update Drive integration plan`
-- Add the key in the second paragraph of commit message except for very short edits. 
+- Add the key changes in the second paragraph of the commit message except for very short edits.
 - Commit after a coherent TODO item or meaningful sub-item is complete, not only at the end of an entire phase.
 - Do not rewrite, squash, amend, or force-push existing commits unless explicitly instructed.
 - If unrelated user changes are present, leave them untouched and commit only files belonging to the current task.

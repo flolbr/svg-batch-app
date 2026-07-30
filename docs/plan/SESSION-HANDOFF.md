@@ -85,4 +85,4 @@ Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending commit: worksheet normalization.
+`c737a6e feat: normalize spreadsheet rows`
