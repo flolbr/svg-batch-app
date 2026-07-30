@@ -84,4 +84,4 @@ Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-`c737a6e feat: normalize spreadsheet rows`
+`b2fd665 feat: render normalized spreadsheet grid`
