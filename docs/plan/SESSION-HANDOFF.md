@@ -4,8 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Accessible desktop panel resizing is
-complete.
+No implementation task is active. The initial Zustand store is complete.
 
 ## What works
 
@@ -24,40 +23,39 @@ complete.
   left and right arrow keys.
 - Panel minimum widths are preserved, and resize controls are hidden in the
   responsive stacked layout.
+- Zustand now owns project, UI, source, and selection slices.
+- The existing desktop panel weights and resize updates use the UI slice.
+- Project and source slices start explicitly empty; row and SVG object
+  selections start empty and remain separate from UI state.
 
 ## What remains
 
-Product behavior is not implemented yet. The controls and sample data in the
-themed shell are static.
+Project restoration and other product behavior are not implemented yet. The
+controls and sample data in the themed shell are static.
 
 ## Next concrete step
 
 Start the next `Phase 1 — Application shell` item in `00-TODO.md`:
 
-1. mark the initial Zustand store item `[-]`;
-2. define the smallest project, UI, source, and selection slices required by the
-   documented initial state;
-3. keep source data immutable and avoid adding actions for unimplemented
-   features.
+1. mark embedded project JSON parsing and validation `[-]`;
+2. define the smallest startup schema required for the current empty project;
+3. load valid `#svg-batch-project` JSON and surface invalid embedded data through
+   the existing error/notification UI.
 
 ## Files changed
 
+- `src/store.ts`
+- `src/store.test.ts`
 - `src/App.tsx`
-- `src/App.test.tsx`
-- `src/styles.css`
 - `docs/plan/00-TODO.md`
-- `docs/plan/03-UI-AND-COMPONENTS.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
+- `bun run test -- src/store.test.ts`
 - `bun run test -- src/App.test.tsx`
 - `bun run check`
-- Browser Harness at 1920 px: pointer drag and keyboard resize both changed
-  adjacent panel widths without horizontal overflow.
-- Browser Harness at 1000 px: separators hidden, Preview-first stack preserved,
-  no horizontal overflow.
 
 ## Latest implementation commit
 
-`b3696b5 feat: make workspace panels resizable`
+`7b29799 feat: add initial application store`
