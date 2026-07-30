@@ -220,4 +220,4 @@ Continue `Phase 4 — Mapping engine` in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending `feat: add text fitting`
+`edf4f8c feat: add text fitting`
