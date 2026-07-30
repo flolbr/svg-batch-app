@@ -199,4 +199,4 @@ Start the first `Phase 4 — Mapping engine` item in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending current feature commit.
+`54ee93a feat: show SVG source status`
