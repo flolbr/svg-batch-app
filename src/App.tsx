@@ -86,6 +86,9 @@ import { importSvgFile } from "./svg/importSvg";
 import type { SvgTreeNode } from "./svg/buildSvgTree";
 
 const minimumPanelWidths = [360, 300, 360];
+const MIN_PREVIEW_ZOOM = 25;
+const MAX_PREVIEW_ZOOM = 200;
+const PREVIEW_ZOOM_STEP = 25;
 const emptySourceColumns: DataColumn[] = [];
 const emptySourceRows: SourceRow[] = [];
 const emptyManualRows: ManualRow[] = [];
@@ -384,6 +387,7 @@ export function App() {
   const [searchColumn, setSearchColumn] = useState<ColumnId | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [svgSearchQuery, setSvgSearchQuery] = useState("");
+  const [previewZoomPercent, setPreviewZoomPercent] = useState(100);
   const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 150);
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
   const spreadsheet = useAppStore((state) => state.sources.spreadsheet);
@@ -574,6 +578,10 @@ export function App() {
     setEditingManualRowId(null);
     setEditingSourceRowId(null);
   }, [spreadsheet?.data]);
+
+  useEffect(() => {
+    setPreviewZoomPercent(100);
+  }, [svg?.acceptedSvg]);
 
   useEffect(() => {
     if (!editingManualRowId || !shouldVirtualizeRows) return;
@@ -1287,14 +1295,40 @@ export function App() {
                 <Text size="sm" c="dimmed">
                   Zoom
                 </Text>
-                <ActionIcon variant="default" aria-label="Zoom out">
+                <ActionIcon
+                  variant="default"
+                  aria-label="Zoom out"
+                  disabled={!svg || previewZoomPercent <= MIN_PREVIEW_ZOOM}
+                  onClick={() =>
+                    setPreviewZoomPercent((zoom) =>
+                      Math.max(MIN_PREVIEW_ZOOM, zoom - PREVIEW_ZOOM_STEP),
+                    )
+                  }
+                >
                   <IconMinus />
                 </ActionIcon>
-                <Text size="sm">100%</Text>
-                <ActionIcon variant="default" aria-label="Zoom in">
+                <Text aria-live="polite" size="sm">
+                  {previewZoomPercent}%
+                </Text>
+                <ActionIcon
+                  variant="default"
+                  aria-label="Zoom in"
+                  disabled={!svg || previewZoomPercent >= MAX_PREVIEW_ZOOM}
+                  onClick={() =>
+                    setPreviewZoomPercent((zoom) =>
+                      Math.min(MAX_PREVIEW_ZOOM, zoom + PREVIEW_ZOOM_STEP),
+                    )
+                  }
+                >
                   <IconPlus />
                 </ActionIcon>
-                <Button variant="default">Fit</Button>
+                <Button
+                  variant="default"
+                  disabled={!svg || previewZoomPercent === 100}
+                  onClick={() => setPreviewZoomPercent(100)}
+                >
+                  Fit
+                </Button>
               </Group>
             </div>
 
@@ -1303,6 +1337,7 @@ export function App() {
                 <SvgPreview
                   acceptedSvg={svg.acceptedSvg}
                   selectedTargetId={selectedSvgObjectId}
+                  zoomPercent={previewZoomPercent}
                 />
               ) : (
                 <div className="preview-document">

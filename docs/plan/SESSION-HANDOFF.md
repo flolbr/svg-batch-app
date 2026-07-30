@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Selected-row preview navigation is complete.
+No implementation task is active. Preview zoom and fit controls are complete.
 
 ## What works
 
@@ -155,6 +155,9 @@ No implementation task is active. Selected-row preview navigation is complete.
   filters remain navigable.
 - The active preview row stays within the current selection, falls back to the
   first selected row when necessary, and reconciles across worksheet changes.
+- Preview zoom changes the iframe-only presentation from 25% to 200% in 25%
+  steps. Fit restores the contained 100% view, and neither operation changes
+  accepted SVG markup or selected-target highlighting.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -162,32 +165,35 @@ No implementation task is active. Selected-row preview navigation is complete.
 
 ## What remains
 
-Zoom/fit controls and source status remain Phase 3 work.
+Source status remains Phase 3 work.
 
 ## Next concrete step
 
 Start the next `Phase 3 — SVG import, tree, and preview` item in `00-TODO.md`:
 
-1. mark “Add zoom and fit controls” `[-]`;
-2. apply zoom only to the isolated preview presentation;
-3. cover zoom bounds and fit reset without changing accepted SVG markup.
+1. mark “Show source status: embedded, linked, Drive, unavailable, modified”
+   `[-]`;
+2. derive status from the source representation already supported by the local
+   core;
+3. avoid introducing linked or Drive behavior before their own TODO items.
 
 ## Files changed
 
 - `src/App.tsx`
 - `src/App.test.tsx`
-- `src/store.ts`
-- `src/store.test.ts`
+- `src/SvgPreview.tsx`
+- `src/SvgPreview.test.tsx`
 - `docs/plan/00-TODO.md`
 - `docs/plan/03-UI-AND-COMPONENTS.md`
+- `docs/plan/05-SVG-AND-MAPPINGS.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/store.test.ts src/App.test.tsx`
+- `bun run test -- src/SvgPreview.test.tsx src/App.test.tsx`
 - `bun run check`
-- Browser Harness selected-row navigation check
+- Browser Harness zoom and fit check
 
 ## Latest substantive commit
 
-`721c048 feat: navigate selected preview rows`
+Pending current feature commit.

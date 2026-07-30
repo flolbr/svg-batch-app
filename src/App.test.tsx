@@ -172,6 +172,13 @@ describe("App", () => {
       </MantineProvider>,
     );
 
+    const zoomOut = screen.getByRole("button", { name: "Zoom out" });
+    const zoomIn = screen.getByRole("button", { name: "Zoom in" });
+    const fit = screen.getByRole("button", { name: "Fit" });
+    expect(zoomOut).toBeDisabled();
+    expect(zoomIn).toBeDisabled();
+    expect(fit).toBeDisabled();
+
     await user.upload(
       screen.getByLabelText("Choose an SVG file"),
       new File(
@@ -188,6 +195,9 @@ describe("App", () => {
     });
     expect(screen.getByText("Sanitized")).toBeInTheDocument();
     expect(screen.getByText("1 mapping target found")).toBeInTheDocument();
+    expect(zoomOut).toBeEnabled();
+    expect(zoomIn).toBeEnabled();
+    expect(fit).toBeDisabled();
     const preview = screen.getByTitle("SVG preview");
     expect(preview).toHaveAttribute("sandbox", "");
     expect(preview.getAttribute("srcdoc")).toContain('id="badge"');
@@ -205,6 +215,26 @@ describe("App", () => {
     });
     expect(useAppStore.getState().sources.svg?.acceptedSvg).not.toContain(
       "data-svg-batch-highlight",
+    );
+
+    for (let step = 0; step < 4; step += 1) {
+      await user.click(zoomIn);
+    }
+    expect(screen.getByText("200%")).toBeInTheDocument();
+    expect(zoomIn).toBeDisabled();
+    expect(fit).toBeEnabled();
+
+    await user.click(fit);
+    expect(screen.getByText("100%")).toBeInTheDocument();
+    expect(fit).toBeDisabled();
+
+    for (let step = 0; step < 3; step += 1) {
+      await user.click(zoomOut);
+    }
+    expect(screen.getByText("25%")).toBeInTheDocument();
+    expect(zoomOut).toBeDisabled();
+    expect(useAppStore.getState().sources.svg?.acceptedSvg).not.toContain(
+      "transform:scale",
     );
 
     await user.type(

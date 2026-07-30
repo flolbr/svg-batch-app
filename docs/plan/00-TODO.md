@@ -220,7 +220,14 @@ Only one implementation item should normally be `[-]`.
     `src/store.test.ts`.
   - Tests: `bun run test -- src/store.test.ts src/App.test.tsx`;
     `bun run check`; Browser Harness selected-row navigation check.
-- [ ] Add zoom and fit controls.
+- [x] Add zoom and fit controls.
+  - Zoom adjusts the isolated preview from 25% to 200% in 25% steps; Fit
+    restores the existing 100% contained presentation without modifying the
+    accepted SVG snapshot.
+  - Main files: `src/App.tsx`, `src/App.test.tsx`, `src/SvgPreview.tsx`,
+    `src/SvgPreview.test.tsx`.
+  - Tests: `bun run test -- src/SvgPreview.test.tsx src/App.test.tsx`;
+    `bun run check`; Browser Harness zoom and fit check.
 - [ ] Show source status: embedded, linked, Drive, unavailable, modified.
 
 ## Phase 4 — Mapping engine

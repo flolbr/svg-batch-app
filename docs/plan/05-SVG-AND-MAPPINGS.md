@@ -20,7 +20,8 @@ The live preview uses only the accepted string in an empty-capability
 sandboxed `srcDoc` iframe. Imported markup never enters the parent application
 DOM, and the iframe ignores pointer interaction. Selecting an SVG object
 derives a separate preview document with a highlight marker; the accepted
-template snapshot is never modified.
+template snapshot is never modified. Zoom similarly changes only derived
+iframe presentation CSS, while Fit restores the contained 100% view.
 
 The local importer parses SVG as XML, requires an SVG namespace root, rejects
 unsupported elements and event attributes, permits only local fragment

@@ -66,4 +66,26 @@ describe("SvgPreview", () => {
       'id="target" data-svg-batch-highlight="true"',
     );
   });
+
+  it("scales only the derived preview presentation", () => {
+    const acceptedSvg = '<svg id="accepted-svg"><rect id="target"/></svg>';
+    const { rerender } = render(
+      <SvgPreview
+        acceptedSvg={acceptedSvg}
+        selectedTargetId="target"
+        zoomPercent={150}
+      />,
+    );
+    const frame = screen.getByTitle("SVG preview");
+
+    expect(frame.getAttribute("srcdoc")).toContain("transform:scale(1.5)");
+    expect(frame.getAttribute("srcdoc")).toContain(
+      'id="target" data-svg-batch-highlight="true"',
+    );
+    expect(acceptedSvg).not.toContain("transform:scale");
+    expect(acceptedSvg).not.toContain("data-svg-batch-highlight");
+
+    rerender(<SvgPreview acceptedSvg={acceptedSvg} />);
+    expect(frame.getAttribute("srcdoc")).toContain("transform:scale(1)");
+  });
 });

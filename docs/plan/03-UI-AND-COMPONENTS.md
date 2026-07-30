@@ -106,8 +106,8 @@ Controls:
 - previous/next selected row in active-worksheet order, including selected
   rows hidden by search or filters;
 - current selected-row position indicator;
-- zoom;
-- fit;
+- zoom from 25% to 200% in 25% steps;
+- fit to the existing contained 100% presentation;
 - highlight selected SVG target.
 
 Preview:
