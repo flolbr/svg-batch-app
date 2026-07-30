@@ -24,12 +24,14 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   IconBox,
+  IconCheck,
   IconChevronLeft,
   IconChevronRight,
   IconColumns3,
   IconCopy,
   IconDatabase,
   IconDownload,
+  IconEdit,
   IconEye,
   IconFileTypeSvg,
   IconFolderOpen,
@@ -39,6 +41,7 @@ import {
   IconPlus,
   IconSearch,
   IconSettings,
+  IconRestore,
   IconTrash,
   IconUpload,
 } from "@tabler/icons-react";
@@ -68,6 +71,12 @@ import {
 } from "./data/manualRows";
 import type { ColumnId, DataColumn, SourceRow } from "./data/normalizeWorkbook";
 import { getRowSelectionState } from "./data/rowSelection";
+import {
+  getEffectiveSourceRows,
+  resetRowOverride,
+  updateRowOverride,
+  type RowOverride,
+} from "./data/rowOverrides";
 import { createRowSearchIndex, searchRows } from "./data/searchRows";
 import { type PanelWeights, useAppStore } from "./store";
 
@@ -75,6 +84,7 @@ const minimumPanelWidths = [360, 300, 360];
 const emptySourceColumns: DataColumn[] = [];
 const emptySourceRows: SourceRow[] = [];
 const emptyManualRows: ManualRow[] = [];
+const emptyRowOverrides: RowOverride[] = [];
 export const ROW_VIRTUALIZATION_THRESHOLD = 200;
 
 type ResizeSession = {
@@ -147,6 +157,8 @@ function PanelResizeHandle({
 function DataRow({
   columns,
   editingManualRowId,
+  isEditingSourceRow,
+  isModifiedSourceRow,
   isSelected,
   manualRow,
   manualRowIndex,
@@ -155,12 +167,18 @@ function DataRow({
   onManualCellChange,
   onManualCellPaste,
   onManualEditStarted,
+  onResetSourceRow,
+  onSourceCellChange,
+  onStartSourceEdit,
+  onStopSourceEdit,
   onToggleSelection,
   row,
   virtualIndex,
 }: {
   columns: DataColumn[];
   editingManualRowId: string | null;
+  isEditingSourceRow: boolean;
+  isModifiedSourceRow: boolean;
   isSelected: boolean;
   manualRow?: ManualRow;
   manualRowIndex?: number;
@@ -173,6 +191,14 @@ function DataRow({
   ) => void;
   onManualCellPaste: (rowId: string, columnId: ColumnId, value: string) => void;
   onManualEditStarted: () => void;
+  onResetSourceRow: (rowId: string) => void;
+  onSourceCellChange: (
+    rowId: string,
+    columnId: ColumnId,
+    value: string,
+  ) => void;
+  onStartSourceEdit: (rowId: string) => void;
+  onStopSourceEdit: () => void;
   onToggleSelection: (rowId: string) => void;
   row: Row<SourceRow>;
   virtualIndex?: number;
@@ -193,29 +219,40 @@ function DataRow({
       </Table.Td>
       {row.getVisibleCells().map((cell, columnIndex) => {
         const column = columns[columnIndex];
+        const isEditable = Boolean(manualRow) || isEditingSourceRow;
         return (
           <Table.Td
-            className={manualRow ? "data-table-manual-cell" : undefined}
+            className={isEditable ? "data-table-editable-cell" : undefined}
             key={cell.id}
           >
-            {manualRow && column ? (
+            {isEditable && column ? (
               <TextInput
-                aria-label={`${column.displayName} for manual row ${(manualRowIndex ?? 0) + 1}`}
+                aria-label={
+                  manualRow
+                    ? `${column.displayName} for manual row ${(manualRowIndex ?? 0) + 1}`
+                    : `${column.displayName} for imported row ${row.index + 1}`
+                }
                 autoFocus={
-                  editingManualRowId === manualRow.id && columnIndex === 0
+                  columnIndex === 0 &&
+                  (editingManualRowId === manualRow?.id || isEditingSourceRow)
                 }
-                onChange={(event) =>
-                  onManualCellChange(
-                    manualRow.id,
-                    column.id,
-                    event.currentTarget.value,
-                  )
-                }
+                onChange={(event) => {
+                  const value = event.currentTarget.value;
+                  if (manualRow) {
+                    onManualCellChange(manualRow.id, column.id, value);
+                  } else {
+                    onSourceCellChange(row.original.id, column.id, value);
+                  }
+                }}
                 onKeyDown={(event) => {
-                  if (event.key === "Enter") event.currentTarget.blur();
+                  if (event.key === "Enter") {
+                    event.currentTarget.blur();
+                    if (!manualRow) onStopSourceEdit();
+                  }
                 }}
                 onFocus={() => {
                   if (
+                    manualRow &&
                     editingManualRowId === manualRow.id &&
                     columnIndex === 0
                   ) {
@@ -223,6 +260,7 @@ function DataRow({
                   }
                 }}
                 onPaste={(event: ClipboardEvent<HTMLInputElement>) => {
+                  if (!manualRow) return;
                   const pastedText = event.clipboardData.getData("text");
                   if (pastedText.includes("\t") || pastedText.includes("\n")) {
                     event.preventDefault();
@@ -230,12 +268,7 @@ function DataRow({
                   }
                 }}
                 size="xs"
-                value={
-                  manualRow.values[column.id] === null ||
-                  manualRow.values[column.id] === undefined
-                    ? ""
-                    : String(manualRow.values[column.id])
-                }
+                value={row.original.displayedValues[column.id] ?? ""}
                 variant="unstyled"
               />
             ) : (
@@ -269,9 +302,45 @@ function DataRow({
             </ActionIcon>
           </Group>
         ) : (
-          <Text c="dimmed" size="xs">
-            Source
-          </Text>
+          <Group gap={4} wrap="nowrap">
+            <Badge
+              color={isModifiedSourceRow ? "yellow" : "gray"}
+              size="xs"
+              variant="light"
+            >
+              {isModifiedSourceRow ? "Modified" : "Source"}
+            </Badge>
+            <ActionIcon
+              aria-label={
+                isEditingSourceRow
+                  ? `Finish editing imported row ${row.index + 1}`
+                  : `Edit imported row ${row.index + 1}`
+              }
+              onClick={() =>
+                isEditingSourceRow
+                  ? onStopSourceEdit()
+                  : onStartSourceEdit(row.original.id)
+              }
+              size="sm"
+              variant="subtle"
+            >
+              {isEditingSourceRow ? (
+                <IconCheck size={14} />
+              ) : (
+                <IconEdit size={14} />
+              )}
+            </ActionIcon>
+            {isModifiedSourceRow && (
+              <ActionIcon
+                aria-label={`Reset imported row ${row.index + 1}`}
+                onClick={() => onResetSourceRow(row.original.id)}
+                size="sm"
+                variant="subtle"
+              >
+                <IconRestore size={14} />
+              </ActionIcon>
+            )}
+          </Group>
         )}
       </Table.Td>
     </Table.Tr>
@@ -286,6 +355,9 @@ export function App() {
   const [editingManualRowId, setEditingManualRowId] = useState<string | null>(
     null,
   );
+  const [editingSourceRowId, setEditingSourceRowId] = useState<string | null>(
+    null,
+  );
   const [searchColumn, setSearchColumn] = useState<ColumnId | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [columnFilters, setColumnFilters] = useState<ColumnFilter[]>([]);
@@ -297,6 +369,7 @@ export function App() {
   const deselectRows = useAppStore((state) => state.deselectRows);
   const selectRows = useAppStore((state) => state.selectRows);
   const setManualRows = useAppStore((state) => state.setManualRows);
+  const setRowOverrides = useAppStore((state) => state.setRowOverrides);
   const setPanelWeights = useAppStore((state) => state.setPanelWeights);
   const setSelectedWorksheet = useAppStore(
     (state) => state.setSelectedWorksheet,
@@ -307,6 +380,13 @@ export function App() {
   const toggleRowSelection = useAppStore((state) => state.toggleRowSelection);
   const sourceColumns = spreadsheet?.data.columns ?? emptySourceColumns;
   const sourceRows = spreadsheet?.data.rows ?? emptySourceRows;
+  const rowOverrides =
+    spreadsheet?.rowOverridesBySheet[spreadsheet.selectedSheetName] ??
+    emptyRowOverrides;
+  const effectiveSourceRows = useMemo(
+    () => getEffectiveSourceRows(sourceRows, rowOverrides, sourceColumns),
+    [rowOverrides, sourceColumns, sourceRows],
+  );
   const manualRows =
     spreadsheet?.manualRowsBySheet[spreadsheet.selectedSheetName] ??
     emptyManualRows;
@@ -315,8 +395,16 @@ export function App() {
     [manualRows, sourceColumns],
   );
   const allRows = useMemo(
-    () => [...sourceRows, ...manualSourceRows],
-    [manualSourceRows, sourceRows],
+    () => [...effectiveSourceRows, ...manualSourceRows],
+    [effectiveSourceRows, manualSourceRows],
+  );
+  const sourceRowsById = useMemo(
+    () => new Map(sourceRows.map((row) => [row.id, row])),
+    [sourceRows],
+  );
+  const overriddenRowIds = useMemo(
+    () => new Set(rowOverrides.map((override) => override.rowId)),
+    [rowOverrides],
   );
   const manualRowsById = useMemo(
     () => new Map(manualRows.map((row) => [row.id, row])),
@@ -344,10 +432,16 @@ export function App() {
       searchRows(
         searchIndex,
         allRows,
-        debouncedSearchQuery,
+        editingSourceRowId ? "" : debouncedSearchQuery,
         activeSearchColumn,
       ),
-    [activeSearchColumn, allRows, debouncedSearchQuery, searchIndex],
+    [
+      activeSearchColumn,
+      allRows,
+      debouncedSearchQuery,
+      editingSourceRowId,
+      searchIndex,
+    ],
   );
   const matchingRows = useMemo(
     () => filterRows(searchedRows, columnFilters),
@@ -415,6 +509,7 @@ export function App() {
   useEffect(() => {
     setColumnFilters([]);
     setEditingManualRowId(null);
+    setEditingSourceRowId(null);
   }, [spreadsheet?.data]);
 
   useEffect(() => {
@@ -466,6 +561,26 @@ export function App() {
     setManualRows(deleteManualRow(manualRows, rowId));
     deselectRows([rowId]);
     if (editingManualRowId === rowId) setEditingManualRowId(null);
+  }
+
+  function startSourceEdit(rowId: string) {
+    setSearchQuery("");
+    setColumnFilters([]);
+    setEditingSourceRowId(rowId);
+  }
+
+  function changeSourceCell(rowId: string, columnId: ColumnId, value: string) {
+    const sourceRow = sourceRowsById.get(rowId);
+    if (!sourceRow) return;
+
+    setRowOverrides(
+      updateRowOverride(rowOverrides, sourceRow, columnId, value),
+    );
+  }
+
+  function resetSourceRow(rowId: string) {
+    setRowOverrides(resetRowOverride(rowOverrides, rowId));
+    if (editingSourceRowId === rowId) setEditingSourceRowId(null);
   }
 
   async function handleSpreadsheetFile(event: ChangeEvent<HTMLInputElement>) {
@@ -834,6 +949,13 @@ export function App() {
                           <DataRow
                             columns={sourceColumns}
                             editingManualRowId={editingManualRowId}
+                            isEditingSourceRow={
+                              editingSourceRowId ===
+                              dataRows[virtualRow.index].original.id
+                            }
+                            isModifiedSourceRow={overriddenRowIds.has(
+                              dataRows[virtualRow.index].original.id,
+                            )}
                             isSelected={selectedRowIdSet.has(
                               dataRows[virtualRow.index].original.id,
                             )}
@@ -851,6 +973,10 @@ export function App() {
                             onManualEditStarted={() =>
                               setEditingManualRowId(null)
                             }
+                            onResetSourceRow={resetSourceRow}
+                            onSourceCellChange={changeSourceCell}
+                            onStartSourceEdit={startSourceEdit}
+                            onStopSourceEdit={() => setEditingSourceRowId(null)}
                             onToggleSelection={toggleRowSelection}
                             row={dataRows[virtualRow.index]}
                             virtualIndex={virtualRow.index}
@@ -873,6 +999,12 @@ export function App() {
                         <DataRow
                           columns={sourceColumns}
                           editingManualRowId={editingManualRowId}
+                          isEditingSourceRow={
+                            editingSourceRowId === row.original.id
+                          }
+                          isModifiedSourceRow={overriddenRowIds.has(
+                            row.original.id,
+                          )}
                           isSelected={selectedRowIdSet.has(row.original.id)}
                           key={row.id}
                           manualRow={manualRowsById.get(row.original.id)}
@@ -884,6 +1016,10 @@ export function App() {
                           onManualEditStarted={() =>
                             setEditingManualRowId(null)
                           }
+                          onResetSourceRow={resetSourceRow}
+                          onSourceCellChange={changeSourceCell}
+                          onStartSourceEdit={startSourceEdit}
+                          onStopSourceEdit={() => setEditingSourceRowId(null)}
                           onToggleSelection={toggleRowSelection}
                           row={row}
                         />

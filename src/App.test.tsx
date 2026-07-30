@@ -686,6 +686,101 @@ describe("App", () => {
     );
   });
 
+  it("edits imported rows through overrides and can reset them", async () => {
+    const user = userEvent.setup();
+    setMemberSpreadsheet();
+    const sourceRows = useAppStore.getState().sources.spreadsheet?.data.rows;
+    const sourceRowId = sourceRows?.[0].id;
+
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    await user.type(
+      screen.getByRole("textbox", { name: "Search imported values" }),
+      "chloe",
+    );
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("cell", { name: "Alice Martin" }),
+      ).not.toBeInTheDocument();
+    });
+
+    await user.click(
+      screen.getByRole("button", { name: "Edit imported row 1" }),
+    );
+    expect(
+      screen.getByRole("textbox", { name: "Search imported values" }),
+    ).toHaveValue("");
+    const nameInput = screen.getByRole("textbox", {
+      name: "Name for imported row 1",
+    });
+    const cityInput = screen.getByRole("textbox", {
+      name: "City for imported row 1",
+    });
+    expect(nameInput).toHaveFocus();
+
+    await user.clear(nameInput);
+    await user.type(nameInput, "Renée Durand");
+    await user.tab();
+    expect(cityInput).toHaveFocus();
+    await user.clear(cityInput);
+    await user.type(cityInput, "Berlin");
+    await user.keyboard("{Enter}");
+
+    expect(
+      screen.queryByRole("textbox", { name: "Name for imported row 1" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("cell", { name: "Renée Durand" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "Berlin" })).toBeInTheDocument();
+    expect(screen.getByText("Modified")).toBeInTheDocument();
+    expect(
+      useAppStore.getState().sources.spreadsheet?.rowOverridesBySheet.Members,
+    ).toEqual([
+      {
+        rowId: sourceRowId,
+        values: { "col-0": "Renée Durand", "col-1": "Berlin" },
+      },
+    ]);
+    expect(useAppStore.getState().sources.spreadsheet?.data.rows).toBe(
+      sourceRows,
+    );
+    expect(sourceRows?.[0].displayedValues).toEqual({
+      "col-0": "Chloé Petit",
+      "col-1": "Paris",
+    });
+
+    await user.type(
+      screen.getByRole("textbox", { name: "Search imported values" }),
+      "renee",
+    );
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("cell", { name: "Alice Martin" }),
+      ).not.toBeInTheDocument();
+    });
+    expect(
+      screen.getByRole("cell", { name: "Renée Durand" }),
+    ).toBeInTheDocument();
+
+    await user.clear(
+      screen.getByRole("textbox", { name: "Search imported values" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Reset imported row 1" }),
+    );
+    expect(
+      screen.getByRole("cell", { name: "Chloé Petit" }),
+    ).toBeInTheDocument();
+    expect(
+      useAppStore.getState().sources.spreadsheet?.rowOverridesBySheet.Members,
+    ).toEqual([]);
+  });
+
   it("renders every row without a scroll region at the virtualization threshold", () => {
     setSpreadsheetRows(ROW_VIRTUALIZATION_THRESHOLD);
 

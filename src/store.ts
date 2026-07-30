@@ -11,12 +11,15 @@ import {
   selectRows,
   toggleSelectedRow,
 } from "./data/rowSelection";
+import type { RowOverride } from "./data/rowOverrides";
 import type { Project } from "./project/loadProject";
 
 export type PanelWeights = [number, number, number];
 export type SpreadsheetSource = ImportedSpreadsheet & {
   data: NormalizedWorksheet;
   manualRowsBySheet: Record<string, ManualRow[]>;
+  normalizedDataBySheet: Record<string, NormalizedWorksheet>;
+  rowOverridesBySheet: Record<string, RowOverride[]>;
   selectedSheetName: string;
 };
 
@@ -38,6 +41,7 @@ type AppStore = {
   setPanelWeights: (panelWeights: PanelWeights) => void;
   setSelectedWorksheet: (sheetName: string) => void;
   setManualRows: (rows: ManualRow[]) => void;
+  setRowOverrides: (overrides: RowOverride[]) => void;
   setSpreadsheetSource: (spreadsheet: ImportedSpreadsheet) => void;
   clearRowSelection: () => void;
   deselectRows: (rowIds: RowId[]) => void;
@@ -72,33 +76,44 @@ export const useAppStore = create<AppStore>()((set) => ({
         return state;
       }
 
+      const data =
+        spreadsheet.normalizedDataBySheet[sheetName] ??
+        normalizeWorksheet(spreadsheet.workbook.Sheets[sheetName] ?? {});
       return {
         sources: {
           ...state.sources,
           spreadsheet: {
             ...spreadsheet,
-            data: normalizeWorksheet(
-              spreadsheet.workbook.Sheets[sheetName] ?? {},
-            ),
+            data,
+            normalizedDataBySheet: {
+              ...spreadsheet.normalizedDataBySheet,
+              [sheetName]: data,
+            },
             selectedSheetName: sheetName,
           },
         },
       };
     }),
   setSpreadsheetSource: (spreadsheet) =>
-    set((state) => ({
-      sources: {
-        ...state.sources,
-        spreadsheet: {
-          ...spreadsheet,
-          data: normalizeWorksheet(
-            spreadsheet.workbook.Sheets[spreadsheet.sheetNames[0]] ?? {},
-          ),
-          manualRowsBySheet: {},
-          selectedSheetName: spreadsheet.sheetNames[0],
+    set((state) => {
+      const selectedSheetName = spreadsheet.sheetNames[0];
+      const data = normalizeWorksheet(
+        spreadsheet.workbook.Sheets[selectedSheetName] ?? {},
+      );
+      return {
+        sources: {
+          ...state.sources,
+          spreadsheet: {
+            ...spreadsheet,
+            data,
+            manualRowsBySheet: {},
+            normalizedDataBySheet: { [selectedSheetName]: data },
+            rowOverridesBySheet: {},
+            selectedSheetName,
+          },
         },
-      },
-    })),
+      };
+    }),
   setManualRows: (rows) =>
     set((state) => {
       const spreadsheet = state.sources.spreadsheet;
@@ -112,6 +127,24 @@ export const useAppStore = create<AppStore>()((set) => ({
             manualRowsBySheet: {
               ...spreadsheet.manualRowsBySheet,
               [spreadsheet.selectedSheetName]: rows,
+            },
+          },
+        },
+      };
+    }),
+  setRowOverrides: (overrides) =>
+    set((state) => {
+      const spreadsheet = state.sources.spreadsheet;
+      if (!spreadsheet) return state;
+
+      return {
+        sources: {
+          ...state.sources,
+          spreadsheet: {
+            ...spreadsheet,
+            rowOverridesBySheet: {
+              ...spreadsheet.rowOverridesBySheet,
+              [spreadsheet.selectedSheetName]: overrides,
             },
           },
         },

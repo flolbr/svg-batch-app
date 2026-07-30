@@ -4,7 +4,7 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. Editable manual rows are complete.
+No implementation task is active. Imported-row edit overrides are complete.
 
 ## What works
 
@@ -44,8 +44,9 @@ No implementation task is active. Editable manual rows are complete.
 - Headers handle BOMs, whitespace, blanks, and duplicates. Cells retain typed
   values and formatted display strings, including date and leading-zero
   formatting.
-- Row IDs are generated independently from table position and remain stable
-  while the selected worksheet stays active.
+- Row IDs are generated independently from table position. Normalized
+  worksheets are cached so IDs remain stable across worksheet switches during
+  the imported workbook's lifetime.
 - TanStack Table renders normalized worksheet headers and displayed cell values.
 - The grid uses each generated source row ID as its TanStack identity and
   updates when the selected worksheet changes.
@@ -89,6 +90,16 @@ No implementation task is active. Editable manual rows are complete.
   remain separate from immutable imported rows. They participate in search,
   filters, virtualization, selection, and counts.
 - Manual rows remain transient until their dedicated persistence item.
+- Imported rows expose an explicit Edit action. Changes are stored as
+  worksheet-scoped overrides and merged only in the effective-row pipeline;
+  normalized source rows remain unchanged.
+- Modified imported rows carry a visible marker and reset action. Returning
+  cells to their original displayed values removes their overrides.
+- Effective imported values participate in search, structured filters,
+  virtualization, selection, and counts. Numeric display edits retain their
+  entered form while exposing typed numbers to range filters.
+- Imported-row overrides remain transient until their dedicated persistence
+  item.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -96,18 +107,17 @@ No implementation task is active. Editable manual rows are complete.
 
 ## What remains
 
-Imported-row edit overrides and the rest of the spreadsheet workflow remain
-Phase 2 work.
+Column visibility/export preferences and project persistence remain Phase 2
+work.
 
 ## Next concrete step
 
 Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 
-1. mark “Add edit overrides for imported rows without mutating source rows”
-   `[-]`;
-2. define and test effective-row override operations;
-3. add an explicit imported-row edit action and verify source rows remain
-   unchanged.
+1. mark “Add visible/exported-column selection” `[-]`;
+2. define and test independent visible and exported column preferences;
+3. connect the Columns control to the grid without removing columns from
+   search or mapping availability.
 
 ## Files changed
 
@@ -116,21 +126,21 @@ Start the next `Phase 2 — Spreadsheet import and grid` item in `00-TODO.md`:
 - `src/styles.css`
 - `src/store.ts`
 - `src/store.test.ts`
-- `src/data/manualRows.ts`
-- `src/data/manualRows.test.ts`
+- `src/data/rowOverrides.ts`
+- `src/data/rowOverrides.test.ts`
 - `docs/plan/00-TODO.md`
 - `docs/plan/04-DATA-AND-SEARCH.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/data/manualRows.test.ts src/store.test.ts`
+- `bun run test -- src/data/rowOverrides.test.ts src/store.test.ts`
 - `bun run test -- src/App.test.tsx`
-- `bun run test -- src/data/manualRows.test.ts src/data/searchRows.test.ts src/data/filterRows.test.ts src/store.test.ts src/App.test.tsx`
+- `bun run test -- src/data/rowOverrides.test.ts src/store.test.ts src/App.test.tsx`
 - `bun run lint`
 - `bun run build:single`
 - `bun run check`
 
 ## Latest substantive commit
 
-`1d09ddb feat: add editable manual rows`
+Pending commit for imported-row edit overrides.

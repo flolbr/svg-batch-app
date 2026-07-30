@@ -184,17 +184,17 @@ select {
   padding-inline: 11px;
 }
 
-.data-table .data-table-manual-cell {
+.data-table .data-table-editable-cell {
   padding-block: 3px;
 }
 
-.data-table-manual-cell input {
+.data-table-editable-cell input {
   min-width: 100px;
   padding-inline: 6px;
   border-radius: 4px;
 }
 
-.data-table-manual-cell input:focus {
+.data-table-editable-cell input:focus {
   outline: 2px solid var(--app-color-primary);
   outline-offset: -2px;
 }

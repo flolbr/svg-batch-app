@@ -52,8 +52,7 @@ keys, and a scroll viewport capped at 400 px. The virtual table reports its
 logical row count and logical row indexes for assistive technology, while the
 scroll region remains keyboard focusable.
 
-Empty imports and worksheets show an explicit empty state. Row selection and
-manual-row controls remain separate follow-up items.
+Empty imports and worksheets show an explicit empty state.
 
 ## Header normalization
 
@@ -107,12 +106,27 @@ function getEffectiveRow(
 
 A row is either source or manual. Overrides apply only to source rows.
 
+Imported-row overrides are stored separately by worksheet and stable source
+row ID. The effective-row layer overlays changed values and display strings
+without mutating normalized source objects. Numeric strings in
+inferred-number columns provide typed numeric values while retaining their
+entered display form.
+
+The grid exposes an explicit Edit action for imported rows, uses a Modified
+marker while an override exists, and provides a reset action. Enter finishes
+the current imported-row edit. Returning a cell to its original displayed
+value removes that cell override; restoring every cell removes the row
+override.
+
+Normalized worksheet results are cached for the lifetime of an imported
+workbook so their generated row IDs remain stable across worksheet switches.
+Overrides remain transient until the dedicated Phase 2 persistence item.
+
 ## Search
 
-Fuse.js indexes effective displayed row values. The current source-row
-implementation builds the all-values and per-column indexes only when the
-normalized worksheet data changes. Manual rows and overrides join the same
-index when their dedicated items are implemented.
+Fuse.js indexes effective displayed row values. The current implementation
+builds the all-values and per-column indexes when normalized data, manual rows,
+or overrides change.
 
 Create one search document per row:
 

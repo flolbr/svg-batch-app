@@ -67,6 +67,10 @@ describe("useAppStore", () => {
       ...spreadsheet,
       data: { columns: [], rows: [] },
       manualRowsBySheet: {},
+      normalizedDataBySheet: {
+        Customers: { columns: [], rows: [] },
+      },
+      rowOverridesBySheet: {},
       selectedSheetName: "Customers",
     });
     expect(stateAfter.sources.svg).toBe(stateBefore.sources.svg);
@@ -188,5 +192,50 @@ describe("useAppStore", () => {
       Members: [{ id: "manual-member", values: { "col-0": "Ada" } }],
       Plans: [{ id: "manual-plan", values: { "col-0": "Premium" } }],
     });
+  });
+
+  it("keeps imported-row overrides scoped to their worksheet", () => {
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.aoa_to_sheet([["Name"], ["Ada"]]),
+      "Members",
+    );
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.aoa_to_sheet([["Plan"], ["Basic"]]),
+      "Plans",
+    );
+    useAppStore.getState().setSpreadsheetSource({
+      fileName: "members.xlsx",
+      fileSize: 123,
+      sheetNames: workbook.SheetNames,
+      workbook,
+    });
+    const memberRowId =
+      useAppStore.getState().sources.spreadsheet?.data.rows[0].id ?? "";
+
+    useAppStore
+      .getState()
+      .setRowOverrides([
+        { rowId: memberRowId, values: { "col-0": "Augusta" } },
+      ]);
+    useAppStore.getState().setSelectedWorksheet("Plans");
+    const planRowId =
+      useAppStore.getState().sources.spreadsheet?.data.rows[0].id ?? "";
+    useAppStore
+      .getState()
+      .setRowOverrides([{ rowId: planRowId, values: { "col-0": "Premium" } }]);
+    useAppStore.getState().setSelectedWorksheet("Members");
+
+    expect(
+      useAppStore.getState().sources.spreadsheet?.rowOverridesBySheet,
+    ).toEqual({
+      Members: [{ rowId: memberRowId, values: { "col-0": "Augusta" } }],
+      Plans: [{ rowId: planRowId, values: { "col-0": "Premium" } }],
+    });
+    expect(useAppStore.getState().sources.spreadsheet?.data.rows[0].id).toBe(
+      memberRowId,
+    );
   });
 });

@@ -106,7 +106,17 @@ Only one implementation item should normally be `[-]`.
     `src/styles.css`.
   - Tests: `bun run test -- src/data/manualRows.test.ts src/data/searchRows.test.ts src/data/filterRows.test.ts src/store.test.ts src/App.test.tsx`;
     `bun run check`.
-- [ ] Add edit overrides for imported rows without mutating source rows.
+- [x] Add edit overrides for imported rows without mutating source rows.
+  - Imported rows enter editing only through an explicit action. Effective
+    values feed search, filters, selection, virtualization, and counts while
+    normalized source rows remain unchanged.
+  - Overrides are worksheet-scoped, show a Modified marker, can be reset, and
+    retain stable row IDs across worksheet switches.
+  - Main files: `src/data/rowOverrides.ts`,
+    `src/data/rowOverrides.test.ts`, `src/store.ts`, `src/store.test.ts`,
+    `src/App.tsx`, `src/App.test.tsx`, `src/styles.css`.
+  - Tests: `bun run test -- src/data/rowOverrides.test.ts src/store.test.ts src/App.test.tsx`;
+    `bun run check`.
 - [ ] Add visible/exported-column selection.
 - [ ] Persist selected rows, filters, edits, and manual rows.
 
