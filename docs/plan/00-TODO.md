@@ -18,6 +18,9 @@ Only one implementation item should normally be `[-]`.
 - [x] Include the approved UI reference image.
 - [x] Add Bun setup script and starter Vite shell.
 - [x] Add agent workflow and context-compaction instructions.
+- [x] Verify the documented README setup against the current dependency versions.
+  - Main files: `package.json`, `bun.lock`, `src/vite-env.d.ts`, `vitest.setup.ts`.
+  - Tests: `bun run check`; Browser Harness launch check at `http://localhost:5173/`.
 
 ## Phase 1 — Application shell
 

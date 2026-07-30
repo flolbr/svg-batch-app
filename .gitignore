@@ -2,6 +2,9 @@ node_modules/
 dist/
 coverage/
 .vite/
+.bun-cache/
+.bun-tmp/
+*.tsbuildinfo
 .DS_Store
 *.log
 .env

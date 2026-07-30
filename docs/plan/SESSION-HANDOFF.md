@@ -4,7 +4,8 @@ Last updated: 2026-07-30
 
 ## Current task
 
-No implementation task is active. The handoff package and starter shell are prepared.
+No implementation task is active. The README setup and starter shell have been
+verified against the current dependency versions.
 
 ## What exists
 
@@ -12,6 +13,7 @@ No implementation task is active. The handoff package and starter shell are prep
 - Agreed stack.
 - UI reference image.
 - Bun setup script.
+- Installed dependency manifest and `bun.lock`.
 - Minimal Vite + React + Mantine starter.
 - Single-file Vite build configuration.
 - Starter smoke test.
@@ -46,8 +48,18 @@ Start `Phase 1 — Application shell` in `00-TODO.md`:
 
 ## Tests currently expected
 
-- starter render test;
-- `bun run build:single`.
+- `bun run check` passes;
+- Browser Harness confirmed the starter shell at `http://localhost:5173/`.
+
+## Files changed during setup verification
+
+- `package.json`
+- `bun.lock`
+- `src/vite-env.d.ts`
+- `vitest.setup.ts`
+- `.gitignore`
+- `docs/plan/00-TODO.md`
+- `docs/plan/SESSION-HANDOFF.md`
 
 ## Known constraints
 
