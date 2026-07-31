@@ -4,7 +4,8 @@ Last updated: 2026-07-31
 
 ## Current task
 
-No implementation task is active. The shared validation pipeline is complete.
+No implementation task is active. The explicit Phase 5 validation rules are
+complete.
 
 ## What works
 
@@ -208,6 +209,15 @@ No implementation task is active. The shared validation pipeline is complete.
 - Each validated row owns a separate mapped SVG clone and its issues. The
   pipeline also returns flattened row-ordered issues and a shared error gate,
   including correct empty-batch behavior.
+- Mapping configuration validation reports missing columns, missing targets,
+  and target incompatibility once per pipeline run, then excludes invalid
+  mappings from row application.
+- Existing unknown-option, required-value, and text-overflow mapping failures
+  remain attached to their rows.
+- Generated SVGs reject non-embedded `href` and `url(...)` resources after
+  mapping.
+- Requested filenames are compared after NFC normalization, trimming, and
+  case folding; every row in a collision receives a blocking issue.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -215,21 +225,23 @@ No implementation task is active. The shared validation pipeline is complete.
 
 ## What remains
 
-The explicit Phase 5 validation rules are next.
+The compact validation report is next.
 
 ## Next concrete step
 
 Continue `Phase 5 — Validation and export` in `00-TODO.md`:
 
-1. mark “Validate missing columns, missing targets, unknown options, empty
-   required cells, text overflow, external resources, and duplicate
-   filenames” `[-]`;
-2. add project/batch rules around the existing row mapping issues;
-3. keep all results in `validateRows` so preview and export consume identical
-   issue semantics.
+1. mark “Show a compact validation report grouped by row and issue type” `[-]`;
+2. derive one compact presentation from `ValidationPipelineResult`;
+3. keep grouping and counts independently testable, then connect the report to
+   the existing validation/export UI surface.
 
 ## Files changed
 
+- `src/validation/validationRules.ts`
+- `src/validation/validationRules.test.ts`
+- `src/validation/filenameValidation.ts`
+- `src/validation/filenameValidation.test.ts`
 - `src/validation/validationPipeline.ts`
 - `src/validation/validationPipeline.test.ts`
 - `docs/plan/00-TODO.md`
@@ -239,10 +251,11 @@ Continue `Phase 5 — Validation and export` in `00-TODO.md`:
 ## Tests run
 
 - `bun run test -- src/validation/validationPipeline.test.ts
-  src/mappings/applyMappings.test.ts`
+  src/validation/validationRules.test.ts
+  src/validation/filenameValidation.test.ts src/mappings/applyMappings.test.ts`
 - `bunx tsc -b`
 - `bun run check`
 
 ## Latest substantive commit
 
-`c4536d8 feat: add shared validation pipeline`
+`a5d852d feat: integrate validation rules`
