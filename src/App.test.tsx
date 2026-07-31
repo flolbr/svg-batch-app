@@ -302,6 +302,7 @@ describe("App", () => {
         "row-1.svg",
         "row-2.svg",
         "selected-data.csv",
+        "manifest.json",
       ]);
       expect(await archive.file("row-1.svg")!.async("string")).toContain(
         '<rect id="shape" width="120" height="80"/>',
@@ -309,6 +310,26 @@ describe("App", () => {
       expect(await archive.file("selected-data.csv")!.async("string")).toBe(
         "\uFEFFName\r\nChloé Petit\r\nAlice Martin\r\n",
       );
+      expect(
+        JSON.parse(await archive.file("manifest.json")!.async("string")),
+      ).toEqual([
+        {
+          rowId: rows[0].id,
+          requestedFilename: "row-1.svg",
+          actualFilename: "row-1.svg",
+          status: "success",
+          outputs: ["row-1.svg"],
+          warnings: [],
+        },
+        {
+          rowId: rows[1].id,
+          requestedFilename: "row-2.svg",
+          actualFilename: "row-2.svg",
+          status: "success",
+          outputs: ["row-2.svg"],
+          warnings: [],
+        },
+      ]);
       expect(screen.getByText(/Validated, no issues$/)).toBeInTheDocument();
 
       downloadedNames.length = 0;
@@ -326,11 +347,20 @@ describe("App", () => {
       );
       await user.click(screen.getByRole("button", { name: "Export selected" }));
 
-      await waitFor(() => expect(downloadedNames).toEqual(["row-1.pdf"]));
+      await waitFor(() =>
+        expect(downloadedNames).toEqual(["svg-batch-export.zip"]),
+      );
       expect(objectUrls).toHaveLength(1);
-      expect(objectUrls[0].type).toBe("application/pdf");
+      expect(objectUrls[0].type).toBe("application/zip");
+      const pdfArchive = await JSZip.loadAsync(
+        await objectUrls[0].arrayBuffer(),
+      );
+      expect(Object.keys(pdfArchive.files)).toEqual([
+        "row-1.pdf",
+        "manifest.json",
+      ]);
       const pdfHeader = new TextDecoder().decode(
-        (await objectUrls[0].arrayBuffer()).slice(0, 4),
+        (await pdfArchive.file("row-1.pdf")!.async("uint8array")).slice(0, 4),
       );
       expect(pdfHeader).toBe("%PDF");
     } finally {

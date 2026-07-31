@@ -429,9 +429,9 @@ Only one implementation item should normally be `[-]`.
     `bun run check`; Browser Harness canonical fixture check for a valid
     `row-1.pdf`, one 1200 × 800 pt page, and the validated footer state.
 - [x] Bundle multiple outputs with JSZip.
-  - A single generated SVG or PDF keeps its direct download. Two or more files
-    are added to `svg-batch-export.zip` in worksheet order with their existing
-    filenames and exact text or binary contents.
+  - Generated files are added to `svg-batch-export.zip` in worksheet order with
+    their existing filenames and exact text or binary contents. The required
+    manifest now makes every completed export an archive.
   - ZIP creation is independent of its Blob/object-URL download boundary and
     accepts both SVG strings and PDF buffers without mutating them.
   - Main files: `src/export/zipExport.ts`,
@@ -457,7 +457,20 @@ Only one implementation item should normally be `[-]`.
     export column and producing one ZIP with two SVGs plus a BOM-prefixed
     `selected-data.csv` containing the remaining seven headers and two selected
     rows.
-- [ ] Add `manifest.json` with requested name, actual name, status, and warnings.
+- [x] Add `manifest.json` with requested name, actual name, status, and warnings.
+  - Every completed export appends a deterministic `manifest.json` array after
+    its graphic files and optional CSV, so the browser receives one ZIP.
+  - Each selected row has an ordered success entry with its row ID, current
+    interim requested and actual filename, graphic output name, and row-level
+    validation warning messages. Failed/skipped entries and errors are
+    supported by the serializer for the later execution-controls task.
+  - Main files: `src/export/manifestExport.ts`,
+    `src/export/manifestExport.test.ts`, `src/App.tsx`, `src/App.test.tsx`.
+  - Tests: `bun run test -- src/export/manifestExport.test.ts
+    src/export/zipExport.test.ts src/App.test.tsx`; `bunx tsc -b`;
+    `bun run check`; Browser Harness canonical fixture check for one ZIP with
+    two SVGs and a two-entry `manifest.json` containing ordered requested and
+    actual names, success statuses, output names, and empty warning arrays.
 - [ ] Add progress, cancel, continue-on-error, and retry-failed controls.
 - [ ] Keep batch processing sequential initially. Add concurrency only if measured.
 - [ ] Add filename sanitation and collision rules.

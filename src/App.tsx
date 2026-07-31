@@ -85,8 +85,9 @@ import {
 } from "./data/rowOverrides";
 import { createRowSearchIndex, searchRows } from "./data/searchRows";
 import { createSelectedDataCsv } from "./export/csvExport";
-import { createPdfExportFiles, downloadPdfFile } from "./export/pdfExport";
-import { createSvgExportFiles, downloadSvgFile } from "./export/svgExport";
+import { createExportManifest } from "./export/manifestExport";
+import { createPdfExportFiles } from "./export/pdfExport";
+import { createSvgExportFiles } from "./export/svgExport";
 import { createZipExport, downloadZipExport } from "./export/zipExport";
 import { getMappingStatus } from "./mappings/mappingStatus";
 import { type PanelWeights, useAppStore } from "./store";
@@ -769,25 +770,29 @@ export function App() {
             selectedRows,
           )
         : null;
-      if (exportFormat === "pdf") {
-        const files = await createPdfExportFiles(requests);
-        if (files.length === 1 && !csvFile) {
-          downloadPdfFile(files[0]);
-        } else {
-          downloadZipExport(
-            await createZipExport(csvFile ? [...files, csvFile] : files),
-          );
-        }
-      } else {
-        const files = createSvgExportFiles(requests);
-        if (files.length === 1 && !csvFile) {
-          downloadSvgFile(files[0]);
-        } else {
-          downloadZipExport(
-            await createZipExport(csvFile ? [...files, csvFile] : files),
-          );
-        }
-      }
+      const files =
+        exportFormat === "pdf"
+          ? await createPdfExportFiles(requests)
+          : createSvgExportFiles(requests);
+      const manifestFile = createExportManifest(
+        files.map((file, index) => ({
+          rowId: file.rowId,
+          requestedFilename: requests[index].filename,
+          actualFilename: file.filename,
+          status: "success",
+          outputs: [file.filename],
+          warnings: result.rows[index].issues
+            .filter((issue) => issue.level === "warning")
+            .map((issue) => issue.message),
+        })),
+      );
+      downloadZipExport(
+        await createZipExport([
+          ...files,
+          ...(csvFile ? [csvFile] : []),
+          manifestFile,
+        ]),
+      );
     } catch (error) {
       notifications.show({
         color: "red",

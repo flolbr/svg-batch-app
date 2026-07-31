@@ -152,11 +152,9 @@ Export selected first runs the same `validateRows` call as the report. Blocking
 errors open the report and produce no files.
 
 For a valid selection, each mapped SVG clone is serialized in worksheet order
-with a UTF-8 XML declaration and `image/svg+xml` MIME type. Exactly one file
-uses the SVG browser download boundary, which creates and immediately revokes
-its object URL; multiple files follow the ZIP rule below. Until the
+with a UTF-8 XML declaration and `image/svg+xml` MIME type. Until the
 filename-rules task is complete, requested names are
-`row-{worksheet position}.svg`.
+`row-{worksheet position}.svg`. The graphic files follow the ZIP rule below.
 
 ### Individual PDF
 
@@ -168,16 +166,15 @@ falls back to a positive `viewBox` size when explicit dimensions are absent.
 An SVG without either valid source fails the export with a clear error.
 
 Until filename rules are complete, requested PDF names are
-`row-{worksheet position}.pdf`. The ZIP bundling rule below applies to multiple
-PDFs.
+`row-{worksheet position}.pdf`. The graphic files follow the ZIP rule below.
 
 ### ZIP bundling
 
-Exactly one generated SVG or PDF keeps its individual browser download. When
-an export produces two or more files, JSZip writes them to
-`svg-batch-export.zip` in worksheet order using their existing filenames and
-exact text or binary contents. ZIP creation remains separate from the small
-Blob/object-URL download boundary.
+JSZip writes generated files to `svg-batch-export.zip` in worksheet order using
+their existing filenames and exact text or binary contents. Because every
+completed export now includes `manifest.json`, the browser always receives one
+archive. ZIP creation remains separate from the small Blob/object-URL download
+boundary.
 
 ### Selected-data CSV
 
@@ -191,6 +188,24 @@ output starts with a BOM, uses CRLF records with a final CRLF, and quotes
 fields containing commas, quotes, or line breaks while doubling embedded
 quotes. Because CSV accompanies a graphic output, enabling it uses the
 multi-file ZIP path.
+
+### Manifest
+
+Every completed export appends `manifest.json` after the graphic files and
+optional CSV. Its deterministic JSON array contains one entry per selected row
+in worksheet order:
+
+- `rowId`;
+- the requested filename and actual filename;
+- `success`, `failed`, or `skipped` status;
+- generated output names;
+- warning messages;
+- an optional error.
+
+Current successful exports use the same interim filename for requested and
+actual names, list that row's SVG or PDF output, and retain row-level validation
+warnings in issue order. Failed/skipped entries and error text are serialized
+for the later progress/retry work rather than being produced prematurely.
 
 ## Batch execution
 
