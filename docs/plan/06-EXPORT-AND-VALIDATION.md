@@ -33,16 +33,30 @@ type ValidationPipelineResult = {
     svg: SVGSVGElement;
     issues: ValidationIssue[];
   }[];
+  projectIssues: ValidationIssue[];
   issues: ValidationIssue[];
   hasErrors: boolean;
 };
 ```
 
 Every row owns a separate SVG clone. Issues stay attached to their row and are
-also flattened in row order. `hasErrors` is the common export gate. Mapping
-dependencies such as text measurement and image resolution are supplied once
-and passed through for every row. Individual validation rules are composed
-into this result; preview and export do not maintain separate validators.
+also flattened after the project issues in row order. `hasErrors` is the common
+export gate. Mapping dependencies such as text measurement and image resolution
+are supplied once and passed through for every row. Individual validation rules
+are composed into this result; preview and export do not maintain separate
+validators.
+
+The caller supplies the active worksheet column IDs alongside the rows.
+Mapping configuration is checked once per pipeline run. A missing column,
+missing target, or target-incompatible mapping produces a project issue and is
+excluded from row application so the same configuration failure is not
+repeated for every row.
+
+Row mapping issues retain their existing mapping, target, column, and row
+context. This includes unknown visibility/group options, required blank values,
+missing image or QR values, and text overflow. Each generated SVG is also
+scanned after mapping; any `href` or `url(...)` reference that is neither a
+local fragment nor embedded data is a blocking `external-resource` issue.
 
 ## Project-level validation
 
@@ -94,6 +108,12 @@ Collision policy:
 - optional: error.
 
 Manifest records both requested and actual names.
+
+Before export naming is resolved, `validateRows` can receive the requested
+filename for each row. Duplicate detection compares NFC-normalized, trimmed,
+case-insensitive names, ignores blanks, and emits a blocking
+`duplicate-filename` issue for every row in a collision. Filename sanitation
+and automatic suffix allocation remain part of the later filename-rules task.
 
 ## Export outputs
 

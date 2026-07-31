@@ -68,11 +68,7 @@ describe("validateMappingConfiguration", () => {
 
     expect(result.applicableMappings).toEqual([mappings[0]]);
     expect(
-      result.issues.map((issue) => [
-        issue.mappingId,
-        issue.code,
-        issue.rowId,
-      ]),
+      result.issues.map((issue) => [issue.mappingId, issue.code, issue.rowId]),
     ).toEqual([
       ["missing-column", "missing-column", undefined],
       ["missing-target", "missing-target", undefined],

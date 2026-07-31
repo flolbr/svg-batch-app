@@ -50,8 +50,14 @@ describe("validateDuplicateFilenames", () => {
         { rowId: "row-2", filename: "card.svg" },
       ]),
     ).toMatchObject([
-      { rowId: "row-1", message: 'Filename "Card.SVG" is requested by multiple rows.' },
-      { rowId: "row-2", message: 'Filename "card.svg" is requested by multiple rows.' },
+      {
+        rowId: "row-1",
+        message: 'Filename "Card.SVG" is requested by multiple rows.',
+      },
+      {
+        rowId: "row-2",
+        message: 'Filename "card.svg" is requested by multiple rows.',
+      },
     ]);
   });
 

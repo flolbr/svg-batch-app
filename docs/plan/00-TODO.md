@@ -370,7 +370,22 @@ Only one implementation item should normally be `[-]`.
     `src/validation/validationPipeline.test.ts`.
   - Tests: `bun run test -- src/validation/validationPipeline.test.ts
     src/mappings/applyMappings.test.ts`; `bunx tsc -b`; `bun run check`.
-- [-] Validate missing columns, missing targets, unknown options, empty required cells, text overflow, external resources, and duplicate filenames.
+- [x] Validate missing columns, missing targets, unknown options, empty required cells, text overflow, external resources, and duplicate filenames.
+  - Mapping configuration is checked once per pipeline run. Missing columns,
+    missing targets, and target-incompatible mappings are project issues and
+    are skipped instead of producing the same failure for every row.
+  - Existing mapping errors for unknown options, required blanks, and text
+    overflow remain row-scoped. Generated SVGs are checked for non-embedded
+    references after mappings run.
+  - Requested filename collisions compare NFC-normalized, trimmed,
+    case-insensitive names and attach one blocking issue to every involved row.
+  - Main files: `src/validation/validationRules.ts`,
+    `src/validation/filenameValidation.ts`,
+    `src/validation/validationPipeline.ts` and their tests.
+  - Tests: `bun run test -- src/validation/validationPipeline.test.ts
+    src/validation/validationRules.test.ts
+    src/validation/filenameValidation.test.ts
+    src/mappings/applyMappings.test.ts`; `bunx tsc -b`; `bun run check`.
 - [ ] Show a compact validation report grouped by row and issue type.
 - [ ] Export one SVG per selected row.
 - [ ] Export one PDF per selected row with `svg2pdf.js` and jsPDF.
