@@ -608,7 +608,16 @@ Only one implementation item should normally be `[-]`.
     `file://`, saving fixture state, disabling networking, and reopening with
     zero resource requests plus restored data/SVG sources, mapping, selection,
     PDF/CSV choices, and filename template.
-- [ ] Verify generated outputs are not embedded in the project HTML.
+- [x] Verify generated outputs are not embedded in the project HTML.
+  - Generated SVG/PDF/ZIP files and manifest entries remain transient export
+    values. Saving after an export serializes only the strict Project schema
+    and preserves the accepted template rather than a mapped output clone.
+  - Main files: `src/App.test.tsx`,
+    `docs/plan/07-SINGLE-FILE-PROJECT.md`.
+  - Tests: `bun run test -- src/App.test.tsx`; `bun run check` (48 test files,
+    303 tests). The integration test creates and inspects a mapped SVG ZIP,
+    then inspects the subsequently saved project block for the exact schema
+    keys and absence of generated XML and manifest fields.
 
 ## Phase 7 — Linked SVG manual reload
 

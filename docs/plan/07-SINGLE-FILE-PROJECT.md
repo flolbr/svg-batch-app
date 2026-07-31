@@ -16,6 +16,11 @@ A built or saved project is one HTML file containing:
 
 Generated PDFs, SVGs, and ZIPs are never embedded.
 
+Export artifacts remain transient Blobs and local batch values. Saving after
+an export still serializes only the strict Project schema: the accepted
+template is retained, while mapped SVG/PDF bytes, ZIP bytes, output filenames,
+statuses, and manifest entries are excluded from the project block.
+
 ## Project block
 
 Use one inert JSON script:

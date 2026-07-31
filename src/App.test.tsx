@@ -260,6 +260,133 @@ describe("App", () => {
     expect(handle.createWritable).toHaveBeenCalledTimes(2);
   });
 
+  it("keeps generated export artifacts out of saved project HTML", async () => {
+    const user = userEvent.setup();
+    const exportBlobs: Blob[] = [];
+    const savedBlobs: Blob[] = [];
+    const originalCreateObjectUrl = URL.createObjectURL;
+    const originalRevokeObjectUrl = URL.revokeObjectURL;
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: vi.fn((blob: Blob) => {
+        exportBlobs.push(blob);
+        return "blob:generated-export";
+      }),
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: vi.fn(),
+    });
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+
+    try {
+      useAppStore.setState({ project: project() });
+      setMemberSpreadsheet();
+      const state = useAppStore.getState();
+      const firstRow = state.sources.spreadsheet!.data.rows[0];
+      state.setSvgSource({
+        acceptedSvg:
+          '<svg xmlns="http://www.w3.org/2000/svg"><text id="member-name">Template</text></svg>',
+        fileName: "badge.svg",
+        fileSize: 1,
+        sourceStatus: "embedded",
+        targets: [{ id: "member-name", tagName: "text" }],
+        tree: [
+          {
+            children: [],
+            id: "member-name",
+            label: "Member name",
+            tagName: "text",
+          },
+        ],
+      });
+      state.setMapping({
+        id: "mapping-member-name",
+        targetId: "member-name",
+        columnId: "col-0",
+        type: "text",
+        fit: "keep",
+      });
+      state.selectRows([firstRow.id]);
+
+      const close = vi.fn().mockResolvedValue(undefined);
+      render(
+        <MantineProvider>
+          <App
+            projectDocument={cleanProjectDocument()}
+            showSaveFilePicker={vi.fn().mockResolvedValue({
+              createWritable: vi.fn(async () => ({
+                write: vi.fn(async (blob: Blob) => savedBlobs.push(blob)),
+                close,
+              })),
+            })}
+          />
+        </MantineProvider>,
+      );
+
+      await user.click(screen.getByRole("button", { name: "Export selected" }));
+      await waitFor(() => expect(exportBlobs).toHaveLength(1));
+      const archive = await JSZip.loadAsync(await exportBlobs[0].arrayBuffer());
+      const generatedSvg = await archive.file("row-1.svg")!.async("string");
+      expect(generatedSvg).toContain('<?xml version="1.0" encoding="UTF-8"?>');
+      expect(generatedSvg).toContain(">Chloé Petit</text>");
+      expect(archive.file("manifest.json")).not.toBeNull();
+
+      await user.click(screen.getByRole("button", { name: "Save project" }));
+      await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
+      const savedDocument = new DOMParser().parseFromString(
+        await savedBlobs[0].text(),
+        "text/html",
+      );
+      const projectJson =
+        savedDocument.getElementById("svg-batch-project")!.textContent!;
+      const savedProject = JSON.parse(projectJson) as Record<string, unknown>;
+
+      expect(Object.keys(savedProject).sort()).toEqual([
+        "assets",
+        "audit",
+        "data",
+        "exportSettings",
+        "mappings",
+        "name",
+        "projectId",
+        "schemaVersion",
+        "sources",
+        "template",
+      ]);
+      expect(projectJson).not.toContain('"actualFilename"');
+      expect(projectJson).not.toContain('"outputs"');
+      expect(projectJson).not.toContain('"status":"success"');
+      expect(projectJson).not.toContain("<?xml");
+      expect(savedProject.template).toMatchObject({
+        acceptedSvg: expect.stringContaining(">Template</text>"),
+      });
+      expect(loadEmbeddedProject(savedDocument)).toMatchObject({
+        success: true,
+        project: { projectId: "project-1" },
+      });
+    } finally {
+      if (originalCreateObjectUrl) {
+        Object.defineProperty(URL, "createObjectURL", {
+          configurable: true,
+          value: originalCreateObjectUrl,
+        });
+      } else {
+        delete (URL as { createObjectURL?: typeof URL.createObjectURL })
+          .createObjectURL;
+      }
+      if (originalRevokeObjectUrl) {
+        Object.defineProperty(URL, "revokeObjectURL", {
+          configurable: true,
+          value: originalRevokeObjectUrl,
+        });
+      } else {
+        delete (URL as { revokeObjectURL?: typeof URL.revokeObjectURL })
+          .revokeObjectURL;
+      }
+    }
+  });
+
   it("keeps the prior project audit when closing the file fails", async () => {
     const user = userEvent.setup();
     const loadedProject = project();
