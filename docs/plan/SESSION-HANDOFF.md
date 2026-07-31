@@ -4,7 +4,7 @@ Last updated: 2026-07-31
 
 ## Current task
 
-No implementation task is active. Phase 5 export manifest is complete.
+No implementation task is active. Phase 5 export execution controls are complete.
 
 ## What works
 
@@ -249,7 +249,15 @@ No implementation task is active. Phase 5 export manifest is complete.
   CSV, and a final deterministic `manifest.json`.
 - The manifest has one ordered entry per selected row with requested/actual
   filenames, success status, output name, and row validation warnings. Its
-  serializer also supports failed/skipped entries for the next task.
+  serializer also supports the runner's failed/skipped entries.
+- Export rows run strictly one at a time with visible completed/total progress
+  and the current filename.
+- Project errors always block. An explicit partial-export checkbox permits
+  row-level failures, which become failed manifest entries while valid rows
+  continue; runtime failures stop or continue according to the same control.
+- Cancel suppresses download through the final ZIP step. Failed-row retry keeps
+  the original format/CSV setting, revalidates current state, and runs only the
+  failed row IDs.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -257,23 +265,22 @@ No implementation task is active. Phase 5 export manifest is complete.
 
 ## What remains
 
-Progress, cancel, continue-on-error, and retry-failed controls are next.
+The explicit sequential-processing TODO is next.
 
 ## Next concrete step
 
 Continue `Phase 5 — Validation and export` in `00-TODO.md`:
 
-1. mark “Add progress, cancel, continue-on-error, and retry-failed controls”
-   `[-]`;
-2. separate sequential row execution state from the final archive download
-   without introducing workers or concurrency;
-3. expose progress/current filename, cancellation, continue-on-error, and retry
-   only for failed rows, with manifest results covering success/failure/skip.
+1. mark “Keep batch processing sequential initially. Add concurrency only if
+   measured” `[-]`;
+2. confirm the runner's no-overlap test and implementation are sufficient
+   evidence without adding another abstraction or worker path;
+3. record the decision and move to filename sanitation/collision rules.
 
 ## Files changed
 
-- `src/export/manifestExport.ts`
-- `src/export/manifestExport.test.ts`
+- `src/export/runExportBatch.ts`
+- `src/export/runExportBatch.test.ts`
 - `src/App.tsx`
 - `src/App.test.tsx`
 - `docs/plan/00-TODO.md`
@@ -282,15 +289,14 @@ Continue `Phase 5 — Validation and export` in `00-TODO.md`:
 
 ## Tests run
 
-- `bun run test -- src/export/manifestExport.test.ts src/export/zipExport.test.ts
-  src/App.test.tsx`
+- `bun run test -- src/export/runExportBatch.test.ts src/App.test.tsx`
 - `bunx tsc -b`
 - `bun run check`
-- Browser Harness canonical fixture check for one ZIP with two SVGs and a
-  two-entry `manifest.json` containing ordered requested/actual names, success
-  statuses, output names, and empty warning arrays. Recording:
-  `/home/flo/.config/browser-harness/agent-workspace/recordings/manifest-export-final`.
+- Browser Harness canonical nine-row PDF check under moderate Chrome CPU
+  throttling with visible `1/9` progress, an available Cancel control,
+  confirmed cancellation, and no downloaded archive. Recording:
+  `/home/flo/.config/browser-harness/agent-workspace/recordings/export-controls-cancel-confirmed`.
 
 ## Latest substantive commit
 
-`5b1c3cd feat: add export manifest`
+`ce26072 feat: add export execution controls`
