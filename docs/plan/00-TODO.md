@@ -360,7 +360,16 @@ Only one implementation item should normally be `[-]`.
 
 ## Phase 5 — Validation and export
 
-- [ ] Build one validation pipeline shared by preview and export.
+- [x] Build one validation pipeline shared by preview and export.
+  - `validateRows` is the single deterministic entry point for one preview row
+    or a selected export batch. Each row receives its own mapped SVG clone and
+    ordered issues; the result also exposes aggregate issues and an error gate.
+  - Mapping dependencies are passed through once for every row. Empty batches
+    succeed without special caller logic.
+  - Main files: `src/validation/validationPipeline.ts`,
+    `src/validation/validationPipeline.test.ts`.
+  - Tests: `bun run test -- src/validation/validationPipeline.test.ts
+    src/mappings/applyMappings.test.ts`; `bunx tsc -b`; `bun run check`.
 - [ ] Validate missing columns, missing targets, unknown options, empty required cells, text overflow, external resources, and duplicate filenames.
 - [ ] Show a compact validation report grouped by row and issue type.
 - [ ] Export one SVG per selected row.

@@ -22,6 +22,28 @@ type ValidationIssue = {
 };
 ```
 
+`validateRows` is the shared deterministic entry point. Preview passes its one
+active row; export passes the selected rows in worksheet order. The pipeline
+calls the same ordered mapping application for every row and returns:
+
+```ts
+type ValidationPipelineResult = {
+  rows: {
+    rowId: string;
+    svg: SVGSVGElement;
+    issues: ValidationIssue[];
+  }[];
+  issues: ValidationIssue[];
+  hasErrors: boolean;
+};
+```
+
+Every row owns a separate SVG clone. Issues stay attached to their row and are
+also flattened in row order. `hasErrors` is the common export gate. Mapping
+dependencies such as text measurement and image resolution are supplied once
+and passed through for every row. Individual validation rules are composed
+into this result; preview and export do not maintain separate validators.
+
 ## Project-level validation
 
 Check:

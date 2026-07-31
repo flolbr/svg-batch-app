@@ -4,7 +4,7 @@ Last updated: 2026-07-31
 
 ## Current task
 
-No implementation task is active. Phase 4 mapping application is complete.
+No implementation task is active. The shared validation pipeline is complete.
 
 ## What works
 
@@ -203,6 +203,11 @@ No implementation task is active. Phase 4 mapping application is complete.
 - Mapping application preserves input order within each type, injects text
   metrics and image resolution, aggregates issues without stopping, and never
   mutates the accepted template.
+- `validateRows` is the single mapping-and-validation entry point for one
+  preview row or an ordered export batch.
+- Each validated row owns a separate mapped SVG clone and its issues. The
+  pipeline also returns flattened row-ordered issues and a shared error gate,
+  including correct empty-batch behavior.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -210,31 +215,34 @@ No implementation task is active. Phase 4 mapping application is complete.
 
 ## What remains
 
-Phase 4 is complete. The shared Phase 5 validation pipeline is next.
+The explicit Phase 5 validation rules are next.
 
 ## Next concrete step
 
 Continue `Phase 5 — Validation and export` in `00-TODO.md`:
 
-1. read `docs/plan/06-VALIDATION-AND-EXPORT.md`;
-2. mark “Build one validation pipeline shared by preview and export” `[-]`;
-3. compose configuration and row-level mapping issues around `applyMappings`
-   without creating separate preview/export validators.
+1. mark “Validate missing columns, missing targets, unknown options, empty
+   required cells, text overflow, external resources, and duplicate
+   filenames” `[-]`;
+2. add project/batch rules around the existing row mapping issues;
+3. keep all results in `validateRows` so preview and export consume identical
+   issue semantics.
 
 ## Files changed
 
-- `src/mappings/applyMappings.ts`
-- `src/mappings/applyMappings.test.ts`
+- `src/validation/validationPipeline.ts`
+- `src/validation/validationPipeline.test.ts`
 - `docs/plan/00-TODO.md`
-- `docs/plan/05-SVG-AND-MAPPINGS.md`
+- `docs/plan/06-EXPORT-AND-VALIDATION.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/mappings/applyMappings.test.ts`
+- `bun run test -- src/validation/validationPipeline.test.ts
+  src/mappings/applyMappings.test.ts`
 - `bunx tsc -b`
 - `bun run check`
 
 ## Latest substantive commit
 
-`cc62e0a feat: orchestrate mapping application`
+Pending `feat: add shared validation pipeline`
