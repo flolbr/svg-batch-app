@@ -4,7 +4,7 @@ Last updated: 2026-07-31
 
 ## Current task
 
-No implementation task is active. Individual Phase 5 SVG export is complete.
+No implementation task is active. Individual Phase 5 PDF export is complete.
 
 ## What works
 
@@ -231,6 +231,12 @@ No implementation task is active. Individual Phase 5 SVG export is complete.
   the filename-rules task.
 - SVG serialization is independent of the small tested Blob/object-URL browser
   boundary and leaves validated SVGs unchanged.
+- The action bar selects SVG or PDF output while keeping the same validation
+  gate and worksheet-order flow.
+- PDF export processes rows sequentially with `svg2pdf.js` and jsPDF. Each page
+  uses positive SVG `width`/`height` dimensions or falls back to its `viewBox`.
+- Interim PDF names use `row-{worksheet position}.pdf`; multiple outputs remain
+  direct downloads until the ZIP task.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -238,22 +244,21 @@ No implementation task is active. Individual Phase 5 SVG export is complete.
 
 ## What remains
 
-Individual PDF export is next.
+Bundling multiple outputs with JSZip is next.
 
 ## Next concrete step
 
 Continue `Phase 5 — Validation and export` in `00-TODO.md`:
 
-1. mark “Export one PDF per selected row with `svg2pdf.js` and jsPDF” `[-]`;
-2. convert one validated SVG clone at a time with page dimensions derived from
-   the SVG;
-3. test successful bytes and page size separately from the browser download
-   boundary before adding the format control.
+1. mark “Bundle multiple outputs with JSZip” `[-]`;
+2. keep one-file exports as direct downloads and create a ZIP when the selected
+   export produces more than one file;
+3. test archive names, bytes, ordering, and the browser download boundary.
 
 ## Files changed
 
-- `src/export/svgExport.ts`
-- `src/export/svgExport.test.ts`
+- `src/export/pdfExport.ts`
+- `src/export/pdfExport.test.ts`
 - `src/App.tsx`
 - `src/App.test.tsx`
 - `docs/plan/00-TODO.md`
@@ -262,12 +267,14 @@ Continue `Phase 5 — Validation and export` in `00-TODO.md`:
 
 ## Tests run
 
-- `bun run test -- src/export/svgExport.test.ts src/App.test.tsx`
+- `bun run test -- src/export/pdfExport.test.ts src/export/svgExport.test.ts
+  src/App.test.tsx`
 - `bunx tsc -b`
 - `bun run check`
-- Browser Harness canonical fixture download check for `row-1.svg`, its UTF-8
-  XML declaration and SVG content, and the validated footer state.
+- Browser Harness canonical fixture download check for `row-1.pdf`, its `%PDF`
+  header, one 1200 × 800 pt page, and the validated footer state. Recording:
+  `/home/flo/.config/browser-harness/agent-workspace/recordings/pdf-export-final`.
 
 ## Latest substantive commit
 
-`1c1b9e9 feat: export selected SVG files`
+`3ebbceb feat: export selected PDF files`
