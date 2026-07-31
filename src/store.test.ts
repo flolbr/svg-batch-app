@@ -1,6 +1,31 @@
 import * as XLSX from "xlsx";
 import { beforeEach, describe, expect, it } from "vitest";
+import type { Project } from "./project/projectSchema";
 import { initialPanelWeights, useAppStore } from "./store";
+
+function project(overrides: Partial<Project> = {}): Project {
+  return {
+    schemaVersion: 1,
+    projectId: "project-1",
+    name: "Badges",
+    mappings: [],
+    assets: [],
+    exportSettings: {
+      format: "svg",
+      includeCsv: false,
+      filenameTemplate: "row-{row}",
+      collisionPolicy: "suffix",
+      continueOnError: false,
+    },
+    sources: [],
+    audit: {
+      createdAt: "2026-07-31T08:00:00.000Z",
+      updatedAt: "2026-07-31T08:00:00.000Z",
+      appVersion: "0.0.0",
+    },
+    ...overrides,
+  };
+}
 
 describe("useAppStore", () => {
   beforeEach(() => {
@@ -48,16 +73,12 @@ describe("useAppStore", () => {
 
   it("loads a validated project without changing transient state", () => {
     const stateBefore = useAppStore.getState();
-    const project = {
-      schemaVersion: 1 as const,
-      projectId: "project-1",
-      name: "Badges",
-    };
+    const loadedProject = project();
 
-    stateBefore.setProject(project);
+    stateBefore.setProject(loadedProject);
 
     const stateAfter = useAppStore.getState();
-    expect(stateAfter.project).toEqual(project);
+    expect(stateAfter.project).toEqual(loadedProject);
     expect(stateAfter.ui).toBe(stateBefore.ui);
     expect(stateAfter.sources).toBe(stateBefore.sources);
     expect(stateAfter.selection).toBe(stateBefore.selection);
@@ -500,11 +521,7 @@ describe("useAppStore", () => {
       XLSX.utils.aoa_to_sheet([["Plan"], ["Basic"]]),
       "Plans",
     );
-    useAppStore.getState().setProject({
-      schemaVersion: 1,
-      projectId: "project-1",
-      name: "Badges",
-    });
+    useAppStore.getState().setProject(project());
     useAppStore.getState().setSpreadsheetSource({
       fileName: "members.xlsx",
       fileSize: 123,

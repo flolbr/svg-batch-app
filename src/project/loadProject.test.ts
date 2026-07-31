@@ -1,5 +1,30 @@
 import { describe, expect, it } from "vitest";
 import { loadEmbeddedProject } from "./loadProject";
+import type { Project } from "./projectSchema";
+
+function project(overrides: Partial<Project> = {}): Project {
+  return {
+    schemaVersion: 1,
+    projectId: "project-1",
+    name: "Badges",
+    mappings: [],
+    assets: [],
+    exportSettings: {
+      format: "svg",
+      includeCsv: false,
+      filenameTemplate: "row-{row}",
+      collisionPolicy: "suffix",
+      continueOnError: false,
+    },
+    sources: [],
+    audit: {
+      createdAt: "2026-07-31T08:00:00.000Z",
+      updatedAt: "2026-07-31T08:00:00.000Z",
+      appVersion: "0.0.0",
+    },
+    ...overrides,
+  };
+}
 
 function projectDocument(json?: string) {
   const testDocument = document.implementation.createHTMLDocument();
@@ -18,30 +43,17 @@ function projectDocument(json?: string) {
 describe("loadEmbeddedProject", () => {
   it("parses and validates the embedded project", () => {
     const result = loadEmbeddedProject(
-      projectDocument(
-        JSON.stringify({
-          schemaVersion: 1,
-          projectId: "project-1",
-          name: "Badges",
-        }),
-      ),
+      projectDocument(JSON.stringify(project())),
     );
 
     expect(result).toEqual({
       success: true,
-      project: {
-        schemaVersion: 1,
-        projectId: "project-1",
-        name: "Badges",
-      },
+      project: project(),
     });
   });
 
   it("parses validated persisted spreadsheet state", () => {
-    const project = {
-      schemaVersion: 1,
-      projectId: "project-1",
-      name: "Badges",
+    const persistedProject = project({
       data: {
         fileName: "members.csv",
         fileSize: 24,
@@ -58,13 +70,13 @@ describe("loadEmbeddedProject", () => {
           },
         },
       },
-    };
+    });
 
     expect(
-      loadEmbeddedProject(projectDocument(JSON.stringify(project))),
+      loadEmbeddedProject(projectDocument(JSON.stringify(persistedProject))),
     ).toEqual({
       success: true,
-      project,
+      project: persistedProject,
     });
   });
 
@@ -85,20 +97,18 @@ describe("loadEmbeddedProject", () => {
   it.each([
     [
       "unsupported versions",
-      { schemaVersion: 2, projectId: "project-1", name: "Badges" },
-      "Unsupported project schema version.",
+      { ...project(), schemaVersion: 2 },
+      "Unsupported project schema version: 2.",
     ],
     [
       "missing identity fields",
-      { schemaVersion: 1, projectId: "", name: "" },
+      { ...project(), projectId: "", name: "" },
       "Project ID is required. Project name is required.",
     ],
     [
       "unknown fields",
       {
-        schemaVersion: 1,
-        projectId: "project-1",
-        name: "Badges",
+        ...project(),
         unexpected: true,
       },
       'Unrecognized key: "unexpected"',

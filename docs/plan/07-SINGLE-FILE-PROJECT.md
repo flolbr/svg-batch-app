@@ -45,6 +45,19 @@ type Project = {
 };
 ```
 
+Version 1 is strict at every persisted boundary. The template stores the
+accepted SVG text, source metadata, and selected object ID; targets and the
+object tree remain derived runtime data. Export settings contain the SVG/PDF
+format, CSV choice, filename template, collision policy, and partial-export
+choice. Embedded raster assets carry their MIME-matched data URL. Persisted
+source records identify embedded, linked, Drive, or HTTPS origins without
+storing file handles or OAuth credentials.
+
+All project JSON enters through `parseProject`. It dispatches on
+`schemaVersion`, validates version 1, and is the single place where future
+version migrations will be added. Missing and unknown versions fail before any
+state is loaded.
+
 The Phase 2 data boundary is:
 
 ```ts

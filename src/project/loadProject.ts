@@ -1,18 +1,7 @@
 import { z } from "zod";
-import { dataProjectStateSchema } from "./dataProjectState";
+import { parseProject, type Project } from "./projectSchema";
 
-const projectSchema = z
-  .object({
-    schemaVersion: z.literal(1, {
-      error: "Unsupported project schema version.",
-    }),
-    projectId: z.string().trim().min(1, "Project ID is required."),
-    name: z.string().trim().min(1, "Project name is required."),
-    data: dataProjectStateSchema.optional(),
-  })
-  .strict();
-
-export type Project = z.infer<typeof projectSchema>;
+export type { Project } from "./projectSchema";
 
 export type ProjectLoadResult =
   { success: true; project: Project } | { success: false; error: string };
@@ -37,13 +26,17 @@ export function loadEmbeddedProject(document: Document): ProjectLoadResult {
     };
   }
 
-  const result = projectSchema.safeParse(projectJson);
-  if (!result.success) {
+  try {
+    return { success: true, project: parseProject(projectJson) };
+  } catch (error) {
     return {
       success: false,
-      error: result.error.issues.map((issue) => issue.message).join(" "),
+      error:
+        error instanceof z.ZodError
+          ? error.issues.map((issue) => issue.message).join(" ")
+          : error instanceof Error
+            ? error.message
+            : "Embedded project data could not be migrated.",
     };
   }
-
-  return { success: true, project: result.data };
 }

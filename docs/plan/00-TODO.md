@@ -512,7 +512,18 @@ Only one implementation item should normally be `[-]`.
 
 ## Phase 6 — Single-file project save
 
-- [ ] Define the complete project schema and migration entry point.
+- [x] Define the complete project schema and migration entry point.
+  - Version 1 strictly validates identity, the accepted template snapshot,
+    normalized data, mappings, embedded raster assets, export settings, source
+    references, and audit data.
+  - `parseProject` is the single version-dispatch boundary. Missing and
+    unsupported versions fail without partially loading state.
+  - Main files: `src/project/projectSchema.ts`,
+    `src/project/projectSchema.test.ts`, `src/project/loadProject.ts`,
+    `src/project/loadProject.test.ts`, `index.html`.
+  - Tests: `bun run test -- src/project/projectSchema.test.ts
+    src/project/loadProject.test.ts src/store.test.ts`; `bunx tsc -b`;
+    `bun run check`.
 - [ ] Serialize the current project into `#svg-batch-project`.
 - [ ] Produce a single HTML build with all core runtime assets inlined.
 - [ ] Add “Save project” using File System Access API when available.
