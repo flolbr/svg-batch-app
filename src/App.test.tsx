@@ -993,6 +993,59 @@ describe("App", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("previews mapped values and updates them when switching selected rows", async () => {
+    const user = userEvent.setup();
+    setMemberSpreadsheet();
+    const state = useAppStore.getState();
+    const rows = state.sources.spreadsheet!.data.rows;
+    state.setSvgSource({
+      acceptedSvg:
+        '<svg xmlns="http://www.w3.org/2000/svg"><text id="member-name">Template</text></svg>',
+      fileName: "badge.svg",
+      fileSize: 1,
+      sourceStatus: "embedded",
+      targets: [{ id: "member-name", tagName: "text" }],
+      tree: [
+        {
+          children: [],
+          id: "member-name",
+          label: "Member name",
+          tagName: "text",
+        },
+      ],
+    });
+    state.setMapping({
+      id: "mapping-member-name",
+      targetId: "member-name",
+      columnId: "col-0",
+      type: "text",
+      fit: "keep",
+    });
+    state.selectRows(rows.map((row) => row.id));
+
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    const preview = screen.getByTitle("SVG preview");
+    expect(preview.getAttribute("srcdoc")).toContain(
+      '<text id="member-name">Chloé Petit</text>',
+    );
+    expect(preview.getAttribute("srcdoc")).not.toContain(">Template</text>");
+
+    await user.click(screen.getByRole("button", { name: "Next" }));
+
+    expect(useAppStore.getState().selection.activeRowId).toBe(rows[1].id);
+    expect(preview.getAttribute("srcdoc")).toContain(
+      '<text id="member-name">Alice Martin</text>',
+    );
+    expect(preview.getAttribute("srcdoc")).not.toContain(
+      '<text id="member-name">Chloé Petit</text>',
+    );
+  });
+
   it("shows every SVG source status without enabling future adapters", () => {
     render(
       <MantineProvider>

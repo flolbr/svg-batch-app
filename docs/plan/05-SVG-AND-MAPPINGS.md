@@ -18,10 +18,12 @@ Never inject the unsanitized SVG into the application DOM.
 
 The live preview uses only the accepted string in an empty-capability
 sandboxed `srcDoc` iframe. Imported markup never enters the parent application
-DOM, and the iframe ignores pointer interaction. Selecting an SVG object
-derives a separate preview document with a highlight marker; the accepted
-template snapshot is never modified. Zoom similarly changes only derived
-iframe presentation CSS, while Fit restores the contained 100% view.
+DOM, and the iframe ignores pointer interaction. The active selected row runs
+through the shared validation pipeline, so its mapped SVG becomes the derived
+preview document and Previous/Next replaces it with the newly active row.
+Selecting an SVG object adds a highlight marker to that derived document; the
+accepted template snapshot is never modified. Zoom similarly changes only
+derived iframe presentation CSS, while Fit restores the contained 100% view.
 
 The SVG panel reports a compact source status. A local import is `Embedded`,
 and no accepted source is `Unavailable`. `Linked`, `Drive`, and `Modified` are

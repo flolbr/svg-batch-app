@@ -361,15 +361,21 @@ Only one implementation item should normally be `[-]`.
 ## Phase 5 — Validation and export
 
 - [x] Build one validation pipeline shared by preview and export.
+  - Phase 6 regression verification found and fixed a missing preview caller:
+    the active selected row now runs through `validateRows`, and Previous/Next
+    replace the iframe document with that row's mapped SVG.
   - `validateRows` is the single deterministic entry point for one preview row
     or a selected export batch. Each row receives its own mapped SVG clone and
     ordered issues; the result also exposes aggregate issues and an error gate.
   - Mapping dependencies are passed through once for every row. Empty batches
     succeed without special caller logic.
   - Main files: `src/validation/validationPipeline.ts`,
-    `src/validation/validationPipeline.test.ts`.
+    `src/validation/validationPipeline.test.ts`, `src/App.tsx`,
+    `src/App.test.tsx`.
   - Tests: `bun run test -- src/validation/validationPipeline.test.ts
-    src/mappings/applyMappings.test.ts`; `bunx tsc -b`; `bun run check`.
+    src/mappings/applyMappings.test.ts src/App.test.tsx`; `bunx tsc -b`;
+    `bun run check`; Browser Harness recording
+    `preview-mapped-row-switch`.
 - [x] Validate missing columns, missing targets, unknown options, empty required cells, text overflow, external resources, and duplicate filenames.
   - Mapping configuration is checked once per pipeline run. Missing columns,
     missing targets, and target-incompatible mappings are project issues and

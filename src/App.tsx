@@ -689,6 +689,26 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
   const activePreviewRowIndex = activeRowId
     ? previewRowIds.indexOf(activeRowId)
     : -1;
+  const activePreviewRow =
+    activePreviewRowIndex >= 0
+      ? selectedRows[activePreviewRowIndex]
+      : null;
+  const previewSvg = useMemo(() => {
+    if (!svg || !activePreviewRow) return svg?.acceptedSvg ?? null;
+
+    const template = new DOMParser().parseFromString(
+      svg.acceptedSvg,
+      "image/svg+xml",
+    ).documentElement as unknown as SVGSVGElement;
+    return (
+      validateRows({
+        template,
+        rows: [activePreviewRow],
+        columnIds: new Set(sourceColumns.map((column) => column.id)),
+        mappings,
+      }).rows[0]?.svg.outerHTML ?? svg.acceptedSvg
+    );
+  }, [activePreviewRow, mappings, sourceColumns, svg]);
   const dataColumns = useMemo<ColumnDef<SourceRow>[]>(
     () =>
       visibleColumns.map((column) => ({
@@ -1864,7 +1884,7 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
             <div className="preview-canvas">
               {svg ? (
                 <SvgPreview
-                  acceptedSvg={svg.acceptedSvg}
+                  acceptedSvg={previewSvg ?? svg.acceptedSvg}
                   selectedTargetId={selectedSvgObjectId}
                   zoomPercent={previewZoomPercent}
                 />
