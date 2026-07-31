@@ -4,7 +4,7 @@ Last updated: 2026-07-31
 
 ## Current task
 
-Phase 6 output-exclusion verification is next.
+Phase 6 is complete. Stop before Phase 7.
 
 ## What works
 
@@ -153,6 +153,8 @@ Phase 6 output-exclusion verification is next.
 - Preview Previous/Next controls navigate selected rows in active-worksheet
   order and expose the current position. Selected rows hidden by search or
   filters remain navigable.
+- The active selected row runs through the shared validation pipeline before
+  rendering, so mapped preview values update on Previous/Next row switches.
 - The active preview row stays within the current selection, falls back to the
   first selected row when necessary, and reconciles across worksheet changes.
 - Preview zoom changes the iframe-only presentation from 25% to 200% in 25%
@@ -274,6 +276,9 @@ Phase 6 output-exclusion verification is next.
   restores spreadsheet/SVG sources, mappings, selections, and export settings.
 - Persisted SVG snapshots are revalidated as untrusted input before targets and
   the object tree are rebuilt for project or recovery hydration.
+- Generated export SVG/PDF/ZIP bytes and manifest entries remain transient.
+  Saving after export retains the accepted template and serializes only the
+  strict Project schema.
 - Export rows run strictly one at a time with visible completed/total progress
   and the current filename.
 - Project errors always block. An explicit partial-export checkbox permits
@@ -289,34 +294,28 @@ Phase 6 output-exclusion verification is next.
 
 ## What remains
 
-Output-exclusion verification remains in Phase 6.
+Phase 7 and later remain intentionally unchecked.
 
 ## Next concrete step
 
-Verify generated outputs are not embedded in saved project HTML.
+Stop here. If work resumes, begin with the first Phase 7 linked-SVG TODO.
 
 ## Files changed
 
 - `docs/plan/00-TODO.md`
+- `docs/plan/05-SVG-AND-MAPPINGS.md`
 - `docs/plan/07-SINGLE-FILE-PROJECT.md`
-- `src/project/loadProject.ts`
-- `src/project/loadProject.test.ts`
-- `src/project/recoveryStore.ts`
-- `src/project/recoveryStore.test.ts`
-- `src/project/serializeProjectHtml.test.ts`
-- `src/store.ts`
-- `src/store.test.ts`
-- `src/svg/importSvg.ts`
-- `src/svg/importSvg.test.ts`
+- `src/App.tsx`
+- `src/App.test.tsx`
 
 ## Tests run
 
-- `bun run test -- src/project/serializeProjectHtml.test.ts
-  src/svg/importSvg.test.ts src/project/loadProject.test.ts
-  src/project/recoveryStore.test.ts src/store.test.ts` (5 files, 50 tests)
-- `bun run check` (48 test files, 301 tests)
-- Browser Harness recording `phase6-offline-reopen`
+- `bun run test -- src/App.test.tsx` (30 tests)
+- `bun run check` (48 test files, 303 tests)
+- Browser Harness recordings `phase6-file-save`,
+  `phase6-download-fallback`, `phase6-indexeddb-recovery`,
+  `phase6-offline-reopen`, and `preview-mapped-row-switch`
 
 ## Latest commit
 
-`bcd0dd2 feat: restore saved projects offline`
+`5634d8b test: verify project output exclusion`
