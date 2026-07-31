@@ -4,7 +4,7 @@ Last updated: 2026-07-31
 
 ## Current task
 
-No implementation task is active. Phase 5 multi-file ZIP export is complete.
+No implementation task is active. Phase 5 selected-data CSV export is complete.
 
 ## What works
 
@@ -240,6 +240,11 @@ No implementation task is active. Phase 5 multi-file ZIP export is complete.
   bundled into `svg-batch-export.zip` in worksheet order.
 - The ZIP helper preserves Unicode filenames and exact SVG text/PDF bytes, and
   keeps archive creation separate from its browser download boundary.
+- The action bar can optionally add `selected-data.csv` to the graphic outputs.
+  It uses active-worksheet export columns and selected effective rows in their
+  existing order.
+- CSV output preserves displayed formatting and overrides, uses display headers,
+  and writes a UTF-8 BOM, CRLF records, and standard CSV escaping.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -247,22 +252,23 @@ No implementation task is active. Phase 5 multi-file ZIP export is complete.
 
 ## What remains
 
-Exporting selected source columns as CSV is next.
+Adding `manifest.json` is next.
 
 ## Next concrete step
 
 Continue `Phase 5 — Validation and export` in `00-TODO.md`:
 
-1. mark “Export selected source columns as CSV” `[-]`;
-2. derive the ordered column list from the active worksheet's export-column
-   preferences and serialize selected effective rows;
-3. add the CSV to the existing output/archive flow with focused escaping,
-   ordering, override, and browser-boundary tests.
+1. mark “Add `manifest.json` with requested name, actual name, status, and
+   warnings” `[-]`;
+2. define a deterministic manifest entry for every selected row using the
+   current interim requested/actual filename;
+3. add the manifest to the archive and test order, statuses, output names, and
+   warnings without pre-implementing filename sanitation.
 
 ## Files changed
 
-- `src/export/zipExport.ts`
-- `src/export/zipExport.test.ts`
+- `src/export/csvExport.ts`
+- `src/export/csvExport.test.ts`
 - `src/App.tsx`
 - `src/App.test.tsx`
 - `docs/plan/00-TODO.md`
@@ -271,15 +277,15 @@ Continue `Phase 5 — Validation and export` in `00-TODO.md`:
 
 ## Tests run
 
-- `bun run test -- src/export/zipExport.test.ts src/export/svgExport.test.ts
-  src/export/pdfExport.test.ts src/App.test.tsx`
+- `bun run test -- src/export/csvExport.test.ts src/export/zipExport.test.ts
+  src/App.test.tsx`
 - `bunx tsc -b`
 - `bun run check`
-- Browser Harness canonical fixture download check for one
-  `svg-batch-export.zip` containing ordered `row-1.svg` and `row-2.svg` with
-  expected XML declarations/content and a clean validation footer. Recording:
-  `/home/flo/.config/browser-harness/agent-workspace/recordings/zip-export-final`.
+- Browser Harness canonical fixture check excluding the Note export column and
+  producing one ZIP with two SVGs plus BOM-prefixed `selected-data.csv`
+  containing the remaining seven headers and two selected rows. Recording:
+  `/home/flo/.config/browser-harness/agent-workspace/recordings/csv-export-final`.
 
 ## Latest substantive commit
 
-`0724936 feat: bundle multi-file exports`
+`df911cb feat: export selected data as CSV`
