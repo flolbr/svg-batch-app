@@ -4,7 +4,7 @@ Last updated: 2026-07-31
 
 ## Current task
 
-Phase 6 current-state serialization is in progress.
+Phase 6 IndexedDB recovery is in progress.
 
 ## What works
 
@@ -259,6 +259,14 @@ Phase 6 current-state serialization is in progress.
   references, and audit metadata.
 - `parseProject` is the single version dispatch and future migration boundary;
   missing and unsupported versions fail before application state is loaded.
+- Current runtime state serializes into a validated, script-safe project block
+  inside an immutable clean HTML shell.
+- `bun run check` enforces a single `dist/index.html` with inline application
+  JavaScript/CSS and no external runtime resource references.
+- “Save project” uses File System Access when available, reuses successful
+  handles, and updates the saved audit only after close succeeds.
+- Browsers without File System Access download the same validated project HTML
+  through a short-lived Blob URL.
 - Export rows run strictly one at a time with visible completed/total progress
   and the current filename.
 - Project errors always block. An explicit partial-export checkbox permits
@@ -274,34 +282,34 @@ Phase 6 current-state serialization is in progress.
 
 ## What remains
 
-Current-state serialization, single-file verification, project saving,
-download fallback, IndexedDB recovery, offline restore, and output-exclusion
-verification remain in Phase 6.
+IndexedDB recovery, offline reopen/restore, and output-exclusion verification
+remain in Phase 6.
 
 ## Next concrete step
 
-Serialize the current runtime project snapshot into a cloned
-`#svg-batch-project` block, escaping `<` and leaving the live document
-untouched.
+Debounce dirty project snapshots into IndexedDB, validate them on read, and
+offer recover/discard only when the recovery audit is newer than the embedded
+project.
 
 ## Files changed
 
 - `docs/plan/00-TODO.md`
 - `docs/plan/07-SINGLE-FILE-PROJECT.md`
-- `index.html`
-- `src/project/projectSchema.ts`
-- `src/project/projectSchema.test.ts`
-- `src/project/loadProject.ts`
-- `src/project/loadProject.test.ts`
-- `src/store.test.ts`
+- `src/App.tsx`
+- `src/App.test.tsx`
+- `src/main.tsx`
+- `src/project/createProjectSnapshot.ts`
+- `src/project/serializeProjectHtml.ts`
+- `src/project/saveProjectFile.ts`
+- `src/project/downloadProjectFile.ts`
+- `scripts/verify-single-build.ts`
 
 ## Tests run
 
-- `bun run test -- src/project/projectSchema.test.ts
-  src/project/loadProject.test.ts src/store.test.ts`
-- `bunx tsc -b`
-- `bun run check` (42 test files, 267 tests)
+- `bun run check` (46 test files, 286 tests)
+- Browser Harness recordings `phase6-file-save` and
+  `phase6-download-fallback`
 
 ## Latest commit
 
-`251cc97 feat: define complete project schema`
+`9929ab4 feat: download project fallback`
