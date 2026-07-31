@@ -84,6 +84,7 @@ import {
   type RowOverride,
 } from "./data/rowOverrides";
 import { createRowSearchIndex, searchRows } from "./data/searchRows";
+import { createPdfExportFiles, downloadPdfFile } from "./export/pdfExport";
 import { createSvgExportFiles, downloadSvgFile } from "./export/svgExport";
 import { getMappingStatus } from "./mappings/mappingStatus";
 import { type PanelWeights, useAppStore } from "./store";
@@ -410,6 +411,8 @@ export function App() {
   const [validationReportOpened, setValidationReportOpened] = useState(false);
   const [validationResult, setValidationResult] =
     useState<ValidationPipelineResult | null>(null);
+  const [exportFormat, setExportFormat] = useState<"svg" | "pdf">("svg");
+  const [isExporting, setIsExporting] = useState(false);
   const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 150);
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
   const mappings = useAppStore((state) => state.mappings);
@@ -740,7 +743,7 @@ export function App() {
     setValidationReportOpened(true);
   }
 
-  function exportSelection() {
+  async function exportSelection() {
     const result = runValidation();
     if (!result) return;
     if (result.hasErrors) {
@@ -748,13 +751,30 @@ export function App() {
       return;
     }
 
-    createSvgExportFiles(
-      result.rows.map((row, index) => ({
+    setIsExporting(true);
+    try {
+      const requests = result.rows.map((row, index) => ({
         rowId: row.rowId,
-        filename: `row-${worksheetRowNumbers.get(row.rowId) ?? index + 1}.svg`,
+        filename: `row-${worksheetRowNumbers.get(row.rowId) ?? index + 1}.${exportFormat}`,
         svg: row.svg,
-      })),
-    ).forEach(downloadSvgFile);
+      }));
+      if (exportFormat === "pdf") {
+        (await createPdfExportFiles(requests)).forEach(downloadPdfFile);
+      } else {
+        createSvgExportFiles(requests).forEach(downloadSvgFile);
+      }
+    } catch (error) {
+      notifications.show({
+        color: "red",
+        message:
+          error instanceof Error
+            ? error.message
+            : "The export could not be created.",
+        title: `${exportFormat.toUpperCase()} export failed`,
+      });
+    } finally {
+      setIsExporting(false);
+    }
   }
 
   async function handleSpreadsheetFile(event: ChangeEvent<HTMLInputElement>) {
@@ -1491,10 +1511,25 @@ export function App() {
             Validate
           </Button>
           <Button variant="default">Save project</Button>
+          <Select
+            allowDeselect={false}
+            aria-label="Export format"
+            data={[
+              { label: "SVG", value: "svg" },
+              { label: "PDF", value: "pdf" },
+            ]}
+            disabled={isExporting}
+            onChange={(value) => {
+              if (value === "svg" || value === "pdf") setExportFormat(value);
+            }}
+            value={exportFormat}
+            w={92}
+          />
           <Button
             disabled={!svg || selectedRows.length === 0}
             leftSection={<IconDownload />}
-            onClick={exportSelection}
+            loading={isExporting}
+            onClick={() => void exportSelection()}
           >
             Export selected
           </Button>

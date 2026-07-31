@@ -238,7 +238,7 @@ describe("App", () => {
     );
   });
 
-  it("downloads one mapped SVG for each selected row", async () => {
+  it("downloads selected rows in the chosen SVG or PDF format", async () => {
     const user = userEvent.setup();
     const objectUrls: Blob[] = [];
     const downloadedNames: string[] = [];
@@ -272,7 +272,7 @@ describe("App", () => {
         screen.getByLabelText("Choose an SVG file"),
         new File(
           [
-            '<svg xmlns="http://www.w3.org/2000/svg"><text id="name">Template</text></svg>',
+            '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80"><rect id="shape" width="120" height="80"/></svg>',
           ],
           "template.svg",
           { type: "image/svg+xml" },
@@ -287,9 +287,31 @@ describe("App", () => {
       expect(objectUrls).toHaveLength(2);
       expect(objectUrls[0].type).toBe("image/svg+xml");
       expect(await objectUrls[0].text()).toContain(
-        '<text id="name">Template</text>',
+        '<rect id="shape" width="120" height="80"/>',
       );
       expect(screen.getByText(/Validated, no issues$/)).toBeInTheDocument();
+
+      downloadedNames.length = 0;
+      objectUrls.length = 0;
+      act(() => useAppStore.getState().deselectRows([rows[1].id]));
+      await waitFor(() =>
+        expect(
+          screen.getByRole("region", { name: "Project actions" }),
+        ).toHaveTextContent("1 row selected"),
+      );
+      await user.click(screen.getByRole("combobox", { name: "Export format" }));
+      fireEvent.click(
+        screen.getByRole("option", { name: "PDF", hidden: true }),
+      );
+      await user.click(screen.getByRole("button", { name: "Export selected" }));
+
+      await waitFor(() => expect(downloadedNames).toEqual(["row-1.pdf"]));
+      expect(objectUrls).toHaveLength(1);
+      expect(objectUrls[0].type).toBe("application/pdf");
+      const pdfHeader = new TextDecoder().decode(
+        (await objectUrls[0].arrayBuffer()).slice(0, 4),
+      );
+      expect(pdfHeader).toBe("%PDF");
     } finally {
       if (originalCreateObjectUrl) {
         Object.defineProperty(URL, "createObjectURL", {

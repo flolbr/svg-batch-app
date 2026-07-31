@@ -158,6 +158,19 @@ filename-rules task is complete, requested names are
 `row-{worksheet position}.svg`. Multiple files are direct downloads until the
 later ZIP task replaces that browser-facing behavior.
 
+### Individual PDF
+
+The action-bar format selector uses the same validation result and mapped SVG
+clones as SVG export. PDF rows are processed sequentially with `svg2pdf.js` and
+jsPDF. Each document uses point dimensions from the SVG's positive
+`width`/`height` attributes, accepting unitless, `px`, or `pt` values, and
+falls back to a positive `viewBox` size when explicit dimensions are absent.
+An SVG without either valid source fails the export with a clear error.
+
+Until filename rules are complete, requested PDF names are
+`row-{worksheet position}.pdf`. Multiple PDFs remain direct downloads until
+the ZIP task replaces that browser-facing behavior.
+
 ## Batch execution
 
 Start sequentially:

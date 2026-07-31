@@ -415,7 +415,19 @@ Only one implementation item should normally be `[-]`.
     `bunx tsc -b`; `bun run check`; Browser Harness canonical fixture download
     check for `row-1.svg`, its XML declaration and SVG content, and the
     validated footer state.
-- [ ] Export one PDF per selected row with `svg2pdf.js` and jsPDF.
+- [x] Export one PDF per selected row with `svg2pdf.js` and jsPDF.
+  - The action-bar format selector switches between SVG and PDF while keeping
+    the same validation gate and worksheet-order export flow.
+  - PDF generation is sequential. Each mapped SVG is converted with
+    `svg2pdf.js` into a jsPDF document whose point dimensions match the SVG
+    `width`/`height`, falling back to its `viewBox`. Interim filenames use
+    `row-{worksheet position}.pdf` until filename rules are implemented.
+  - Main files: `src/export/pdfExport.ts`,
+    `src/export/pdfExport.test.ts`, `src/App.tsx`, `src/App.test.tsx`.
+  - Tests: `bun run test -- src/export/pdfExport.test.ts
+    src/export/svgExport.test.ts src/App.test.tsx`; `bunx tsc -b`;
+    `bun run check`; Browser Harness canonical fixture check for a valid
+    `row-1.pdf`, one 1200 × 800 pt page, and the validated footer state.
 - [ ] Bundle multiple outputs with JSZip.
 - [ ] Export selected source columns as CSV.
 - [ ] Add `manifest.json` with requested name, actual name, status, and warnings.
