@@ -5,6 +5,7 @@ import {
   Checkbox,
   Group,
   Paper,
+  Progress,
   Select,
   Stack,
   Table,
@@ -87,6 +88,10 @@ import { createRowSearchIndex, searchRows } from "./data/searchRows";
 import { createSelectedDataCsv } from "./export/csvExport";
 import { createExportManifest } from "./export/manifestExport";
 import { createPdfExportFiles } from "./export/pdfExport";
+import {
+  runExportBatch,
+  type ExportBatchProgress,
+} from "./export/runExportBatch";
 import { createSvgExportFiles } from "./export/svgExport";
 import { createZipExport, downloadZipExport } from "./export/zipExport";
 import { getMappingStatus } from "./mappings/mappingStatus";
@@ -102,6 +107,12 @@ const minimumPanelWidths = [360, 300, 360];
 const MIN_PREVIEW_ZOOM = 25;
 const MAX_PREVIEW_ZOOM = 200;
 const PREVIEW_ZOOM_STEP = 25;
+type ExportFormat = "svg" | "pdf";
+type FailedExportRetry = {
+  rowIds: string[];
+  format: ExportFormat;
+  includeCsv: boolean;
+};
 const svgSourceStatusPresentation: Record<
   SvgSourceStatus,
   { color: string; label: string }
@@ -399,6 +410,7 @@ export function App() {
   const workspaceRef = useRef<HTMLElement>(null);
   const dataTableScrollRef = useRef<HTMLDivElement>(null);
   const resizeSession = useRef<ResizeSession | null>(null);
+  const cancelExportRef = useRef(false);
   const [isImportingSpreadsheet, setIsImportingSpreadsheet] = useState(false);
   const [isImportingSvg, setIsImportingSvg] = useState(false);
   const [editingManualRowId, setEditingManualRowId] = useState<string | null>(
@@ -414,8 +426,13 @@ export function App() {
   const [validationReportOpened, setValidationReportOpened] = useState(false);
   const [validationResult, setValidationResult] =
     useState<ValidationPipelineResult | null>(null);
-  const [exportFormat, setExportFormat] = useState<"svg" | "pdf">("svg");
+  const [exportFormat, setExportFormat] = useState<ExportFormat>("svg");
   const [includeCsv, setIncludeCsv] = useState(false);
+  const [continueOnError, setContinueOnError] = useState(false);
+  const [exportProgress, setExportProgress] =
+    useState<ExportBatchProgress | null>(null);
+  const [failedExportRetry, setFailedExportRetry] =
+    useState<FailedExportRetry | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 150);
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
@@ -724,8 +741,10 @@ export function App() {
     if (editingSourceRowId === rowId) setEditingSourceRowId(null);
   }
 
-  function runValidation(): ValidationPipelineResult | null {
-    if (!svg || selectedRows.length === 0) return null;
+  function runValidation(
+    rows: readonly SourceRow[] = selectedRows,
+  ): ValidationPipelineResult | null {
+    if (!svg || rows.length === 0) return null;
 
     const template = new DOMParser().parseFromString(
       svg.acceptedSvg,
@@ -733,7 +752,7 @@ export function App() {
     ).documentElement as unknown as SVGSVGElement;
     const result = validateRows({
       template,
-      rows: selectedRows,
+      rows,
       columnIds: new Set(sourceColumns.map((column) => column.id)),
       mappings,
     });
@@ -747,52 +766,117 @@ export function App() {
     setValidationReportOpened(true);
   }
 
-  async function exportSelection() {
-    const result = runValidation();
+  async function exportRows(
+    rows: readonly SourceRow[],
+    format: ExportFormat,
+    includeSelectedData: boolean,
+    allowPartialErrors: boolean,
+  ) {
+    const result = runValidation(rows);
     if (!result) return;
-    if (result.hasErrors) {
+    const hasProjectErrors = result.projectIssues.some(
+      (issue) => issue.level === "error",
+    );
+    if (hasProjectErrors || (result.hasErrors && !allowPartialErrors)) {
       setValidationReportOpened(true);
       return;
     }
 
+    cancelExportRef.current = false;
+    setFailedExportRetry(null);
     setIsExporting(true);
+    setExportProgress({
+      completed: 0,
+      total: result.rows.length,
+      currentFilename: null,
+    });
+    const notifyCancelled = () =>
+      notifications.show({
+        color: "gray",
+        message:
+          "Completed files were discarded and no archive was downloaded.",
+        title: "Export cancelled",
+      });
     try {
       const requests = result.rows.map((row, index) => ({
         rowId: row.rowId,
-        filename: `row-${worksheetRowNumbers.get(row.rowId) ?? index + 1}.${exportFormat}`,
+        filename: `row-${worksheetRowNumbers.get(row.rowId) ?? index + 1}.${format}`,
         svg: row.svg,
       }));
-      const csvFile = includeCsv
+      const batch = await runExportBatch(
+        result.rows.map((row, index) => ({
+          rowId: row.rowId,
+          requestedFilename: requests[index].filename,
+          warnings: row.issues
+            .filter((issue) => issue.level === "warning")
+            .map((issue) => issue.message),
+          errors: row.issues
+            .filter((issue) => issue.level === "error")
+            .map((issue) => issue.message),
+          createFile: async () => {
+            if (format === "pdf") {
+              return (await createPdfExportFiles([requests[index]]))[0];
+            }
+            return createSvgExportFiles([requests[index]])[0];
+          },
+        })),
+        {
+          continueOnError: allowPartialErrors,
+          isCancelled: () => cancelExportRef.current,
+          onProgress: setExportProgress,
+        },
+      );
+      if (batch.cancelled || cancelExportRef.current) {
+        notifyCancelled();
+        return;
+      }
+
+      setFailedExportRetry(
+        batch.failedRowIds.length > 0
+          ? {
+              rowIds: batch.failedRowIds,
+              format,
+              includeCsv: includeSelectedData,
+            }
+          : null,
+      );
+
+      const successfulRowIds = new Set(
+        batch.entries
+          .filter((entry) => entry.status === "success")
+          .map((entry) => entry.rowId),
+      );
+      const csvFile = includeSelectedData
         ? createSelectedDataCsv(
             sourceColumns.filter((column) =>
               columnPreferences.exported.includes(column.id),
             ),
-            selectedRows,
+            rows.filter((row) => successfulRowIds.has(row.id)),
           )
         : null;
-      const files =
-        exportFormat === "pdf"
-          ? await createPdfExportFiles(requests)
-          : createSvgExportFiles(requests);
-      const manifestFile = createExportManifest(
-        files.map((file, index) => ({
-          rowId: file.rowId,
-          requestedFilename: requests[index].filename,
-          actualFilename: file.filename,
-          status: "success",
-          outputs: [file.filename],
-          warnings: result.rows[index].issues
-            .filter((issue) => issue.level === "warning")
-            .map((issue) => issue.message),
-        })),
-      );
-      downloadZipExport(
-        await createZipExport([
-          ...files,
-          ...(csvFile ? [csvFile] : []),
-          manifestFile,
-        ]),
-      );
+      const manifestFile = createExportManifest(batch.entries);
+      const archive = await createZipExport([
+        ...batch.files,
+        ...(csvFile ? [csvFile] : []),
+        manifestFile,
+      ]);
+      if (cancelExportRef.current) {
+        setFailedExportRetry(null);
+        notifyCancelled();
+        return;
+      }
+      downloadZipExport(archive);
+
+      if (batch.failedRowIds.length > 0) {
+        const skippedCount = batch.entries.filter(
+          (entry) => entry.status === "skipped",
+        ).length;
+        notifications.show({
+          color: "yellow",
+          message: `${batch.failedRowIds.length} failed${skippedCount > 0 ? ` and ${skippedCount} skipped` : ""}. Use Retry failed to try the failed rows again.`,
+          title: "Partial export created",
+        });
+      }
     } catch (error) {
       notifications.show({
         color: "red",
@@ -800,11 +884,30 @@ export function App() {
           error instanceof Error
             ? error.message
             : "The export could not be created.",
-        title: `${exportFormat.toUpperCase()} export failed`,
+        title: `${format.toUpperCase()} export failed`,
       });
     } finally {
+      cancelExportRef.current = false;
+      setExportProgress(null);
       setIsExporting(false);
     }
+  }
+
+  async function retryFailedRows() {
+    if (!failedExportRetry) return;
+    const failedRowIds = new Set(failedExportRetry.rowIds);
+    const rows = allRows.filter((row) => failedRowIds.has(row.id));
+    if (rows.length === 0) {
+      setFailedExportRetry(null);
+      return;
+    }
+
+    await exportRows(
+      rows,
+      failedExportRetry.format,
+      failedExportRetry.includeCsv,
+      true,
+    );
   }
 
   async function handleSpreadsheetFile(event: ChangeEvent<HTMLInputElement>) {
@@ -1561,15 +1664,65 @@ export function App() {
             label="Include CSV"
             onChange={(event) => setIncludeCsv(event.currentTarget.checked)}
           />
+          <Checkbox
+            checked={continueOnError}
+            disabled={isExporting}
+            label="Continue on errors (partial export)"
+            onChange={(event) =>
+              setContinueOnError(event.currentTarget.checked)
+            }
+          />
+          {failedExportRetry && !isExporting && (
+            <Button onClick={() => void retryFailedRows()} variant="default">
+              Retry failed ({failedExportRetry.rowIds.length})
+            </Button>
+          )}
           <Button
             disabled={!svg || selectedRows.length === 0}
             leftSection={<IconDownload />}
             loading={isExporting}
-            onClick={() => void exportSelection()}
+            onClick={() =>
+              void exportRows(
+                selectedRows,
+                exportFormat,
+                includeCsv,
+                continueOnError,
+              )
+            }
           >
             Export selected
           </Button>
+          {isExporting && (
+            <Button
+              color="red"
+              onClick={() => {
+                cancelExportRef.current = true;
+              }}
+              variant="light"
+            >
+              Cancel export
+            </Button>
+          )}
         </Group>
+        {isExporting && exportProgress && (
+          <Group gap="xs" wrap="nowrap">
+            <Progress
+              aria-label="Export progress"
+              value={
+                exportProgress.total === 0
+                  ? 0
+                  : (exportProgress.completed / exportProgress.total) * 100
+              }
+              w={140}
+            />
+            <Text aria-live="polite" size="sm">
+              {exportProgress.completed}/{exportProgress.total}
+              {exportProgress.currentFilename
+                ? ` · ${exportProgress.currentFilename}`
+                : ""}
+            </Text>
+          </Group>
+        )}
         <Text aria-live="polite" size="sm" c="dimmed">
           {selectedRowIds.length} {selectedRowIds.length === 1 ? "row" : "rows"}{" "}
           selected ·{" "}

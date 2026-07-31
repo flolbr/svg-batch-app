@@ -225,11 +225,21 @@ for each selected row:
 
 Add:
 
-- progress count;
-- current filename;
-- cancel flag;
-- continue-on-error;
-- retry failed rows.
+- progress count and current filename while the sequential runner is active;
+- cancellation between rows and before the final archive download;
+- an explicit “Continue on errors (partial export)” choice;
+- retry limited to failed row IDs with the original output settings.
+
+Project-level validation errors always block export. Without the explicit
+partial-export choice, any row validation error also opens the report and
+produces no files. With it enabled, rows with validation errors become failed
+manifest entries while valid rows continue.
+
+Runtime conversion errors become failed entries. The default stops and marks
+remaining rows skipped; continue-on-error attempts every row. Cancellation
+marks unstarted rows skipped internally, discards completed files, and produces
+no archive. Retry revalidates only failed rows against current data, SVG, and
+mappings while retaining the failed batch's format and CSV choice.
 
 Do not add parallel workers until sequential export is shown to be too slow.
 

@@ -471,7 +471,23 @@ Only one implementation item should normally be `[-]`.
     `bun run check`; Browser Harness canonical fixture check for one ZIP with
     two SVGs and a two-entry `manifest.json` containing ordered requested and
     actual names, success statuses, output names, and empty warning arrays.
-- [ ] Add progress, cancel, continue-on-error, and retry-failed controls.
+- [x] Add progress, cancel, continue-on-error, and retry-failed controls.
+  - A generic runner processes one row at a time, reports completed/total and
+    the current filename, yields between rows for rendering/cancellation, and
+    records success, failure, and skipped manifest entries in worksheet order.
+  - Project validation errors always block. Row errors remain blocked unless
+    the user explicitly enables “Continue on errors (partial export)”; runtime
+    failures either stop and skip remaining rows or continue according to that
+    control.
+  - Cancel discards completed files and suppresses the archive even during the
+    final ZIP step. Failed-row retry retains the original format/CSV choice,
+    revalidates current data and mappings, and runs only failed row IDs.
+  - Main files: `src/export/runExportBatch.ts`,
+    `src/export/runExportBatch.test.ts`, `src/App.tsx`, `src/App.test.tsx`.
+  - Tests: `bun run test -- src/export/runExportBatch.test.ts
+    src/App.test.tsx`; `bunx tsc -b`; `bun run check`; Browser Harness
+    canonical nine-row PDF check with visible `1/9` progress, an available
+    Cancel control, confirmed cancellation, and no downloaded archive.
 - [ ] Keep batch processing sequential initially. Add concurrency only if measured.
 - [ ] Add filename sanitation and collision rules.
 

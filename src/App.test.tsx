@@ -385,6 +385,211 @@ describe("App", () => {
     }
   });
 
+  it("creates a partial export and retries only failed rows", async () => {
+    const user = userEvent.setup();
+    const objectUrls: Blob[] = [];
+    const downloadedNames: string[] = [];
+    const originalCreateObjectUrl = URL.createObjectURL;
+    const originalRevokeObjectUrl = URL.revokeObjectURL;
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: vi.fn((blob: Blob) => {
+        objectUrls.push(blob);
+        return `blob:partial-export-${objectUrls.length}`;
+      }),
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: vi.fn(),
+    });
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      downloadedNames.push(this.download);
+    });
+
+    try {
+      setMemberSpreadsheet();
+      render(
+        <MantineProvider>
+          <App />
+        </MantineProvider>,
+      );
+      await user.upload(
+        screen.getByLabelText("Choose an SVG file"),
+        new File(
+          ['<svg xmlns="http://www.w3.org/2000/svg"><path id="badge"/></svg>'],
+          "badge.svg",
+          { type: "image/svg+xml" },
+        ),
+      );
+
+      const state = useAppStore.getState();
+      const rows = state.sources.spreadsheet!.data.rows;
+      const cityColumn = state.sources.spreadsheet!.data.columns.find(
+        (column) => column.displayName === "City",
+      )!;
+      const mapping = {
+        id: "badge-visibility",
+        targetId: "badge",
+        columnId: cityColumn.id,
+        type: "visibility" as const,
+        trueValues: ["Paris"],
+        falseValues: ["no"],
+        emptyBehavior: "error" as const,
+      };
+      act(() => {
+        state.selectRows(rows.map((row) => row.id));
+        state.setMapping(mapping);
+      });
+
+      await user.click(screen.getByRole("button", { name: "Export selected" }));
+      expect(
+        await screen.findByRole("dialog", { name: "Validation report" }),
+      ).toBeInTheDocument();
+      expect(downloadedNames).toEqual([]);
+      await user.click(
+        screen.getByRole("button", { name: "Close validation report" }),
+      );
+      await user.click(
+        screen.getByRole("checkbox", {
+          name: "Continue on errors (partial export)",
+        }),
+      );
+      await user.click(screen.getByRole("button", { name: "Export selected" }));
+
+      await waitFor(() =>
+        expect(downloadedNames).toEqual(["svg-batch-export.zip"]),
+      );
+      const partialArchive = await JSZip.loadAsync(
+        await objectUrls[0].arrayBuffer(),
+      );
+      expect(Object.keys(partialArchive.files)).toEqual([
+        "row-1.svg",
+        "manifest.json",
+      ]);
+      expect(
+        JSON.parse(await partialArchive.file("manifest.json")!.async("string")),
+      ).toEqual([
+        {
+          rowId: rows[0].id,
+          requestedFilename: "row-1.svg",
+          actualFilename: "row-1.svg",
+          status: "success",
+          outputs: ["row-1.svg"],
+          warnings: [],
+        },
+        {
+          rowId: rows[1].id,
+          requestedFilename: "row-2.svg",
+          status: "failed",
+          outputs: [],
+          warnings: [],
+          error: "Visibility value is not configured.",
+        },
+      ]);
+
+      const retryButton = screen.getByRole("button", {
+        name: "Retry failed (1)",
+      });
+      act(() => {
+        useAppStore.getState().setMapping({
+          ...mapping,
+          falseValues: ["Lyon"],
+        });
+      });
+      await user.click(retryButton);
+
+      await waitFor(() =>
+        expect(downloadedNames).toEqual([
+          "svg-batch-export.zip",
+          "svg-batch-export.zip",
+        ]),
+      );
+      const retryArchive = await JSZip.loadAsync(
+        await objectUrls[1].arrayBuffer(),
+      );
+      expect(Object.keys(retryArchive.files)).toEqual([
+        "row-2.svg",
+        "manifest.json",
+      ]);
+      expect(
+        JSON.parse(await retryArchive.file("manifest.json")!.async("string")),
+      ).toEqual([
+        {
+          rowId: rows[1].id,
+          requestedFilename: "row-2.svg",
+          actualFilename: "row-2.svg",
+          status: "success",
+          outputs: ["row-2.svg"],
+          warnings: [],
+        },
+      ]);
+      expect(
+        screen.queryByRole("button", { name: "Retry failed (1)" }),
+      ).not.toBeInTheDocument();
+    } finally {
+      if (originalCreateObjectUrl) {
+        Object.defineProperty(URL, "createObjectURL", {
+          configurable: true,
+          value: originalCreateObjectUrl,
+        });
+      } else {
+        delete (URL as { createObjectURL?: typeof URL.createObjectURL })
+          .createObjectURL;
+      }
+      if (originalRevokeObjectUrl) {
+        Object.defineProperty(URL, "revokeObjectURL", {
+          configurable: true,
+          value: originalRevokeObjectUrl,
+        });
+      } else {
+        delete (URL as { revokeObjectURL?: typeof URL.revokeObjectURL })
+          .revokeObjectURL;
+      }
+    }
+  });
+
+  it("shows export progress and cancels before downloading an archive", async () => {
+    const user = userEvent.setup();
+    const downloadClick = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => {});
+    setSpreadsheetRows(50);
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+    await user.upload(
+      screen.getByLabelText("Choose an SVG file"),
+      new File(
+        ['<svg xmlns="http://www.w3.org/2000/svg"><path id="shape"/></svg>'],
+        "template.svg",
+        { type: "image/svg+xml" },
+      ),
+    );
+
+    const rows = useAppStore.getState().sources.spreadsheet!.data.rows;
+    act(() => useAppStore.getState().selectRows(rows.map((row) => row.id)));
+    await user.click(screen.getByRole("button", { name: "Export selected" }));
+
+    expect(
+      await screen.findByRole("progressbar", { name: "Export progress" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: "Project actions" }),
+    ).toHaveTextContent(/\d+\/50/);
+    await user.click(screen.getByRole("button", { name: "Cancel export" }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("button", { name: "Cancel export" }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(downloadClick).not.toHaveBeenCalled();
+  });
+
   it("imports and reports a sanitized local SVG", async () => {
     const user = userEvent.setup();
     render(
