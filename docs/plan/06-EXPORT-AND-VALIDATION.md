@@ -152,11 +152,11 @@ Export selected first runs the same `validateRows` call as the report. Blocking
 errors open the report and produce no files.
 
 For a valid selection, each mapped SVG clone is serialized in worksheet order
-with a UTF-8 XML declaration and `image/svg+xml` MIME type. The browser download
-boundary creates and immediately revokes one object URL per file. Until the
+with a UTF-8 XML declaration and `image/svg+xml` MIME type. Exactly one file
+uses the SVG browser download boundary, which creates and immediately revokes
+its object URL; multiple files follow the ZIP rule below. Until the
 filename-rules task is complete, requested names are
-`row-{worksheet position}.svg`. Multiple files are direct downloads until the
-later ZIP task replaces that browser-facing behavior.
+`row-{worksheet position}.svg`.
 
 ### Individual PDF
 
@@ -168,8 +168,8 @@ falls back to a positive `viewBox` size when explicit dimensions are absent.
 An SVG without either valid source fails the export with a clear error.
 
 Until filename rules are complete, requested PDF names are
-`row-{worksheet position}.pdf`. Multiple PDFs remain direct downloads until
-the ZIP task replaces that browser-facing behavior.
+`row-{worksheet position}.pdf`. The ZIP bundling rule below applies to multiple
+PDFs.
 
 ### ZIP bundling
 
