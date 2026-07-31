@@ -34,6 +34,7 @@ export type ValidationPipelineInput = {
   mappings: readonly Mapping[];
   mappingOptions?: ApplyMappingsOptions;
   requestedFilenames?: readonly RequestedFilename[];
+  filenameIssues?: readonly ValidationIssue[];
 };
 
 export function validateRows({
@@ -43,16 +44,20 @@ export function validateRows({
   mappings,
   mappingOptions,
   requestedFilenames = [],
+  filenameIssues = [],
 }: ValidationPipelineInput): ValidationPipelineResult {
   const configuration = validateMappingConfiguration(
     template,
     columnIds,
     mappings,
   );
-  const filenameIssues = validateDuplicateFilenames(requestedFilenames);
+  const resolvedFilenameIssues = [
+    ...validateDuplicateFilenames(requestedFilenames),
+    ...filenameIssues,
+  ];
   const filenameIssuesByRow = new Map<string, ValidationIssue[]>();
 
-  for (const issue of filenameIssues) {
+  for (const issue of resolvedFilenameIssues) {
     if (!issue.rowId) continue;
     const rowIssues = filenameIssuesByRow.get(issue.rowId) ?? [];
     rowIssues.push(issue);
@@ -77,17 +82,21 @@ export function validateRows({
     };
   });
   const rowIds = new Set(rows.map((row) => row.id));
-  const issues = [
+  const projectIssues = [
     ...configuration.issues,
+    ...resolvedFilenameIssues.filter((issue) => !issue.rowId),
+  ];
+  const issues = [
+    ...projectIssues,
     ...validatedRows.flatMap((row) => row.issues),
-    ...filenameIssues.filter(
+    ...resolvedFilenameIssues.filter(
       (issue) => issue.rowId && !rowIds.has(issue.rowId),
     ),
   ];
 
   return {
     rows: validatedRows,
-    projectIssues: configuration.issues,
+    projectIssues,
     issues,
     hasErrors: issues.some((issue) => issue.level === "error"),
   };

@@ -86,6 +86,10 @@ import {
 } from "./data/rowOverrides";
 import { createRowSearchIndex, searchRows } from "./data/searchRows";
 import { createSelectedDataCsv } from "./export/csvExport";
+import {
+  resolveExportFilenames,
+  type FilenameCollisionPolicy,
+} from "./export/filenameRules";
 import { createExportManifest } from "./export/manifestExport";
 import { createPdfExportFiles } from "./export/pdfExport";
 import {
@@ -95,6 +99,7 @@ import {
 import { createSvgExportFiles } from "./export/svgExport";
 import { createZipExport, downloadZipExport } from "./export/zipExport";
 import { getMappingStatus } from "./mappings/mappingStatus";
+import type { ValidationIssue } from "./mappings/validation";
 import { type PanelWeights, useAppStore } from "./store";
 import { importSvgFile, type SvgSourceStatus } from "./svg/importSvg";
 import type { SvgTreeNode } from "./svg/buildSvgTree";
@@ -108,10 +113,15 @@ const MIN_PREVIEW_ZOOM = 25;
 const MAX_PREVIEW_ZOOM = 200;
 const PREVIEW_ZOOM_STEP = 25;
 type ExportFormat = "svg" | "pdf";
-type FailedExportRetry = {
-  rowIds: string[];
+type ExportSettings = {
   format: ExportFormat;
   includeCsv: boolean;
+  filenameTemplate: string;
+  collisionPolicy: FilenameCollisionPolicy;
+};
+type FailedExportRetry = {
+  rowIds: string[];
+  settings: ExportSettings;
 };
 const svgSourceStatusPresentation: Record<
   SvgSourceStatus,
@@ -428,6 +438,9 @@ export function App() {
     useState<ValidationPipelineResult | null>(null);
   const [exportFormat, setExportFormat] = useState<ExportFormat>("svg");
   const [includeCsv, setIncludeCsv] = useState(false);
+  const [filenameTemplate, setFilenameTemplate] = useState("row-{row}");
+  const [filenameCollisionPolicy, setFilenameCollisionPolicy] =
+    useState<FilenameCollisionPolicy>("suffix");
   const [continueOnError, setContinueOnError] = useState(false);
   const [exportProgress, setExportProgress] =
     useState<ExportBatchProgress | null>(null);
@@ -668,7 +681,15 @@ export function App() {
   useLayoutEffect(() => {
     setValidationResult(null);
     setValidationReportOpened(false);
-  }, [mappings, selectedRows, sourceColumns, svg?.acceptedSvg]);
+  }, [
+    exportFormat,
+    filenameCollisionPolicy,
+    filenameTemplate,
+    mappings,
+    selectedRows,
+    sourceColumns,
+    svg?.acceptedSvg,
+  ]);
 
   useEffect(() => {
     if (!editingManualRowId || !shouldVirtualizeRows) return;
@@ -743,6 +764,7 @@ export function App() {
 
   function runValidation(
     rows: readonly SourceRow[] = selectedRows,
+    filenameIssues: readonly ValidationIssue[] = [],
   ): ValidationPipelineResult | null {
     if (!svg || rows.length === 0) return null;
 
@@ -754,6 +776,7 @@ export function App() {
       template,
       rows,
       columnIds: new Set(sourceColumns.map((column) => column.id)),
+      filenameIssues,
       mappings,
     });
     setValidationResult(result);
@@ -761,18 +784,33 @@ export function App() {
   }
 
   function validateSelection() {
-    const result = runValidation();
+    const filenamePlan = resolveExportFilenames({
+      rows: selectedRows,
+      columns: sourceColumns,
+      rowNumbers: worksheetRowNumbers,
+      template: filenameTemplate,
+      extension: exportFormat,
+      collisionPolicy: filenameCollisionPolicy,
+    });
+    const result = runValidation(selectedRows, filenamePlan.issues);
     if (!result) return;
     setValidationReportOpened(true);
   }
 
   async function exportRows(
     rows: readonly SourceRow[],
-    format: ExportFormat,
-    includeSelectedData: boolean,
+    settings: ExportSettings,
     allowPartialErrors: boolean,
   ) {
-    const result = runValidation(rows);
+    const filenamePlan = resolveExportFilenames({
+      rows,
+      columns: sourceColumns,
+      rowNumbers: worksheetRowNumbers,
+      template: settings.filenameTemplate,
+      extension: settings.format,
+      collisionPolicy: settings.collisionPolicy,
+    });
+    const result = runValidation(rows, filenamePlan.issues);
     if (!result) return;
     const hasProjectErrors = result.projectIssues.some(
       (issue) => issue.level === "error",
@@ -800,13 +838,13 @@ export function App() {
     try {
       const requests = result.rows.map((row, index) => ({
         rowId: row.rowId,
-        filename: `row-${worksheetRowNumbers.get(row.rowId) ?? index + 1}.${format}`,
+        filename: filenamePlan.entries[index].actualFilename,
         svg: row.svg,
       }));
       const batch = await runExportBatch(
         result.rows.map((row, index) => ({
           rowId: row.rowId,
-          requestedFilename: requests[index].filename,
+          requestedFilename: filenamePlan.entries[index].requestedFilename,
           warnings: row.issues
             .filter((issue) => issue.level === "warning")
             .map((issue) => issue.message),
@@ -814,7 +852,7 @@ export function App() {
             .filter((issue) => issue.level === "error")
             .map((issue) => issue.message),
           createFile: async () => {
-            if (format === "pdf") {
+            if (settings.format === "pdf") {
               return (await createPdfExportFiles([requests[index]]))[0];
             }
             return createSvgExportFiles([requests[index]])[0];
@@ -835,8 +873,7 @@ export function App() {
         batch.failedRowIds.length > 0
           ? {
               rowIds: batch.failedRowIds,
-              format,
-              includeCsv: includeSelectedData,
+              settings,
             }
           : null,
       );
@@ -846,7 +883,7 @@ export function App() {
           .filter((entry) => entry.status === "success")
           .map((entry) => entry.rowId),
       );
-      const csvFile = includeSelectedData
+      const csvFile = settings.includeCsv
         ? createSelectedDataCsv(
             sourceColumns.filter((column) =>
               columnPreferences.exported.includes(column.id),
@@ -884,7 +921,7 @@ export function App() {
           error instanceof Error
             ? error.message
             : "The export could not be created.",
-        title: `${format.toUpperCase()} export failed`,
+        title: `${settings.format.toUpperCase()} export failed`,
       });
     } finally {
       cancelExportRef.current = false;
@@ -904,8 +941,7 @@ export function App() {
 
     await exportRows(
       rows,
-      failedExportRetry.format,
-      failedExportRetry.includeCsv,
+      failedExportRetry.settings,
       true,
     );
   }
@@ -1658,6 +1694,32 @@ export function App() {
             value={exportFormat}
             w={92}
           />
+          <TextInput
+            aria-label="Filename template"
+            disabled={isExporting}
+            onChange={(event) =>
+              setFilenameTemplate(event.currentTarget.value)
+            }
+            placeholder="row-{row}"
+            value={filenameTemplate}
+            w={180}
+          />
+          <Select
+            allowDeselect={false}
+            aria-label="Filename collision policy"
+            data={[
+              { label: "Append number", value: "suffix" },
+              { label: "Error", value: "error" },
+            ]}
+            disabled={isExporting}
+            onChange={(value) => {
+              if (value === "suffix" || value === "error") {
+                setFilenameCollisionPolicy(value);
+              }
+            }}
+            value={filenameCollisionPolicy}
+            w={140}
+          />
           <Checkbox
             checked={includeCsv}
             disabled={isExporting}
@@ -1684,8 +1746,12 @@ export function App() {
             onClick={() =>
               void exportRows(
                 selectedRows,
-                exportFormat,
-                includeCsv,
+                {
+                  format: exportFormat,
+                  includeCsv,
+                  filenameTemplate,
+                  collisionPolicy: filenameCollisionPolicy,
+                },
                 continueOnError,
               )
             }

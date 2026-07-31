@@ -499,7 +499,16 @@ Only one implementation item should normally be `[-]`.
     `src/export/runExportBatch.test.ts`, `docs/plan/10-DECISIONS.md`.
   - Tests: `bun run test -- src/export/runExportBatch.test.ts`;
     `bunx tsc -b`; `bun run check`.
-- [ ] Add filename sanitation and collision rules.
+- [x] Add filename sanitation and collision rules.
+  - Filename templates support `{row}` and displayed column-name placeholders.
+    Actual filenames are normalized and sanitized for cross-platform use, capped
+    at 180 Unicode code points, and protect Windows device names.
+  - Collisions either receive deterministic numeric suffixes or block export;
+    manifests retain both requested and actual filenames.
+  - Main files: `src/export/filenameRules.ts`,
+    `src/export/filenameRules.test.ts`, `src/App.tsx`,
+    `src/validation/validationPipeline.ts`.
+  - Tests: `bun run check` (41 files, 262 tests).
 
 ## Phase 6 — Single-file project save
 

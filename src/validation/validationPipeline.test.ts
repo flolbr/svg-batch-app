@@ -317,4 +317,38 @@ describe("validateRows", () => {
     ]);
     expect(result.hasErrors).toBe(true);
   });
+
+  it("routes supplied filename issues to project and row results", () => {
+    const result = validateRows({
+      template: parseSvg('<svg xmlns="http://www.w3.org/2000/svg"/>'),
+      rows: [row("row-1", {})],
+      mappings: [],
+      columnIds: new Set(),
+      filenameIssues: [
+        {
+          level: "error",
+          code: "invalid-filename-template",
+          message: "Unknown placeholder.",
+        },
+        {
+          level: "error",
+          code: "duplicate-filename",
+          message: "Duplicate filename.",
+          rowId: "row-1",
+        },
+      ],
+    });
+
+    expect(result.projectIssues.map((issue) => issue.code)).toEqual([
+      "invalid-filename-template",
+    ]);
+    expect(result.rows[0].issues.map((issue) => issue.code)).toEqual([
+      "duplicate-filename",
+    ]);
+    expect(result.issues.map((issue) => issue.code)).toEqual([
+      "invalid-filename-template",
+      "duplicate-filename",
+    ]);
+    expect(result.hasErrors).toBe(true);
+  });
 });
