@@ -285,6 +285,15 @@ type MappingResult = {
 };
 ```
 
+`applyMappings` accepts a parsed accepted-template element, deep-clones it,
+then applies all configured mappings in the order above regardless of their
+input-array order. It preserves input order within each mapping type,
+aggregates issues without stopping later mappings, and returns only the clone.
+Text metrics and image value resolution are injected through explicit options
+so preview and export can share orchestration while supplying their own
+environment-specific dependencies. The Phase 5 validation and serialization
+steps consume this result rather than mutating the accepted template.
+
 ## Linked SVG manual reload
 
 The project stores the accepted SVG snapshot and optional link metadata.

@@ -4,7 +4,7 @@ Last updated: 2026-07-31
 
 ## Current task
 
-No implementation task is active. SVG-tree mapping validity is complete.
+No implementation task is active. Phase 4 mapping application is complete.
 
 ## What works
 
@@ -198,6 +198,11 @@ No implementation task is active. SVG-tree mapping validity is complete.
 - Tree status badges expose visible text, distinct colors, compact decorative
   symbols, and title text with the exact explanation without coupling the tree
   to Zustand.
+- `applyMappings` deep-clones the accepted SVG element and applies exclusive
+  group, visibility, text, image, and QR mappings in documented order.
+- Mapping application preserves input order within each type, injects text
+  metrics and image resolution, aggregates issues without stopping, and never
+  mutates the accepted template.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -205,43 +210,31 @@ No implementation task is active. SVG-tree mapping validity is complete.
 
 ## What remains
 
-Mapping application unit tests are the next and final Phase 4 item.
+Phase 4 is complete. The shared Phase 5 validation pipeline is next.
 
 ## Next concrete step
 
-Continue `Phase 4 — Mapping engine` in `00-TODO.md`:
+Continue `Phase 5 — Validation and export` in `00-TODO.md`:
 
-1. mark “Add mapping application unit tests” `[-]`;
-2. implement the ordered clone-and-apply orchestration described in
-   `05-SVG-AND-MAPPINGS.md`;
-3. cover ordering, clone isolation, issue aggregation, and supported mapping
-   types without duplicating individual mapper tests.
+1. read `docs/plan/06-VALIDATION-AND-EXPORT.md`;
+2. mark “Build one validation pipeline shared by preview and export” `[-]`;
+3. compose configuration and row-level mapping issues around `applyMappings`
+   without creating separate preview/export validators.
 
 ## Files changed
 
-- `src/mappings/mappingStatus.ts`
-- `src/mappings/mappingStatus.test.ts`
-- `src/SvgObjectTree.tsx`
-- `src/SvgObjectTree.test.tsx`
-- `src/SvgObjectTree.module.css`
-- `src/MappingEditor.tsx`
-- `src/App.tsx`
-- `src/App.test.tsx`
+- `src/mappings/applyMappings.ts`
+- `src/mappings/applyMappings.test.ts`
 - `docs/plan/00-TODO.md`
-- `docs/plan/03-UI-AND-COMPONENTS.md`
 - `docs/plan/05-SVG-AND-MAPPINGS.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/mappings/mappingStatus.test.ts
-  src/MappingEditor.test.tsx src/SvgObjectTree.test.tsx src/App.test.tsx`
+- `bun run test -- src/mappings/applyMappings.test.ts`
 - `bunx tsc -b`
 - `bun run check`
-- Browser Harness at 1920 px with the membership demo XLSX/SVG: created a text
-  mapping and observed Mapped, switched to Mapping Guide and observed Warning
-  with the missing-column explanation, then removed it and observed Unmapped.
 
 ## Latest substantive commit
 
-`f718ecf feat: show mapping validity`
+Pending `feat: orchestrate mapping application`

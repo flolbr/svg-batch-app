@@ -346,7 +346,17 @@ Only one implementation item should normally be `[-]`.
     src/MappingEditor.test.tsx src/SvgObjectTree.test.tsx src/App.test.tsx`;
     `bunx tsc -b`; `bun run check`; Browser Harness mapped, missing-column
     warning, and unmapped checks with the membership demo fixtures.
-- [ ] Add mapping application unit tests.
+- [x] Add mapping application unit tests.
+  - `applyMappings` deep-clones the accepted SVG element, applies mappings in
+    group, visibility, text, image, then QR order regardless of input order,
+    aggregates row issues, and returns the caller-owned result.
+  - Text measurement and image resolution remain explicit injected
+    dependencies. One integration fixture covers every mapping type, while
+    focused tests prove order, clone isolation, continuation, and issue order.
+  - Main files: `src/mappings/applyMappings.ts`,
+    `src/mappings/applyMappings.test.ts`.
+  - Tests: `bun run test -- src/mappings/applyMappings.test.ts`;
+    `bunx tsc -b`; `bun run check`.
 
 ## Phase 5 — Validation and export
 
