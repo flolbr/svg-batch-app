@@ -146,6 +146,18 @@ Required:
 
 Multipage PDF is deferred.
 
+### Individual SVG
+
+Export selected first runs the same `validateRows` call as the report. Blocking
+errors open the report and produce no files.
+
+For a valid selection, each mapped SVG clone is serialized in worksheet order
+with a UTF-8 XML declaration and `image/svg+xml` MIME type. The browser download
+boundary creates and immediately revokes one object URL per file. Until the
+filename-rules task is complete, requested names are
+`row-{worksheet position}.svg`. Multiple files are direct downloads until the
+later ZIP task replaces that browser-facing behavior.
+
 ## Batch execution
 
 Start sequentially:

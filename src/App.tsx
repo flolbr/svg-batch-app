@@ -52,6 +52,7 @@ import {
   type PointerEvent,
   type ReactNode,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -83,6 +84,7 @@ import {
   type RowOverride,
 } from "./data/rowOverrides";
 import { createRowSearchIndex, searchRows } from "./data/searchRows";
+import { createSvgExportFiles, downloadSvgFile } from "./export/svgExport";
 import { getMappingStatus } from "./mappings/mappingStatus";
 import { type PanelWeights, useAppStore } from "./store";
 import { importSvgFile, type SvgSourceStatus } from "./svg/importSvg";
@@ -564,6 +566,10 @@ export function App() {
       ),
     [allRows],
   );
+  const worksheetRowNumbers = useMemo(
+    () => new Map(allRows.map((row, index) => [row.id, index + 1] as const)),
+    [allRows],
+  );
   const previewRowIds = useMemo(
     () => selectedRows.map((row) => row.id),
     [selectedRows],
@@ -635,7 +641,7 @@ export function App() {
     setPreviewZoomPercent(100);
   }, [svg?.acceptedSvg]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setValidationResult(null);
     setValidationReportOpened(false);
   }, [mappings, selectedRows, sourceColumns, svg?.acceptedSvg]);
@@ -711,8 +717,8 @@ export function App() {
     if (editingSourceRowId === rowId) setEditingSourceRowId(null);
   }
 
-  function validateSelection() {
-    if (!svg || selectedRows.length === 0) return;
+  function runValidation(): ValidationPipelineResult | null {
+    if (!svg || selectedRows.length === 0) return null;
 
     const template = new DOMParser().parseFromString(
       svg.acceptedSvg,
@@ -725,7 +731,30 @@ export function App() {
       mappings,
     });
     setValidationResult(result);
+    return result;
+  }
+
+  function validateSelection() {
+    const result = runValidation();
+    if (!result) return;
     setValidationReportOpened(true);
+  }
+
+  function exportSelection() {
+    const result = runValidation();
+    if (!result) return;
+    if (result.hasErrors) {
+      setValidationReportOpened(true);
+      return;
+    }
+
+    createSvgExportFiles(
+      result.rows.map((row, index) => ({
+        rowId: row.rowId,
+        filename: `row-${worksheetRowNumbers.get(row.rowId) ?? index + 1}.svg`,
+        svg: row.svg,
+      })),
+    ).forEach(downloadSvgFile);
   }
 
   async function handleSpreadsheetFile(event: ChangeEvent<HTMLInputElement>) {
@@ -1462,7 +1491,13 @@ export function App() {
             Validate
           </Button>
           <Button variant="default">Save project</Button>
-          <Button leftSection={<IconDownload />}>Export selected</Button>
+          <Button
+            disabled={!svg || selectedRows.length === 0}
+            leftSection={<IconDownload />}
+            onClick={exportSelection}
+          >
+            Export selected
+          </Button>
         </Group>
         <Text aria-live="polite" size="sm" c="dimmed">
           {selectedRowIds.length} {selectedRowIds.length === 1 ? "row" : "rows"}{" "}

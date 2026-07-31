@@ -168,6 +168,7 @@ describe("App", () => {
 
   it("shows row-grouped validation issues and clears stale results", async () => {
     const user = userEvent.setup();
+    const downloadClick = vi.spyOn(HTMLAnchorElement.prototype, "click");
     setMemberSpreadsheet();
     render(
       <MantineProvider>
@@ -209,7 +210,7 @@ describe("App", () => {
     await user.click(validateButton);
 
     expect(
-      screen.getByRole("dialog", { name: "Validation report" }),
+      await screen.findByRole("dialog", { name: "Validation report" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("1 issue found");
     expect(screen.getByText("Row 1 · 1 issue")).toBeInTheDocument();
@@ -222,10 +223,93 @@ describe("App", () => {
     await user.click(
       screen.getByRole("button", { name: "Close validation report" }),
     );
+    await user.click(screen.getByRole("button", { name: "Export selected" }));
+    expect(
+      await screen.findByRole("dialog", { name: "Validation report" }),
+    ).toBeInTheDocument();
+    expect(downloadClick).not.toHaveBeenCalled();
+    await user.click(
+      screen.getByRole("button", { name: "Close validation report" }),
+    );
+
     act(() => useAppStore.getState().removeMapping("badge"));
     await waitFor(() =>
       expect(screen.getByText(/selected · Not validated$/)).toBeInTheDocument(),
     );
+  });
+
+  it("downloads one mapped SVG for each selected row", async () => {
+    const user = userEvent.setup();
+    const objectUrls: Blob[] = [];
+    const downloadedNames: string[] = [];
+    const originalCreateObjectUrl = URL.createObjectURL;
+    const originalRevokeObjectUrl = URL.revokeObjectURL;
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: vi.fn((blob: Blob) => {
+        objectUrls.push(blob);
+        return `blob:export-${objectUrls.length}`;
+      }),
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: vi.fn(),
+    });
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      downloadedNames.push(this.download);
+    });
+
+    try {
+      setMemberSpreadsheet();
+      render(
+        <MantineProvider>
+          <App />
+        </MantineProvider>,
+      );
+      await user.upload(
+        screen.getByLabelText("Choose an SVG file"),
+        new File(
+          [
+            '<svg xmlns="http://www.w3.org/2000/svg"><text id="name">Template</text></svg>',
+          ],
+          "template.svg",
+          { type: "image/svg+xml" },
+        ),
+      );
+
+      const rows = useAppStore.getState().sources.spreadsheet!.data.rows;
+      act(() => useAppStore.getState().selectRows(rows.map((row) => row.id)));
+      await user.click(screen.getByRole("button", { name: "Export selected" }));
+
+      expect(downloadedNames).toEqual(["row-1.svg", "row-2.svg"]);
+      expect(objectUrls).toHaveLength(2);
+      expect(objectUrls[0].type).toBe("image/svg+xml");
+      expect(await objectUrls[0].text()).toContain(
+        '<text id="name">Template</text>',
+      );
+      expect(screen.getByText(/Validated, no issues$/)).toBeInTheDocument();
+    } finally {
+      if (originalCreateObjectUrl) {
+        Object.defineProperty(URL, "createObjectURL", {
+          configurable: true,
+          value: originalCreateObjectUrl,
+        });
+      } else {
+        delete (URL as { createObjectURL?: typeof URL.createObjectURL })
+          .createObjectURL;
+      }
+      if (originalRevokeObjectUrl) {
+        Object.defineProperty(URL, "revokeObjectURL", {
+          configurable: true,
+          value: originalRevokeObjectUrl,
+        });
+      } else {
+        delete (URL as { revokeObjectURL?: typeof URL.revokeObjectURL })
+          .revokeObjectURL;
+      }
+    }
   });
 
   it("imports and reports a sanitized local SVG", async () => {

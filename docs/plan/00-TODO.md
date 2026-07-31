@@ -401,7 +401,20 @@ Only one implementation item should normally be `[-]`.
     `bun run check`; Browser Harness canonical CSV/SVG fixture check for
     selection, grouped row issue, accessible close, footer count, and stale
     result clearing.
-- [ ] Export one SVG per selected row.
+- [x] Export one SVG per selected row.
+  - Export selected runs the shared validation pipeline and opens the report
+    without downloading when any blocking error exists.
+  - Each valid selected row is serialized from its mapped SVG clone with a
+    UTF-8 XML declaration and downloaded in worksheet order. Interim filenames
+    use `row-{worksheet position}.svg` until the later filename-rules task.
+  - Serialization remains independent of the small Blob/object-URL download
+    boundary and does not mutate validated SVGs.
+  - Main files: `src/export/svgExport.ts`, `src/export/svgExport.test.ts`,
+    `src/App.tsx`, `src/App.test.tsx`.
+  - Tests: `bun run test -- src/export/svgExport.test.ts src/App.test.tsx`;
+    `bunx tsc -b`; `bun run check`; Browser Harness canonical fixture download
+    check for `row-1.svg`, its XML declaration and SVG content, and the
+    validated footer state.
 - [ ] Export one PDF per selected row with `svg2pdf.js` and jsPDF.
 - [ ] Bundle multiple outputs with JSZip.
 - [ ] Export selected source columns as CSV.
