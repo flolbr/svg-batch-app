@@ -4,7 +4,7 @@ Last updated: 2026-07-31
 
 ## Current task
 
-No implementation task is active. Phase 5 selected-data CSV export is complete.
+No implementation task is active. Phase 5 export manifest is complete.
 
 ## What works
 
@@ -245,6 +245,11 @@ No implementation task is active. Phase 5 selected-data CSV export is complete.
   existing order.
 - CSV output preserves displayed formatting and overrides, uses display headers,
   and writes a UTF-8 BOM, CRLF records, and standard CSV escaping.
+- Every completed export is now one ZIP containing its graphic files, optional
+  CSV, and a final deterministic `manifest.json`.
+- The manifest has one ordered entry per selected row with requested/actual
+  filenames, success status, output name, and row validation warnings. Its
+  serializer also supports failed/skipped entries for the next task.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -252,23 +257,23 @@ No implementation task is active. Phase 5 selected-data CSV export is complete.
 
 ## What remains
 
-Adding `manifest.json` is next.
+Progress, cancel, continue-on-error, and retry-failed controls are next.
 
 ## Next concrete step
 
 Continue `Phase 5 — Validation and export` in `00-TODO.md`:
 
-1. mark “Add `manifest.json` with requested name, actual name, status, and
-   warnings” `[-]`;
-2. define a deterministic manifest entry for every selected row using the
-   current interim requested/actual filename;
-3. add the manifest to the archive and test order, statuses, output names, and
-   warnings without pre-implementing filename sanitation.
+1. mark “Add progress, cancel, continue-on-error, and retry-failed controls”
+   `[-]`;
+2. separate sequential row execution state from the final archive download
+   without introducing workers or concurrency;
+3. expose progress/current filename, cancellation, continue-on-error, and retry
+   only for failed rows, with manifest results covering success/failure/skip.
 
 ## Files changed
 
-- `src/export/csvExport.ts`
-- `src/export/csvExport.test.ts`
+- `src/export/manifestExport.ts`
+- `src/export/manifestExport.test.ts`
 - `src/App.tsx`
 - `src/App.test.tsx`
 - `docs/plan/00-TODO.md`
@@ -277,15 +282,15 @@ Continue `Phase 5 — Validation and export` in `00-TODO.md`:
 
 ## Tests run
 
-- `bun run test -- src/export/csvExport.test.ts src/export/zipExport.test.ts
+- `bun run test -- src/export/manifestExport.test.ts src/export/zipExport.test.ts
   src/App.test.tsx`
 - `bunx tsc -b`
 - `bun run check`
-- Browser Harness canonical fixture check excluding the Note export column and
-  producing one ZIP with two SVGs plus BOM-prefixed `selected-data.csv`
-  containing the remaining seven headers and two selected rows. Recording:
-  `/home/flo/.config/browser-harness/agent-workspace/recordings/csv-export-final`.
+- Browser Harness canonical fixture check for one ZIP with two SVGs and a
+  two-entry `manifest.json` containing ordered requested/actual names, success
+  statuses, output names, and empty warning arrays. Recording:
+  `/home/flo/.config/browser-harness/agent-workspace/recordings/manifest-export-final`.
 
 ## Latest substantive commit
 
-`df911cb feat: export selected data as CSV`
+`5b1c3cd feat: add export manifest`
