@@ -4,7 +4,7 @@ Last updated: 2026-07-31
 
 ## Current task
 
-No implementation task is active. The explicit Phase 5 validation rules are
+No implementation task is active. The compact Phase 5 validation report is
 complete.
 
 ## What works
@@ -218,6 +218,13 @@ complete.
   mapping.
 - Requested filenames are compared after NFC normalization, trimming, and
   case folding; every row in a collision receives a blocking issue.
+- The action-bar Validate control runs the shared pipeline for selected rows
+  and opens an accessible compact modal.
+- The report shows aggregate severity counts, project issues, and expandable
+  worksheet-row sections grouped by severity and issue code. Repeated messages
+  are counted, and clean selections show an explicit success state.
+- The footer retains the latest validation count and clears it when the SVG,
+  mappings, columns, or selected rows change.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -225,37 +232,39 @@ complete.
 
 ## What remains
 
-The compact validation report is next.
+Individual SVG export is next.
 
 ## Next concrete step
 
 Continue `Phase 5 — Validation and export` in `00-TODO.md`:
 
-1. mark “Show a compact validation report grouped by row and issue type” `[-]`;
-2. derive one compact presentation from `ValidationPipelineResult`;
-3. keep grouping and counts independently testable, then connect the report to
-   the existing validation/export UI surface.
+1. mark “Export one SVG per selected row” `[-]`;
+2. serialize each validated SVG with stable XML output and a requested
+   filename;
+3. keep export generation separate from the browser download boundary and add
+   unit coverage before connecting the action bar.
 
 ## Files changed
 
-- `src/validation/validationRules.ts`
-- `src/validation/validationRules.test.ts`
-- `src/validation/filenameValidation.ts`
-- `src/validation/filenameValidation.test.ts`
-- `src/validation/validationPipeline.ts`
-- `src/validation/validationPipeline.test.ts`
+- `src/validation/validationReport.ts`
+- `src/validation/validationReport.test.ts`
+- `src/ValidationReportModal.tsx`
+- `src/ValidationReportModal.test.tsx`
+- `src/App.tsx`
+- `src/App.test.tsx`
 - `docs/plan/00-TODO.md`
 - `docs/plan/06-EXPORT-AND-VALIDATION.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/validation/validationPipeline.test.ts
-  src/validation/validationRules.test.ts
-  src/validation/filenameValidation.test.ts src/mappings/applyMappings.test.ts`
+- `bun run test -- src/validation/validationReport.test.ts
+  src/ValidationReportModal.test.tsx src/App.test.tsx`
 - `bunx tsc -b`
 - `bun run check`
+- Browser Harness canonical CSV/SVG fixture check for selection, grouped row
+  issue, accessible close, footer count, and stale result clearing.
 
 ## Latest substantive commit
 
-`a5d852d feat: integrate validation rules`
+`123c1f5 feat: add validation report`
