@@ -245,4 +245,4 @@ Continue `Phase 5 — Validation and export` in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending `feat: add shared validation pipeline`
+`c4536d8 feat: add shared validation pipeline`
