@@ -100,6 +100,13 @@ import { createSvgExportFiles } from "./export/svgExport";
 import { createZipExport, downloadZipExport } from "./export/zipExport";
 import { getMappingStatus } from "./mappings/mappingStatus";
 import type { ValidationIssue } from "./mappings/validation";
+import { createProjectSnapshot } from "./project/createProjectSnapshot";
+import {
+  saveProjectWithFilePicker,
+  type ProjectFileHandle,
+  type ShowSaveProjectFilePicker,
+} from "./project/saveProjectFile";
+import { serializeProjectHtml } from "./project/serializeProjectHtml";
 import { type PanelWeights, useAppStore } from "./store";
 import { importSvgFile, type SvgSourceStatus } from "./svg/importSvg";
 import type { SvgTreeNode } from "./svg/buildSvgTree";
@@ -123,6 +130,10 @@ type FailedExportRetry = {
   rowIds: string[];
   settings: ExportSettings;
 };
+type AppProps = {
+  projectDocument?: Document;
+  showSaveFilePicker?: ShowSaveProjectFilePicker;
+};
 const svgSourceStatusPresentation: Record<
   SvgSourceStatus,
   { color: string; label: string }
@@ -138,6 +149,27 @@ const emptySourceRows: SourceRow[] = [];
 const emptyManualRows: ManualRow[] = [];
 const emptyRowOverrides: RowOverride[] = [];
 const emptyColumnFilters: ColumnFilter[] = [];
+
+function projectHtmlFileName(projectName: string): string {
+  const safeName = projectName
+    .normalize("NFC")
+    .replace(/[\\/:*?"<>|]+/g, "-")
+    .trim()
+    .replace(/[.\s]+$/u, "");
+  return `${safeName || "svg-batch-project"}.html`;
+}
+
+function browserSaveFilePicker(): ShowSaveProjectFilePicker | undefined {
+  return (
+    window as unknown as {
+      showSaveFilePicker?: ShowSaveProjectFilePicker;
+    }
+  ).showSaveFilePicker?.bind(window);
+}
+
+function isPickerCancellation(error: unknown): boolean {
+  return error instanceof DOMException && error.name === "AbortError";
+}
 const emptyColumnPreferences: ColumnPreferences = {
   visible: [],
   exported: [],
@@ -416,11 +448,17 @@ function findSvgNode(
   }
 }
 
-export function App() {
+export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
   const workspaceRef = useRef<HTMLElement>(null);
   const dataTableScrollRef = useRef<HTMLDivElement>(null);
   const resizeSession = useRef<ResizeSession | null>(null);
   const cancelExportRef = useRef(false);
+  const cleanProjectDocumentRef = useRef<Document | null>(null);
+  const projectFileHandleRef = useRef<ProjectFileHandle | null>(null);
+  if (!cleanProjectDocumentRef.current) {
+    cleanProjectDocumentRef.current =
+      projectDocument ?? (document.cloneNode(true) as Document);
+  }
   const [isImportingSpreadsheet, setIsImportingSpreadsheet] = useState(false);
   const [isImportingSvg, setIsImportingSvg] = useState(false);
   const [editingManualRowId, setEditingManualRowId] = useState<string | null>(
@@ -436,18 +474,35 @@ export function App() {
   const [validationReportOpened, setValidationReportOpened] = useState(false);
   const [validationResult, setValidationResult] =
     useState<ValidationPipelineResult | null>(null);
-  const [exportFormat, setExportFormat] = useState<ExportFormat>("svg");
-  const [includeCsv, setIncludeCsv] = useState(false);
-  const [filenameTemplate, setFilenameTemplate] = useState("row-{row}");
+  const [exportFormat, setExportFormat] = useState<ExportFormat>(
+    () => useAppStore.getState().project?.exportSettings.format ?? "svg",
+  );
+  const [includeCsv, setIncludeCsv] = useState(
+    () => useAppStore.getState().project?.exportSettings.includeCsv ?? false,
+  );
+  const [filenameTemplate, setFilenameTemplate] = useState(
+    () =>
+      useAppStore.getState().project?.exportSettings.filenameTemplate ??
+      "row-{row}",
+  );
   const [filenameCollisionPolicy, setFilenameCollisionPolicy] =
-    useState<FilenameCollisionPolicy>("suffix");
-  const [continueOnError, setContinueOnError] = useState(false);
+    useState<FilenameCollisionPolicy>(
+      () =>
+        useAppStore.getState().project?.exportSettings.collisionPolicy ??
+        "suffix",
+    );
+  const [continueOnError, setContinueOnError] = useState(
+    () =>
+      useAppStore.getState().project?.exportSettings.continueOnError ?? false,
+  );
   const [exportProgress, setExportProgress] =
     useState<ExportBatchProgress | null>(null);
   const [failedExportRetry, setFailedExportRetry] =
     useState<FailedExportRetry | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [isSavingProject, setIsSavingProject] = useState(false);
   const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 150);
+  const project = useAppStore((state) => state.project);
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
   const mappings = useAppStore((state) => state.mappings);
   const spreadsheet = useAppStore((state) => state.sources.spreadsheet);
@@ -795,6 +850,67 @@ export function App() {
     const result = runValidation(selectedRows, filenamePlan.issues);
     if (!result) return;
     setValidationReportOpened(true);
+  }
+
+  async function saveProject() {
+    const picker = showSaveFilePicker ?? browserSaveFilePicker();
+    if (!project || !picker) {
+      notifications.show({
+        color: "orange",
+        message:
+          "Direct file saving is not available in this browser. Download fallback is not implemented yet.",
+        title: "Project was not saved",
+      });
+      return;
+    }
+
+    setIsSavingProject(true);
+    try {
+      const snapshot = createProjectSnapshot({
+        project,
+        spreadsheet,
+        svg,
+        selectedSvgObjectId,
+        mappings,
+        exportSettings: {
+          format: exportFormat,
+          includeCsv,
+          filenameTemplate,
+          collisionPolicy: filenameCollisionPolicy,
+          continueOnError,
+        },
+        updatedAt: new Date().toISOString(),
+      });
+      const html = serializeProjectHtml(
+        cleanProjectDocumentRef.current!,
+        snapshot,
+      );
+      projectFileHandleRef.current = await saveProjectWithFilePicker({
+        html,
+        suggestedName: projectHtmlFileName(project.name),
+        existingHandle: projectFileHandleRef.current ?? undefined,
+        showSaveFilePicker: picker,
+      });
+      useAppStore.setState({ project: snapshot });
+      notifications.show({
+        color: "green",
+        message: "The self-contained project HTML was written successfully.",
+        title: `${project.name} saved`,
+      });
+    } catch (error) {
+      if (!isPickerCancellation(error)) {
+        notifications.show({
+          color: "red",
+          message:
+            error instanceof Error
+              ? error.message
+              : "The project file could not be written.",
+          title: "Project save failed",
+        });
+      }
+    } finally {
+      setIsSavingProject(false);
+    }
   }
 
   async function exportRows(
@@ -1679,7 +1795,14 @@ export function App() {
           >
             Validate
           </Button>
-          <Button variant="default">Save project</Button>
+          <Button
+            disabled={!project || isSavingProject}
+            loading={isSavingProject}
+            onClick={() => void saveProject()}
+            variant="default"
+          >
+            Save project
+          </Button>
           <Select
             allowDeselect={false}
             aria-label="Export format"

@@ -11,6 +11,7 @@ import { useAppStore } from "./store";
 import "./styles.css";
 import { appTheme } from "./theme";
 
+const cleanProjectDocument = document.cloneNode(true) as Document;
 const projectResult = loadEmbeddedProject(document);
 if (projectResult.success) {
   useAppStore.getState().setProject(projectResult.project);
@@ -21,7 +22,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <MantineProvider defaultColorScheme="light" theme={appTheme}>
       <Notifications limit={3} position="top-right" />
       <AppErrorBoundary>
-        <App />
+        <App projectDocument={cleanProjectDocument} />
       </AppErrorBoundary>
     </MantineProvider>
   </React.StrictMode>,

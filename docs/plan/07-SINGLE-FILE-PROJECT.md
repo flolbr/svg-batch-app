@@ -114,6 +114,12 @@ When available:
 - write a Blob;
 - mark project clean only after close succeeds.
 
+The application captures its clean document before React mounts. “Save
+project” builds a fresh validated snapshot, serializes that clean shell, writes
+an HTML Blob through the selected handle, and reuses the handle on later saves.
+Cancellation is quiet; write and close failures leave the prior saved audit
+unchanged and surface an error.
+
 Fallback:
 
 - create Blob URL;

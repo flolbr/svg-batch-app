@@ -547,7 +547,20 @@ Only one implementation item should normally be `[-]`.
   - Main files: `vite.config.ts`, `scripts/verify-single-build.ts`,
     `package.json`.
   - Tests: `bun run verify:single`; `bun run check`.
-- [ ] Add “Save project” using File System Access API when available.
+- [x] Add “Save project” using File System Access API when available.
+  - The clean pre-mount document is retained and the current validated snapshot
+    is written as a UTF-8 HTML Blob through `showSaveFilePicker`.
+  - The selected handle is reused for later saves. State receives the new audit
+    timestamp only after `close()` succeeds; cancellation is quiet and
+    write/close failures preserve the prior project state.
+  - Main files: `src/project/saveProjectFile.ts`,
+    `src/project/saveProjectFile.test.ts`, `src/main.tsx`, `src/App.tsx`,
+    `src/App.test.tsx`.
+  - Tests: `bun run test -- src/project/saveProjectFile.test.ts
+    src/project/createProjectSnapshot.test.ts
+    src/project/serializeProjectHtml.test.ts src/App.test.tsx`;
+    `bunx tsc -b`; `bun run check`; Browser Harness recording
+    `phase6-file-save`.
 - [ ] Add download fallback.
 - [ ] Add browser recovery snapshot in IndexedDB.
 - [ ] Verify a saved HTML reopens with no network access and restores state.

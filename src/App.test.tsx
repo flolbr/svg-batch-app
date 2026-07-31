@@ -11,6 +11,8 @@ import {
 import JSZip from "jszip";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App, ROW_VIRTUALIZATION_THRESHOLD } from "./App";
+import { loadEmbeddedProject } from "./project/loadProject";
+import type { Project } from "./project/projectSchema";
 import { initialPanelWeights, useAppStore } from "./store";
 
 class ResizeObserverMock {
@@ -62,6 +64,37 @@ function setMemberSpreadsheet() {
       },
     },
   });
+}
+
+function project(overrides: Partial<Project> = {}): Project {
+  return {
+    schemaVersion: 1,
+    projectId: "project-1",
+    name: "Member cards",
+    mappings: [],
+    assets: [],
+    exportSettings: {
+      format: "svg",
+      includeCsv: false,
+      filenameTemplate: "row-{row}",
+      collisionPolicy: "suffix",
+      continueOnError: false,
+    },
+    sources: [],
+    audit: {
+      createdAt: "2026-07-30T08:00:00.000Z",
+      updatedAt: "2026-07-30T08:00:00.000Z",
+      appVersion: "0.0.0",
+    },
+    ...overrides,
+  };
+}
+
+function cleanProjectDocument() {
+  return new DOMParser().parseFromString(
+    '<!doctype html><html><body><script id="svg-batch-project" type="application/json">{}</script><div id="root"></div><script>application()</script></body></html>',
+    "text/html",
+  );
 }
 
 describe("App", () => {
@@ -165,6 +198,94 @@ describe("App", () => {
     expect(workspace.style.getPropertyValue("--data-panel-width")).not.toBe(
       initialDataPanelWidth,
     );
+  });
+
+  it("saves the current project through a reusable file handle", async () => {
+    const user = userEvent.setup();
+    const loadedProject = project();
+    useAppStore.setState({ project: loadedProject });
+    const writes: Blob[] = [];
+    const close = vi.fn().mockResolvedValue(undefined);
+    const handle = {
+      createWritable: vi.fn(async () => ({
+        write: vi.fn(async (blob: Blob) => {
+          writes.push(blob);
+        }),
+        close,
+      })),
+    };
+    const showSaveFilePicker = vi.fn().mockResolvedValue(handle);
+
+    render(
+      <MantineProvider>
+        <App
+          projectDocument={cleanProjectDocument()}
+          showSaveFilePicker={showSaveFilePicker}
+        />
+      </MantineProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Save project" }));
+    await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
+
+    expect(showSaveFilePicker).toHaveBeenCalledWith(
+      expect.objectContaining({ suggestedName: "Member cards.html" }),
+    );
+    expect(writes).toHaveLength(1);
+    const savedDocument = new DOMParser().parseFromString(
+      await writes[0].text(),
+      "text/html",
+    );
+    const loaded = loadEmbeddedProject(savedDocument);
+    expect(loaded).toMatchObject({
+      success: true,
+      project: {
+        projectId: "project-1",
+        name: "Member cards",
+        exportSettings: loadedProject.exportSettings,
+      },
+    });
+    expect(useAppStore.getState().project?.audit.updatedAt).not.toBe(
+      loadedProject.audit.updatedAt,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Save project" }));
+    await waitFor(() => expect(close).toHaveBeenCalledTimes(2));
+    expect(showSaveFilePicker).toHaveBeenCalledTimes(1);
+    expect(handle.createWritable).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps the prior project audit when closing the file fails", async () => {
+    const user = userEvent.setup();
+    const loadedProject = project();
+    useAppStore.setState({ project: loadedProject });
+    const close = vi.fn().mockRejectedValue(new Error("disk full"));
+    const showSaveFilePicker = vi.fn().mockResolvedValue({
+      createWritable: vi.fn().mockResolvedValue({
+        write: vi.fn().mockResolvedValue(undefined),
+        close,
+        abort: vi.fn().mockResolvedValue(undefined),
+      }),
+    });
+
+    render(
+      <MantineProvider>
+        <App
+          projectDocument={cleanProjectDocument()}
+          showSaveFilePicker={showSaveFilePicker}
+        />
+      </MantineProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Save project" }));
+    await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Save project" }),
+      ).toBeEnabled(),
+    );
+
+    expect(useAppStore.getState().project?.audit).toEqual(loadedProject.audit);
   });
 
   it("shows row-grouped validation issues and clears stale results", async () => {
