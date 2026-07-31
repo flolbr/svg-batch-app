@@ -538,7 +538,15 @@ Only one implementation item should normally be `[-]`.
   - Tests: `bun run test -- src/project/createProjectSnapshot.test.ts
     src/project/serializeProjectHtml.test.ts`; `bunx tsc -b`;
     `bun run check`.
-- [ ] Produce a single HTML build with all core runtime assets inlined.
+- [x] Produce a single HTML build with all core runtime assets inlined.
+  - The single build emits only `dist/index.html` with an embedded project
+    block and inline application JavaScript and CSS.
+  - `bun run verify:single` rejects extra output files, external markup
+    resources, external CSS URLs, and CSS imports; it is part of `bun run
+    check`.
+  - Main files: `vite.config.ts`, `scripts/verify-single-build.ts`,
+    `package.json`.
+  - Tests: `bun run verify:single`; `bun run check`.
 - [ ] Add “Save project” using File System Access API when available.
 - [ ] Add download fallback.
 - [ ] Add browser recovery snapshot in IndexedDB.

@@ -140,6 +140,10 @@ Core functionality must not require CDNs.
 
 Google scripts are a hosted-mode exception and are loaded lazily only after a Drive action.
 
+`bun run verify:single` builds and then enforces this boundary: `dist` contains
+only `index.html`, the document has inline JavaScript and CSS plus the project
+block, and markup/CSS contain no external runtime resource references.
+
 ## File size guidance
 
 Expected contributors:
