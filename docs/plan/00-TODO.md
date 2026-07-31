@@ -386,7 +386,21 @@ Only one implementation item should normally be `[-]`.
     src/validation/validationRules.test.ts
     src/validation/filenameValidation.test.ts
     src/mappings/applyMappings.test.ts`; `bunx tsc -b`; `bun run check`.
-- [ ] Show a compact validation report grouped by row and issue type.
+- [x] Show a compact validation report grouped by row and issue type.
+  - The Validate action runs the shared pipeline for selected rows and opens a
+    compact modal with aggregate severity counts, project issues, and
+    expandable worksheet-row sections grouped by issue code.
+  - Repeated messages within one issue type are counted instead of duplicated.
+    A clean selection shows an explicit success state.
+  - The footer keeps the latest issue count and returns to Not validated when
+    the SVG, mappings, columns, or selected rows change.
+  - Main files: `src/validation/validationReport.ts`,
+    `src/ValidationReportModal.tsx`, `src/App.tsx` and their tests.
+  - Tests: `bun run test -- src/validation/validationReport.test.ts
+    src/ValidationReportModal.test.tsx src/App.test.tsx`; `bunx tsc -b`;
+    `bun run check`; Browser Harness canonical CSV/SVG fixture check for
+    selection, grouped row issue, accessible close, footer count, and stale
+    result clearing.
 - [ ] Export one SVG per selected row.
 - [ ] Export one PDF per selected row with `svg2pdf.js` and jsPDF.
 - [ ] Bundle multiple outputs with JSZip.

@@ -83,6 +83,25 @@ Check:
 - invalid output filename;
 - filename collision.
 
+## Compact report
+
+The action bar Validate control runs `validateRows` for the selected rows in
+active-worksheet order. It is available after an SVG is loaded and at least one
+row is selected.
+
+The report shows:
+
+- aggregate error, warning, and info counts;
+- project issues grouped by level and issue code;
+- only rows with issues, labelled by their worksheet position;
+- expandable row sections grouped by level and issue code;
+- repeated identical messages as one message with a count;
+- an explicit success state when no issues are found.
+
+The footer retains the latest issue count after the report closes. That result
+is cleared when the accepted SVG, mappings, active columns, or selected rows
+change so a stale result is never presented as current.
+
 ## Filename rules
 
 Use one selected column or a small template such as:

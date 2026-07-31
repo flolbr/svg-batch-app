@@ -61,6 +61,7 @@ import { ColumnSettings } from "./ColumnSettings";
 import { MappingEditor } from "./MappingEditor";
 import { SvgObjectTree } from "./SvgObjectTree";
 import { SvgPreview } from "./SvgPreview";
+import { ValidationReportModal } from "./ValidationReportModal";
 import type { ColumnPreferences } from "./data/columnPreferences";
 import { filterRows, type ColumnFilter } from "./data/filterRows";
 import { importSpreadsheet } from "./data/importSpreadsheet";
@@ -86,6 +87,10 @@ import { getMappingStatus } from "./mappings/mappingStatus";
 import { type PanelWeights, useAppStore } from "./store";
 import { importSvgFile, type SvgSourceStatus } from "./svg/importSvg";
 import type { SvgTreeNode } from "./svg/buildSvgTree";
+import {
+  validateRows,
+  type ValidationPipelineResult,
+} from "./validation/validationPipeline";
 
 const minimumPanelWidths = [360, 300, 360];
 const MIN_PREVIEW_ZOOM = 25;
@@ -400,6 +405,9 @@ export function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [svgSearchQuery, setSvgSearchQuery] = useState("");
   const [previewZoomPercent, setPreviewZoomPercent] = useState(100);
+  const [validationReportOpened, setValidationReportOpened] = useState(false);
+  const [validationResult, setValidationResult] =
+    useState<ValidationPipelineResult | null>(null);
   const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 150);
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
   const mappings = useAppStore((state) => state.mappings);
@@ -545,12 +553,20 @@ export function App() {
     () => new Set(selectedRowIds),
     [selectedRowIds],
   );
-  const previewRowIds = useMemo(
-    () =>
-      allRows
-        .filter((row) => selectedRowIdSet.has(row.id))
-        .map((row) => row.id),
+  const selectedRows = useMemo(
+    () => allRows.filter((row) => selectedRowIdSet.has(row.id)),
     [allRows, selectedRowIdSet],
+  );
+  const validationRowLabels = useMemo(
+    () =>
+      new Map(
+        allRows.map((row, index) => [row.id, `Row ${index + 1}`] as const),
+      ),
+    [allRows],
+  );
+  const previewRowIds = useMemo(
+    () => selectedRows.map((row) => row.id),
+    [selectedRows],
   );
   const activePreviewRowIndex = activeRowId
     ? previewRowIds.indexOf(activeRowId)
@@ -618,6 +634,11 @@ export function App() {
   useEffect(() => {
     setPreviewZoomPercent(100);
   }, [svg?.acceptedSvg]);
+
+  useEffect(() => {
+    setValidationResult(null);
+    setValidationReportOpened(false);
+  }, [mappings, selectedRows, sourceColumns, svg?.acceptedSvg]);
 
   useEffect(() => {
     if (!editingManualRowId || !shouldVirtualizeRows) return;
@@ -688,6 +709,23 @@ export function App() {
   function resetSourceRow(rowId: string) {
     setRowOverrides(resetRowOverride(rowOverrides, rowId));
     if (editingSourceRowId === rowId) setEditingSourceRowId(null);
+  }
+
+  function validateSelection() {
+    if (!svg || selectedRows.length === 0) return;
+
+    const template = new DOMParser().parseFromString(
+      svg.acceptedSvg,
+      "image/svg+xml",
+    ).documentElement as unknown as SVGSVGElement;
+    const result = validateRows({
+      template,
+      rows: selectedRows,
+      columnIds: new Set(sourceColumns.map((column) => column.id)),
+      mappings,
+    });
+    setValidationResult(result);
+    setValidationReportOpened(true);
   }
 
   async function handleSpreadsheetFile(event: ChangeEvent<HTMLInputElement>) {
@@ -1407,15 +1445,35 @@ export function App() {
         </Paper>
       </main>
 
+      <ValidationReportModal
+        onClose={() => setValidationReportOpened(false)}
+        opened={validationReportOpened}
+        result={validationResult}
+        rowLabels={validationRowLabels}
+      />
+
       <footer className="action-bar" aria-label="Project actions" role="region">
         <Group gap="sm">
-          <Button leftSection={<IconEye />}>Validate</Button>
+          <Button
+            disabled={!svg || selectedRows.length === 0}
+            leftSection={<IconEye />}
+            onClick={validateSelection}
+          >
+            Validate
+          </Button>
           <Button variant="default">Save project</Button>
           <Button leftSection={<IconDownload />}>Export selected</Button>
         </Group>
-        <Text size="sm" c="dimmed">
+        <Text aria-live="polite" size="sm" c="dimmed">
           {selectedRowIds.length} {selectedRowIds.length === 1 ? "row" : "rows"}{" "}
-          selected · Not validated
+          selected ·{" "}
+          {validationResult
+            ? validationResult.issues.length === 0
+              ? "Validated, no issues"
+              : `Validated, ${validationResult.issues.length} ${
+                  validationResult.issues.length === 1 ? "issue" : "issues"
+                }`
+            : "Not validated"}
         </Text>
       </footer>
     </div>

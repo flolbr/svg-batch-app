@@ -166,6 +166,68 @@ describe("App", () => {
     );
   });
 
+  it("shows row-grouped validation issues and clears stale results", async () => {
+    const user = userEvent.setup();
+    setMemberSpreadsheet();
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+
+    const validateButton = screen.getByRole("button", { name: "Validate" });
+    expect(validateButton).toBeDisabled();
+
+    await user.upload(
+      screen.getByLabelText("Choose an SVG file"),
+      new File(
+        ['<svg xmlns="http://www.w3.org/2000/svg"><path id="badge"/></svg>'],
+        "badge.svg",
+        { type: "image/svg+xml" },
+      ),
+    );
+
+    const state = useAppStore.getState();
+    const firstRow = state.sources.spreadsheet!.data.rows[0];
+    const cityColumn = state.sources.spreadsheet!.data.columns.find(
+      (column) => column.displayName === "City",
+    )!;
+    act(() => {
+      state.selectRows([firstRow.id]);
+      state.setMapping({
+        id: "badge-visibility",
+        targetId: "badge",
+        columnId: cityColumn.id,
+        type: "visibility",
+        trueValues: ["yes"],
+        falseValues: ["no"],
+        emptyBehavior: "error",
+      });
+    });
+
+    expect(validateButton).toBeEnabled();
+    await user.click(validateButton);
+
+    expect(
+      screen.getByRole("dialog", { name: "Validation report" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("1 issue found");
+    expect(screen.getByText("Row 1 · 1 issue")).toBeInTheDocument();
+    expect(screen.getByText("Unknown Value")).toBeInTheDocument();
+    expect(
+      screen.getByText("Visibility value is not configured."),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Validated, 1 issue$/)).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "Close validation report" }),
+    );
+    act(() => useAppStore.getState().removeMapping("badge"));
+    await waitFor(() =>
+      expect(screen.getByText(/selected · Not validated$/)).toBeInTheDocument(),
+    );
+  });
+
   it("imports and reports a sanitized local SVG", async () => {
     const user = userEvent.setup();
     render(
