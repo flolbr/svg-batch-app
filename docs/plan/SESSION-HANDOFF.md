@@ -237,4 +237,4 @@ Continue `Phase 5 — Validation and export` in `00-TODO.md`:
 
 ## Latest substantive commit
 
-Pending `feat: orchestrate mapping application`
+`cc62e0a feat: orchestrate mapping application`
