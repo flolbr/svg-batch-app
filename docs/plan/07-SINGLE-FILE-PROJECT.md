@@ -28,6 +28,12 @@ Use one inert JSON script:
 
 Escape `<` in serialized JSON to prevent accidental script termination.
 
+`createProjectSnapshot` validates a fresh snapshot from current runtime
+template, mapping, data, selection, source, export, and audit state.
+`serializeProjectHtml` validates that snapshot again, clones the clean shell,
+replaces exactly one inert project block, escapes literal `<` characters, and
+prepends the HTML doctype without touching the source document.
+
 ## Schema
 
 ```ts
@@ -91,7 +97,7 @@ The application needs a clean HTML shell with the project block replaced.
 
 Implementation options, in preferred order:
 
-1. retain a sanitized clone of the initial document before React mounts;
+1. retain a clean clone of the initial document before React mounts;
 2. on save, clone that shell;
 3. replace project JSON;
 4. remove runtime-only attributes/nodes;

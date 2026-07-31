@@ -524,7 +524,20 @@ Only one implementation item should normally be `[-]`.
   - Tests: `bun run test -- src/project/projectSchema.test.ts
     src/project/loadProject.test.ts src/store.test.ts`; `bunx tsc -b`;
     `bun run check`.
-- [ ] Serialize the current project into `#svg-batch-project`.
+- [x] Serialize the current project into `#svg-batch-project`.
+  - Current template, data, mappings, selection, sources, export settings, and
+    audit state form a newly validated snapshot. New local imports replace
+    stale linked metadata while restored source references are preserved.
+  - The clean document is cloned, the single inert project block is replaced,
+    literal `<` characters are escaped as `\u003c`, and the source document is
+    never mutated.
+  - Main files: `src/project/createProjectSnapshot.ts`,
+    `src/project/createProjectSnapshot.test.ts`,
+    `src/project/serializeProjectHtml.ts`,
+    `src/project/serializeProjectHtml.test.ts`.
+  - Tests: `bun run test -- src/project/createProjectSnapshot.test.ts
+    src/project/serializeProjectHtml.test.ts`; `bunx tsc -b`;
+    `bun run check`.
 - [ ] Produce a single HTML build with all core runtime assets inlined.
 - [ ] Add “Save project” using File System Access API when available.
 - [ ] Add download fallback.
