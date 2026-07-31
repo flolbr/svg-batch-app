@@ -4,7 +4,7 @@ Last updated: 2026-07-31
 
 ## Current task
 
-Phase 6 IndexedDB recovery is in progress.
+Phase 6 output-exclusion verification is next.
 
 ## What works
 
@@ -267,6 +267,13 @@ Phase 6 IndexedDB recovery is in progress.
   handles, and updates the saved audit only after close succeeds.
 - Browsers without File System Access download the same validated project HTML
   through a short-lived Blob URL.
+- Dirty validated project snapshots are debounced into IndexedDB. Startup only
+  offers recovery when the stored project is newer than the embedded project,
+  and recover/discard clears the stored snapshot.
+- Saved project HTML reopens from `file://` with networking disabled and
+  restores spreadsheet/SVG sources, mappings, selections, and export settings.
+- Persisted SVG snapshots are revalidated as untrusted input before targets and
+  the object tree are rebuilt for project or recovery hydration.
 - Export rows run strictly one at a time with visible completed/total progress
   and the current filename.
 - Project errors always block. An explicit partial-export checkbox permits
@@ -282,34 +289,34 @@ Phase 6 IndexedDB recovery is in progress.
 
 ## What remains
 
-IndexedDB recovery, offline reopen/restore, and output-exclusion verification
-remain in Phase 6.
+Output-exclusion verification remains in Phase 6.
 
 ## Next concrete step
 
-Debounce dirty project snapshots into IndexedDB, validate them on read, and
-offer recover/discard only when the recovery audit is newer than the embedded
-project.
+Verify generated outputs are not embedded in saved project HTML.
 
 ## Files changed
 
 - `docs/plan/00-TODO.md`
 - `docs/plan/07-SINGLE-FILE-PROJECT.md`
-- `src/App.tsx`
-- `src/App.test.tsx`
-- `src/main.tsx`
-- `src/project/createProjectSnapshot.ts`
-- `src/project/serializeProjectHtml.ts`
-- `src/project/saveProjectFile.ts`
-- `src/project/downloadProjectFile.ts`
-- `scripts/verify-single-build.ts`
+- `src/project/loadProject.ts`
+- `src/project/loadProject.test.ts`
+- `src/project/recoveryStore.ts`
+- `src/project/recoveryStore.test.ts`
+- `src/project/serializeProjectHtml.test.ts`
+- `src/store.ts`
+- `src/store.test.ts`
+- `src/svg/importSvg.ts`
+- `src/svg/importSvg.test.ts`
 
 ## Tests run
 
-- `bun run check` (46 test files, 286 tests)
-- Browser Harness recordings `phase6-file-save` and
-  `phase6-download-fallback`
+- `bun run test -- src/project/serializeProjectHtml.test.ts
+  src/svg/importSvg.test.ts src/project/loadProject.test.ts
+  src/project/recoveryStore.test.ts src/store.test.ts` (5 files, 50 tests)
+- `bun run check` (48 test files, 301 tests)
+- Browser Harness recording `phase6-offline-reopen`
 
 ## Latest commit
 
-`9929ab4 feat: download project fallback`
+`bcd0dd2 feat: restore saved projects offline`
