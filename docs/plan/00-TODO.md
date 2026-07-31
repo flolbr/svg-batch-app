@@ -442,7 +442,21 @@ Only one implementation item should normally be `[-]`.
     one `svg-batch-export.zip` containing ordered `row-1.svg` and `row-2.svg`
     files with their expected XML declarations/content and a clean validation
     footer.
-- [ ] Export selected source columns as CSV.
+- [x] Export selected source columns as CSV.
+  - The action bar can optionally include `selected-data.csv` beside the chosen
+    SVG or PDF outputs. It uses active-worksheet export-column preferences in
+    source order and selected effective rows in worksheet order.
+  - CSV headers use display names; cells use displayed values so formatting and
+    overrides are preserved. Output uses a UTF-8 BOM, CRLF records, a final
+    CRLF, and standard comma/quote/line-break escaping.
+  - Main files: `src/export/csvExport.ts`,
+    `src/export/csvExport.test.ts`, `src/App.tsx`, `src/App.test.tsx`.
+  - Tests: `bun run test -- src/export/csvExport.test.ts
+    src/export/zipExport.test.ts src/App.test.tsx`; `bunx tsc -b`;
+    `bun run check`; Browser Harness canonical fixture check excluding the Note
+    export column and producing one ZIP with two SVGs plus a BOM-prefixed
+    `selected-data.csv` containing the remaining seven headers and two selected
+    rows.
 - [ ] Add `manifest.json` with requested name, actual name, status, and warnings.
 - [ ] Add progress, cancel, continue-on-error, and retry-failed controls.
 - [ ] Keep batch processing sequential initially. Add concurrency only if measured.

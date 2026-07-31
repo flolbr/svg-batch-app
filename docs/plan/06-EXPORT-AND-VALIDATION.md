@@ -179,6 +179,19 @@ an export produces two or more files, JSZip writes them to
 exact text or binary contents. ZIP creation remains separate from the small
 Blob/object-URL download boundary.
 
+### Selected-data CSV
+
+The action bar can optionally add `selected-data.csv` to the chosen SVG or PDF
+outputs. Columns come from the active worksheet's export preferences in source
+order. Rows are the selected effective rows in worksheet order, so imported
+overrides and manual values are represented without mutating source data.
+
+Headers use column display names and cells use displayed values. The UTF-8
+output starts with a BOM, uses CRLF records with a final CRLF, and quotes
+fields containing commas, quotes, or line breaks while doubling embedded
+quotes. Because CSV accompanies a graphic output, enabling it uses the
+multi-file ZIP path.
+
 ## Batch execution
 
 Start sequentially:

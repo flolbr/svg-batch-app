@@ -84,6 +84,7 @@ import {
   type RowOverride,
 } from "./data/rowOverrides";
 import { createRowSearchIndex, searchRows } from "./data/searchRows";
+import { createSelectedDataCsv } from "./export/csvExport";
 import { createPdfExportFiles, downloadPdfFile } from "./export/pdfExport";
 import { createSvgExportFiles, downloadSvgFile } from "./export/svgExport";
 import { createZipExport, downloadZipExport } from "./export/zipExport";
@@ -413,6 +414,7 @@ export function App() {
   const [validationResult, setValidationResult] =
     useState<ValidationPipelineResult | null>(null);
   const [exportFormat, setExportFormat] = useState<"svg" | "pdf">("svg");
+  const [includeCsv, setIncludeCsv] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 150);
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
@@ -759,19 +761,31 @@ export function App() {
         filename: `row-${worksheetRowNumbers.get(row.rowId) ?? index + 1}.${exportFormat}`,
         svg: row.svg,
       }));
+      const csvFile = includeCsv
+        ? createSelectedDataCsv(
+            sourceColumns.filter((column) =>
+              columnPreferences.exported.includes(column.id),
+            ),
+            selectedRows,
+          )
+        : null;
       if (exportFormat === "pdf") {
         const files = await createPdfExportFiles(requests);
-        if (files.length === 1) {
+        if (files.length === 1 && !csvFile) {
           downloadPdfFile(files[0]);
         } else {
-          downloadZipExport(await createZipExport(files));
+          downloadZipExport(
+            await createZipExport(csvFile ? [...files, csvFile] : files),
+          );
         }
       } else {
         const files = createSvgExportFiles(requests);
-        if (files.length === 1) {
+        if (files.length === 1 && !csvFile) {
           downloadSvgFile(files[0]);
         } else {
-          downloadZipExport(await createZipExport(files));
+          downloadZipExport(
+            await createZipExport(csvFile ? [...files, csvFile] : files),
+          );
         }
       }
     } catch (error) {
@@ -1535,6 +1549,12 @@ export function App() {
             }}
             value={exportFormat}
             w={92}
+          />
+          <Checkbox
+            checked={includeCsv}
+            disabled={isExporting}
+            label="Include CSV"
+            onChange={(event) => setIncludeCsv(event.currentTarget.checked)}
           />
           <Button
             disabled={!svg || selectedRows.length === 0}

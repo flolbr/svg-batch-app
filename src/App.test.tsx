@@ -281,7 +281,15 @@ describe("App", () => {
       );
 
       const rows = useAppStore.getState().sources.spreadsheet!.data.rows;
-      act(() => useAppStore.getState().selectRows(rows.map((row) => row.id)));
+      const columns = useAppStore.getState().sources.spreadsheet!.data.columns;
+      act(() => {
+        useAppStore.getState().setColumnPreferences({
+          visible: columns.map((column) => column.id),
+          exported: [columns[0].id],
+        });
+        useAppStore.getState().selectRows(rows.map((row) => row.id));
+      });
+      await user.click(screen.getByRole("checkbox", { name: "Include CSV" }));
       await user.click(screen.getByRole("button", { name: "Export selected" }));
 
       await waitFor(() =>
@@ -290,14 +298,22 @@ describe("App", () => {
       expect(objectUrls).toHaveLength(1);
       expect(objectUrls[0].type).toBe("application/zip");
       const archive = await JSZip.loadAsync(await objectUrls[0].arrayBuffer());
-      expect(Object.keys(archive.files)).toEqual(["row-1.svg", "row-2.svg"]);
+      expect(Object.keys(archive.files)).toEqual([
+        "row-1.svg",
+        "row-2.svg",
+        "selected-data.csv",
+      ]);
       expect(await archive.file("row-1.svg")!.async("string")).toContain(
         '<rect id="shape" width="120" height="80"/>',
+      );
+      expect(await archive.file("selected-data.csv")!.async("string")).toBe(
+        "\uFEFFName\r\nChloé Petit\r\nAlice Martin\r\n",
       );
       expect(screen.getByText(/Validated, no issues$/)).toBeInTheDocument();
 
       downloadedNames.length = 0;
       objectUrls.length = 0;
+      await user.click(screen.getByRole("checkbox", { name: "Include CSV" }));
       act(() => useAppStore.getState().deselectRows([rows[1].id]));
       await waitFor(() =>
         expect(
