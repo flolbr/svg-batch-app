@@ -114,6 +114,20 @@ describe("recoveryStore", () => {
   it.each([
     ["corrupt", { projectId: "project-1" }],
     ["mismatched", { ...project(), projectId: "another-project" }],
+    [
+      "unsafe SVG",
+      {
+        ...project(),
+        template: {
+          fileName: "unsafe.svg",
+          fileSize: 42,
+          acceptedSvg:
+            '<svg xmlns="http://www.w3.org/2000/svg"><text id="name" onload="alert(1)">Name</text></svg>',
+          sourceStatus: "embedded",
+          selectedObjectId: null,
+        },
+      },
+    ],
   ])("deletes a %s recovery record", async (_kind, storedProject) => {
     database.get.mockResolvedValue(storedProject);
 

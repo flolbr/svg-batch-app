@@ -1,4 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
+import { restoreImportedSvg } from "../svg/importSvg";
 import { projectSchema, type Project } from "./projectSchema";
 
 export const RECOVERY_DATABASE_NAME = "svg-batch-project-recovery";
@@ -33,8 +34,14 @@ function getDatabase(): Promise<IDBPDatabase<RecoveryDatabaseSchema>> {
   return databasePromise;
 }
 
+function validateRecoveryProject(project: unknown): Project {
+  const validated = projectSchema.parse(project);
+  if (validated.template) restoreImportedSvg(validated.template);
+  return validated;
+}
+
 export async function saveRecoveryProject(project: Project): Promise<void> {
-  const snapshot = structuredClone(projectSchema.parse(project));
+  const snapshot = structuredClone(validateRecoveryProject(project));
   const database = await getDatabase();
 
   await database.put(RECOVERY_PROJECT_STORE, snapshot);
@@ -50,13 +57,19 @@ export async function loadRecoveryProject(
     return null;
   }
 
-  const result = projectSchema.safeParse(storedProject);
-  if (!result.success || result.data.projectId !== projectId) {
+  let validated: Project;
+  try {
+    validated = validateRecoveryProject(storedProject);
+  } catch {
+    await database.delete(RECOVERY_PROJECT_STORE, projectId);
+    return null;
+  }
+  if (validated.projectId !== projectId) {
     await database.delete(RECOVERY_PROJECT_STORE, projectId);
     return null;
   }
 
-  return structuredClone(result.data);
+  return structuredClone(validated);
 }
 
 export async function deleteRecoveryProject(projectId: string): Promise<void> {

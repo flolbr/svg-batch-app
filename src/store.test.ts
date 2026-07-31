@@ -71,7 +71,7 @@ describe("useAppStore", () => {
     expect(initialPanelWeights).toEqual(initialWeightsBefore);
   });
 
-  it("loads a validated project without changing transient state", () => {
+  it("loads an empty validated project without changing UI state", () => {
     const stateBefore = useAppStore.getState();
     const loadedProject = project();
 
@@ -80,8 +80,82 @@ describe("useAppStore", () => {
     const stateAfter = useAppStore.getState();
     expect(stateAfter.project).toEqual(loadedProject);
     expect(stateAfter.ui).toBe(stateBefore.ui);
-    expect(stateAfter.sources).toBe(stateBefore.sources);
-    expect(stateAfter.selection).toBe(stateBefore.selection);
+    expect(stateAfter.sources).toEqual({ spreadsheet: null, svg: null });
+    expect(stateAfter.selection).toEqual(stateBefore.selection);
+    expect(stateAfter.mappings).toEqual([]);
+  });
+
+  it("hydrates persisted data, SVG, mappings, and selections", () => {
+    useAppStore.getState().setProject(
+      project({
+        template: {
+          fileName: "badge.svg",
+          fileSize: 128,
+          acceptedSvg:
+            '<svg xmlns="http://www.w3.org/2000/svg"><text id="name">Template</text></svg>',
+          sourceStatus: "embedded",
+          selectedObjectId: "name",
+        },
+        data: {
+          fileName: "members.csv",
+          fileSize: 42,
+          sheetNames: ["Members"],
+          selectedSheetName: "Members",
+          worksheets: {
+            Members: {
+              data: {
+                columns: [
+                  {
+                    id: "member-name",
+                    sourceHeader: "Name",
+                    displayName: "Name",
+                    sourceIndex: 0,
+                    inferredType: "text",
+                  },
+                ],
+                rows: [
+                  {
+                    id: "member-1",
+                    values: { "member-name": "Ada" },
+                    displayedValues: { "member-name": "Ada" },
+                  },
+                ],
+              },
+              selectedRowIds: ["member-1"],
+              filters: [],
+              rowOverrides: [],
+              manualRows: [],
+              columnPreferences: {
+                visible: ["member-name"],
+                exported: ["member-name"],
+              },
+            },
+          },
+        },
+        mappings: [
+          {
+            id: "mapping-name",
+            targetId: "name",
+            columnId: "member-name",
+            type: "text",
+            fit: "keep",
+          },
+        ],
+      }),
+    );
+
+    const state = useAppStore.getState();
+    expect(state.mappings).toHaveLength(1);
+    expect(state.sources.svg).toMatchObject({
+      fileName: "badge.svg",
+      targets: [{ id: "name", tagName: "text" }],
+    });
+    expect(state.sources.spreadsheet?.data.rows[0].id).toBe("member-1");
+    expect(state.selection).toEqual({
+      activeRowId: "member-1",
+      selectedRowIds: ["member-1"],
+      svgObjectId: "name",
+    });
   });
 
   it("stores an accepted SVG without changing unrelated state", () => {

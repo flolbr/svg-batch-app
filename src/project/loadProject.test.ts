@@ -94,6 +94,30 @@ describe("loadEmbeddedProject", () => {
     });
   });
 
+  it("rejects an unsafe persisted SVG before loading project state", () => {
+    const result = loadEmbeddedProject(
+      projectDocument(
+        JSON.stringify(
+          project({
+            template: {
+              fileName: "unsafe.svg",
+              fileSize: 42,
+              acceptedSvg:
+                '<svg xmlns="http://www.w3.org/2000/svg"><text id="name" onclick="alert(1)">Name</text></svg>',
+              sourceStatus: "embedded",
+              selectedObjectId: null,
+            },
+          }),
+        ),
+      ),
+    );
+
+    expect(result).toMatchObject({
+      success: false,
+      error: expect.stringContaining("event handler"),
+    });
+  });
+
   it.each([
     [
       "unsupported versions",

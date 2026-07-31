@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { restoreImportedSvg } from "../svg/importSvg";
 import { parseProject, type Project } from "./projectSchema";
 
 export type { Project } from "./projectSchema";
@@ -27,7 +28,9 @@ export function loadEmbeddedProject(document: Document): ProjectLoadResult {
   }
 
   try {
-    return { success: true, project: parseProject(projectJson) };
+    const project = parseProject(projectJson);
+    if (project.template) restoreImportedSvg(project.template);
+    return { success: true, project };
   } catch (error) {
     return {
       success: false,

@@ -164,7 +164,8 @@ describe("serializeProjectHtml", () => {
       name: "Cards </script> < safe",
       template: {
         ...completeProject().template!,
-        acceptedSvg: "<svg><text>Less than: <</text></svg>",
+        acceptedSvg:
+          '<svg xmlns="http://www.w3.org/2000/svg"><text id="name">Less than: &lt;</text></svg>',
       },
     });
 

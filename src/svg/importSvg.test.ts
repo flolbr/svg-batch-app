@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { importSvgFile } from "./importSvg";
+import { importSvgFile, restoreImportedSvg } from "./importSvg";
 
 function svgFile(source: string, name = "template.svg"): File {
   return new File([source], name, { type: "image/svg+xml" });
@@ -98,5 +98,54 @@ describe("importSvgFile", () => {
     ],
   ])("rejects %s", async (_caseName, source, message) => {
     await expect(importSvgFile(svgFile(source))).rejects.toThrow(message);
+  });
+});
+
+describe("restoreImportedSvg", () => {
+  it("revalidates a persisted snapshot and rebuilds derived targets and tree", () => {
+    const restored = restoreImportedSvg({
+      fileName: "saved.svg",
+      fileSize: 42,
+      acceptedSvg:
+        '<svg xmlns="http://www.w3.org/2000/svg"><g id="card" aria-label="Card"><text id="name">Template</text></g></svg>',
+      sourceStatus: "modified",
+    });
+
+    expect(restored).toMatchObject({
+      fileName: "saved.svg",
+      fileSize: 42,
+      sourceStatus: "modified",
+      targets: [
+        { id: "card", tagName: "g" },
+        { id: "name", tagName: "text" },
+      ],
+      tree: [
+        {
+          id: "card",
+          label: "Card",
+          tagName: "g",
+          children: [
+            {
+              id: "name",
+              label: "name",
+              tagName: "text",
+              children: [],
+            },
+          ],
+        },
+      ],
+    });
+  });
+
+  it("rejects an unsafe persisted snapshot", () => {
+    expect(() =>
+      restoreImportedSvg({
+        fileName: "unsafe.svg",
+        fileSize: 42,
+        acceptedSvg:
+          '<svg xmlns="http://www.w3.org/2000/svg"><text id="name" onclick="alert(1)">Name</text></svg>',
+        sourceStatus: "embedded",
+      }),
+    ).toThrow("event handler");
   });
 });

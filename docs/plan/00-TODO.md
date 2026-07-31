@@ -587,7 +587,21 @@ Only one implementation item should normally be `[-]`.
     src/project/startupRecovery.test.ts src/App.test.tsx`; `bunx tsc -b`;
     `bun run check`; Browser Harness recording `phase6-indexeddb-recovery`
     with the real stored project ID, final filename template, and newer audit.
-- [ ] Verify a saved HTML reopens with no network access and restores state.
+- [x] Verify a saved HTML reopens with no network access and restores state.
+  - Persisted SVG is revalidated as untrusted input before targets and the
+    object tree are rebuilt. Unsafe snapshots fail before state is loaded.
+  - Project hydration restores normalized data, mappings, row and SVG-object
+    selections, source metadata, and export settings.
+  - Main files: `src/svg/importSvg.ts`, `src/svg/importSvg.test.ts`,
+    `src/project/loadProject.ts`, `src/project/loadProject.test.ts`,
+    `src/project/recoveryStore.ts`, `src/store.ts`, `src/store.test.ts`.
+  - Tests: `bun run test -- src/svg/importSvg.test.ts
+    src/project/loadProject.test.ts src/project/recoveryStore.test.ts
+    src/store.test.ts src/App.test.tsx`; `bunx tsc -b`; `bun run check`;
+    Browser Harness recording `phase6-offline-reopen` opening production from
+    `file://`, saving fixture state, disabling networking, and reopening with
+    zero resource requests plus restored data/SVG sources, mapping, selection,
+    PDF/CSV choices, and filename template.
 - [ ] Verify generated outputs are not embedded in the project HTML.
 
 ## Phase 7 — Linked SVG manual reload

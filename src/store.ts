@@ -21,7 +21,7 @@ import type { RowOverride } from "./data/rowOverrides";
 import type { Mapping, Mappings } from "./mappings/schema";
 import type { DataProjectState } from "./project/dataProjectState";
 import type { Project } from "./project/loadProject";
-import type { ImportedSvg } from "./svg/importSvg";
+import { restoreImportedSvg, type ImportedSvg } from "./svg/importSvg";
 
 export type PanelWeights = [number, number, number];
 export type SpreadsheetSource = Omit<ImportedSpreadsheet, "workbook"> & {
@@ -236,27 +236,39 @@ export const useAppStore = create<AppStore>()((set) => ({
   },
   setProject: (project) =>
     set((state) => {
-      if (!project.data) return { project };
-
-      const spreadsheet = restoreSpreadsheet(project.data);
+      const spreadsheet = project.data
+        ? restoreSpreadsheet(project.data)
+        : null;
+      const svg = project.template
+        ? restoreImportedSvg(project.template)
+        : null;
+      const selectedRowIds = spreadsheet
+        ? (spreadsheet.selectedRowIdsBySheet[
+            spreadsheet.selectedSheetName
+          ] ?? [])
+        : [];
+      const svgObjectId =
+        project.template?.selectedObjectId &&
+        svg?.targets.some(
+          (target) => target.id === project.template?.selectedObjectId,
+        )
+          ? project.template.selectedObjectId
+          : null;
       return {
+        mappings: project.mappings,
         project,
         sources: {
-          ...state.sources,
           spreadsheet,
+          svg,
         },
         selection: {
           ...state.selection,
           activeRowId: reconciledActiveRowId(
             state.selection.activeRowId,
-            spreadsheet.selectedRowIdsBySheet[
-              spreadsheet.selectedSheetName
-            ] ?? [],
+            selectedRowIds,
           ),
-          selectedRowIds:
-            spreadsheet.selectedRowIdsBySheet[
-              spreadsheet.selectedSheetName
-            ] ?? [],
+          selectedRowIds,
+          svgObjectId,
         },
       };
     }),

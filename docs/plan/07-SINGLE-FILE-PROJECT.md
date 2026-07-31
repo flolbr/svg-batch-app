@@ -89,6 +89,11 @@ original file.
 
 Validate with Zod at load.
 
+Hydration also revalidates the accepted SVG snapshot as untrusted input, then
+rebuilds its targets and object tree. Only after those checks pass does the
+store restore normalized data, mappings, row and SVG-object selections, source
+metadata, and export settings.
+
 Unknown future versions must fail with a useful message rather than partially loading.
 
 ## Saving
@@ -163,6 +168,11 @@ Google scripts are a hosted-mode exception and are loaded lazily only after a Dr
 `bun run verify:single` builds and then enforces this boundary: `dist` contains
 only `index.html`, the document has inline JavaScript and CSS plus the project
 block, and markup/CSS contain no external runtime resource references.
+
+The production acceptance path opens the build from `file://`, saves a project,
+disables browser networking, and reopens that saved file. Spreadsheet and SVG
+sources, mappings, selections, and export controls must restore with no
+resource requests.
 
 ## File size guidance
 

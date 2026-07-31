@@ -42,6 +42,11 @@ export type ImportedSvg = {
   tree: SvgTreeNode[];
 };
 
+export type PersistedSvgSnapshot = Pick<
+  ImportedSvg,
+  "fileName" | "fileSize" | "acceptedSvg" | "sourceStatus"
+>;
+
 function importError(message: string): Error {
   return new Error(`SVG import rejected: ${message}`);
 }
@@ -112,8 +117,10 @@ function parseAndValidateSvg(source: string): Element {
   return root;
 }
 
-export async function importSvgFile(file: File): Promise<ImportedSvg> {
-  const source = await file.text();
+function acceptSvgSource(source: string): Pick<
+  ImportedSvg,
+  "acceptedSvg" | "targets" | "tree"
+> {
   const root = parseAndValidateSvg(source);
   const acceptedSvg = DOMPurify.sanitize(root.outerHTML, {
     USE_PROFILES: { svg: true, svgFilters: true },
@@ -131,12 +138,27 @@ export async function importSvgFile(file: File): Promise<ImportedSvg> {
   const targets = validateSvgTargets(acceptedSvg);
   const tree = buildSvgTree(acceptedSvg);
 
+  return { acceptedSvg, targets, tree };
+}
+
+export async function importSvgFile(file: File): Promise<ImportedSvg> {
+  const accepted = acceptSvgSource(await file.text());
+
   return {
     fileName: file.name,
     fileSize: file.size,
-    acceptedSvg,
     sourceStatus: "embedded",
-    targets,
-    tree,
+    ...accepted,
+  };
+}
+
+export function restoreImportedSvg(
+  snapshot: PersistedSvgSnapshot,
+): ImportedSvg {
+  return {
+    fileName: snapshot.fileName,
+    fileSize: snapshot.fileSize,
+    sourceStatus: snapshot.sourceStatus,
+    ...acceptSvgSource(snapshot.acceptedSvg),
   };
 }
