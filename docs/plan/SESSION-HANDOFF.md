@@ -4,8 +4,7 @@ Last updated: 2026-07-31
 
 ## Current task
 
-No implementation task is active. The compact Phase 5 validation report is
-complete.
+No implementation task is active. Individual Phase 5 SVG export is complete.
 
 ## What works
 
@@ -225,6 +224,13 @@ complete.
   are counted, and clean selections show an explicit success state.
 - The footer retains the latest validation count and clears it when the SVG,
   mappings, columns, or selected rows change.
+- Export selected runs the shared validation pipeline and produces no download
+  when blocking errors exist.
+- Valid mapped SVG clones serialize with a UTF-8 XML declaration and download
+  in worksheet order. Interim names use `row-{worksheet position}.svg` until
+  the filename-rules task.
+- SVG serialization is independent of the small tested Blob/object-URL browser
+  boundary and leaves validated SVGs unchanged.
 - `docs/examples/membership-demo/` is the canonical end-to-end fixture for
   spreadsheet, SVG, mapping, search, selection, filename, and export flows.
 - The fixture includes matching CSV/XLSX customer data, a secondary worksheet,
@@ -232,24 +238,22 @@ complete.
 
 ## What remains
 
-Individual SVG export is next.
+Individual PDF export is next.
 
 ## Next concrete step
 
 Continue `Phase 5 — Validation and export` in `00-TODO.md`:
 
-1. mark “Export one SVG per selected row” `[-]`;
-2. serialize each validated SVG with stable XML output and a requested
-   filename;
-3. keep export generation separate from the browser download boundary and add
-   unit coverage before connecting the action bar.
+1. mark “Export one PDF per selected row with `svg2pdf.js` and jsPDF” `[-]`;
+2. convert one validated SVG clone at a time with page dimensions derived from
+   the SVG;
+3. test successful bytes and page size separately from the browser download
+   boundary before adding the format control.
 
 ## Files changed
 
-- `src/validation/validationReport.ts`
-- `src/validation/validationReport.test.ts`
-- `src/ValidationReportModal.tsx`
-- `src/ValidationReportModal.test.tsx`
+- `src/export/svgExport.ts`
+- `src/export/svgExport.test.ts`
 - `src/App.tsx`
 - `src/App.test.tsx`
 - `docs/plan/00-TODO.md`
@@ -258,13 +262,12 @@ Continue `Phase 5 — Validation and export` in `00-TODO.md`:
 
 ## Tests run
 
-- `bun run test -- src/validation/validationReport.test.ts
-  src/ValidationReportModal.test.tsx src/App.test.tsx`
+- `bun run test -- src/export/svgExport.test.ts src/App.test.tsx`
 - `bunx tsc -b`
 - `bun run check`
-- Browser Harness canonical CSV/SVG fixture check for selection, grouped row
-  issue, accessible close, footer count, and stale result clearing.
+- Browser Harness canonical fixture download check for `row-1.svg`, its UTF-8
+  XML declaration and SVG content, and the validated footer state.
 
 ## Latest substantive commit
 
-`123c1f5 feat: add validation report`
+`1c1b9e9 feat: export selected SVG files`
