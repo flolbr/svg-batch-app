@@ -4,7 +4,7 @@ Last updated: 2026-07-31
 
 ## Current task
 
-No implementation task is active. Phase 5 sequential execution is confirmed.
+No implementation task is active. Phase 5 validation and export is complete.
 
 ## What works
 
@@ -227,15 +227,13 @@ No implementation task is active. Phase 5 sequential execution is confirmed.
 - Export selected runs the shared validation pipeline and produces no download
   when blocking errors exist.
 - Valid mapped SVG clones serialize with a UTF-8 XML declaration and download
-  in worksheet order. Interim names use `row-{worksheet position}.svg` until
-  the filename-rules task.
+  in worksheet order.
 - SVG serialization is independent of the small tested Blob/object-URL browser
   boundary and leaves validated SVGs unchanged.
 - The action bar selects SVG or PDF output while keeping the same validation
   gate and worksheet-order flow.
 - PDF export processes rows sequentially with `svg2pdf.js` and jsPDF. Each page
   uses positive SVG `width`/`height` dimensions or falls back to its `viewBox`.
-- Interim PDF names use `row-{worksheet position}.pdf`.
 - Exactly one generated SVG or PDF downloads directly. Two or more files are
   bundled into `svg-batch-export.zip` in worksheet order.
 - The ZIP helper preserves Unicode filenames and exact SVG text/PDF bytes, and
@@ -250,6 +248,12 @@ No implementation task is active. Phase 5 sequential execution is confirmed.
 - The manifest has one ordered entry per selected row with requested/actual
   filenames, success status, output name, and row validation warnings. Its
   serializer also supports the runner's failed/skipped entries.
+- Export filenames use a small template with `{row}` and displayed column-name
+  placeholders. Actual names are NFC-normalized, cross-platform sanitized,
+  length-capped, and protected from Windows device names.
+- Filename collisions either receive deterministic numeric suffixes in
+  worksheet order or become blocking validation errors. The manifest retains
+  both the requested and actual filename.
 - Export rows run strictly one at a time with visible completed/total progress
   and the current filename.
 - Project errors always block. An explicit partial-export checkbox permits
@@ -265,30 +269,26 @@ No implementation task is active. Phase 5 sequential execution is confirmed.
 
 ## What remains
 
-Filename sanitation and collision rules are next.
+Phase 6 single-file project save remains.
 
 ## Next concrete step
 
-Continue `Phase 5 — Validation and export` in `00-TODO.md`:
-
-1. mark “Add filename sanitation and collision rules” `[-]`;
-2. derive requested names without adding a general expression language, then
-   sanitize and allocate deterministic suffixes in worksheet order;
-3. pass requested names into validation and preserve requested versus actual
-   names in the manifest.
+Start `Phase 6 — Single-file project save` in `00-TODO.md` by defining the
+complete project schema and migration entry point.
 
 ## Files changed
 
 - `docs/plan/00-TODO.md`
-- `docs/plan/10-DECISIONS.md`
-- `docs/plan/SESSION-HANDOFF.md`
+- `src/App.tsx`
+- `src/export/filenameRules.ts`
+- `src/export/filenameRules.test.ts`
+- `src/validation/validationPipeline.ts`
+- `src/validation/validationPipeline.test.ts`
 
 ## Tests run
 
-- `bun run test -- src/export/runExportBatch.test.ts`
-- `bunx tsc -b`
-- `bun run check`
+- `bun run check` (41 test files, 262 tests)
 
 ## Latest commit
 
-`bd213d7 docs: confirm sequential export`
+`1dc34f5 feat: add export filename rules`
