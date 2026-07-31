@@ -4,7 +4,7 @@ Last updated: 2026-07-31
 
 ## Current task
 
-No implementation task is active. Phase 5 validation and export is complete.
+Phase 6 current-state serialization is in progress.
 
 ## What works
 
@@ -254,6 +254,11 @@ No implementation task is active. Phase 5 validation and export is complete.
 - Filename collisions either receive deterministic numeric suffixes in
   worksheet order or become blocking validation errors. The manifest retains
   both the requested and actual filename.
+- A strict version-1 schema now covers the accepted template snapshot,
+  normalized data, mappings, embedded raster assets, export settings, source
+  references, and audit metadata.
+- `parseProject` is the single version dispatch and future migration boundary;
+  missing and unsupported versions fail before application state is loaded.
 - Export rows run strictly one at a time with visible completed/total progress
   and the current filename.
 - Project errors always block. An explicit partial-export checkbox permits
@@ -269,26 +274,34 @@ No implementation task is active. Phase 5 validation and export is complete.
 
 ## What remains
 
-Phase 6 single-file project save remains.
+Current-state serialization, single-file verification, project saving,
+download fallback, IndexedDB recovery, offline restore, and output-exclusion
+verification remain in Phase 6.
 
 ## Next concrete step
 
-Start `Phase 6 — Single-file project save` in `00-TODO.md` by defining the
-complete project schema and migration entry point.
+Serialize the current runtime project snapshot into a cloned
+`#svg-batch-project` block, escaping `<` and leaving the live document
+untouched.
 
 ## Files changed
 
 - `docs/plan/00-TODO.md`
-- `src/App.tsx`
-- `src/export/filenameRules.ts`
-- `src/export/filenameRules.test.ts`
-- `src/validation/validationPipeline.ts`
-- `src/validation/validationPipeline.test.ts`
+- `docs/plan/07-SINGLE-FILE-PROJECT.md`
+- `index.html`
+- `src/project/projectSchema.ts`
+- `src/project/projectSchema.test.ts`
+- `src/project/loadProject.ts`
+- `src/project/loadProject.test.ts`
+- `src/store.test.ts`
 
 ## Tests run
 
-- `bun run check` (41 test files, 262 tests)
+- `bun run test -- src/project/projectSchema.test.ts
+  src/project/loadProject.test.ts src/store.test.ts`
+- `bunx tsc -b`
+- `bun run check` (42 test files, 267 tests)
 
 ## Latest commit
 
-`1dc34f5 feat: add export filename rules`
+`251cc97 feat: define complete project schema`
