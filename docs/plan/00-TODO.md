@@ -370,7 +370,7 @@ Only one implementation item should normally be `[-]`.
     `src/validation/validationPipeline.test.ts`.
   - Tests: `bun run test -- src/validation/validationPipeline.test.ts
     src/mappings/applyMappings.test.ts`; `bunx tsc -b`; `bun run check`.
-- [ ] Validate missing columns, missing targets, unknown options, empty required cells, text overflow, external resources, and duplicate filenames.
+- [-] Validate missing columns, missing targets, unknown options, empty required cells, text overflow, external resources, and duplicate filenames.
 - [ ] Show a compact validation report grouped by row and issue type.
 - [ ] Export one SVG per selected row.
 - [ ] Export one PDF per selected row with `svg2pdf.js` and jsPDF.
