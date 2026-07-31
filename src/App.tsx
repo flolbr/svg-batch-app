@@ -103,11 +103,16 @@ import type { ValidationIssue } from "./mappings/validation";
 import { createProjectSnapshot } from "./project/createProjectSnapshot";
 import { downloadProjectHtml } from "./project/downloadProjectFile";
 import {
+  deleteRecoveryProject,
+  saveRecoveryProject,
+} from "./project/recoveryStore";
+import {
   saveProjectWithFilePicker,
   type ProjectFileHandle,
   type ShowSaveProjectFilePicker,
 } from "./project/saveProjectFile";
 import { serializeProjectHtml } from "./project/serializeProjectHtml";
+import type { Project } from "./project/projectSchema";
 import { type PanelWeights, useAppStore } from "./store";
 import { importSvgFile, type SvgSourceStatus } from "./svg/importSvg";
 import type { SvgTreeNode } from "./svg/buildSvgTree";
@@ -120,6 +125,7 @@ const minimumPanelWidths = [360, 300, 360];
 const MIN_PREVIEW_ZOOM = 25;
 const MAX_PREVIEW_ZOOM = 200;
 const PREVIEW_ZOOM_STEP = 25;
+export const PROJECT_RECOVERY_DEBOUNCE_MS = 750;
 type ExportFormat = "svg" | "pdf";
 type ExportSettings = {
   format: ExportFormat;
@@ -170,6 +176,16 @@ function browserSaveFilePicker(): ShowSaveProjectFilePicker | undefined {
 
 function isPickerCancellation(error: unknown): boolean {
   return error instanceof DOMException && error.name === "AbortError";
+}
+
+function recoveryFingerprint(project: Project): string {
+  return JSON.stringify({
+    ...project,
+    audit: {
+      ...project.audit,
+      updatedAt: "",
+    },
+  });
 }
 const emptyColumnPreferences: ColumnPreferences = {
   visible: [],
@@ -456,6 +472,9 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
   const cancelExportRef = useRef(false);
   const cleanProjectDocumentRef = useRef<Document | null>(null);
   const projectFileHandleRef = useRef<ProjectFileHandle | null>(null);
+  const recoveryProjectIdRef = useRef<string | null>(null);
+  const recoveryBaselineRef = useRef<string | null>(null);
+  const recoveryWasDirtyRef = useRef(false);
   if (!cleanProjectDocumentRef.current) {
     cleanProjectDocumentRef.current =
       projectDocument ?? (document.cloneNode(true) as Document);
@@ -748,6 +767,84 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
   ]);
 
   useEffect(() => {
+    if (!project) return;
+
+    let snapshot: Project;
+    try {
+      snapshot = createProjectSnapshot({
+        project,
+        spreadsheet,
+        svg,
+        selectedSvgObjectId,
+        mappings,
+        exportSettings: {
+          format: exportFormat,
+          includeCsv,
+          filenameTemplate,
+          collisionPolicy: filenameCollisionPolicy,
+          continueOnError,
+        },
+        updatedAt: project.audit.updatedAt,
+      });
+    } catch {
+      return;
+    }
+
+    const fingerprint = recoveryFingerprint(snapshot);
+    if (recoveryProjectIdRef.current !== project.projectId) {
+      recoveryProjectIdRef.current = project.projectId;
+      recoveryBaselineRef.current = fingerprint;
+      recoveryWasDirtyRef.current = false;
+      return;
+    }
+
+    if (fingerprint === recoveryBaselineRef.current) {
+      if (recoveryWasDirtyRef.current) {
+        recoveryWasDirtyRef.current = false;
+        void deleteRecoveryProject(project.projectId).catch(() => {});
+      }
+      return;
+    }
+
+    recoveryWasDirtyRef.current = true;
+    const timeout = window.setTimeout(() => {
+      try {
+        const recovery = createProjectSnapshot({
+          project,
+          spreadsheet,
+          svg,
+          selectedSvgObjectId,
+          mappings,
+          exportSettings: {
+            format: exportFormat,
+            includeCsv,
+            filenameTemplate,
+            collisionPolicy: filenameCollisionPolicy,
+            continueOnError,
+          },
+          updatedAt: new Date().toISOString(),
+        });
+        void saveRecoveryProject(recovery).catch(() => {});
+      } catch {
+        // Invalid intermediate state is not persisted as recovery data.
+      }
+    }, PROJECT_RECOVERY_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, [
+    continueOnError,
+    exportFormat,
+    filenameCollisionPolicy,
+    filenameTemplate,
+    includeCsv,
+    mappings,
+    project,
+    selectedSvgObjectId,
+    spreadsheet,
+    svg,
+  ]);
+
+  useEffect(() => {
     if (!editingManualRowId || !shouldVirtualizeRows) return;
 
     const rowIndex = dataRows.findIndex(
@@ -889,6 +986,10 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
       } else {
         downloadProjectHtml(html, filename);
       }
+      recoveryProjectIdRef.current = snapshot.projectId;
+      recoveryBaselineRef.current = recoveryFingerprint(snapshot);
+      recoveryWasDirtyRef.current = false;
+      void deleteRecoveryProject(snapshot.projectId).catch(() => {});
       useAppStore.setState({ project: snapshot });
       notifications.show({
         color: "green",

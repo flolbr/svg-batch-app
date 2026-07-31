@@ -572,7 +572,21 @@ Only one implementation item should normally be `[-]`.
     src/App.test.tsx`; `bunx tsc -b`; `bun run check`; Browser Harness
     recording `phase6-download-fallback` with a parsed downloaded HTML
     artifact.
-- [ ] Add browser recovery snapshot in IndexedDB.
+- [x] Add browser recovery snapshot in IndexedDB.
+  - Strict complete recovery projects are stored by project ID after 750 ms of
+    dirty-state inactivity. Returning to the saved baseline or completing a
+    primary save removes the record.
+  - Startup validates the record and offers recover/discard only when its audit
+    timestamp is newer. Corrupt and mismatched records are deleted without
+    partial loading.
+  - Main files: `src/project/recoveryStore.ts`,
+    `src/project/recoveryStore.test.ts`, `src/project/startupRecovery.ts`,
+    `src/project/startupRecovery.test.ts`, `src/main.tsx`, `src/App.tsx`,
+    `src/App.test.tsx`.
+  - Tests: `bun run test -- src/project/recoveryStore.test.ts
+    src/project/startupRecovery.test.ts src/App.test.tsx`; `bunx tsc -b`;
+    `bun run check`; Browser Harness recording `phase6-indexeddb-recovery`
+    with the real stored project ID, final filename template, and newer audit.
 - [ ] Verify a saved HTML reopens with no network access and restores state.
 - [ ] Verify generated outputs are not embedded in the project HTML.
 

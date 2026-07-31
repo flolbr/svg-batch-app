@@ -136,11 +136,21 @@ After meaningful edits, debounce a recovery snapshot into IndexedDB.
 
 Recovery is not the primary save.
 
+Recovery records are strict complete projects keyed by project ID. The first
+render establishes the clean baseline; later meaningful state changes debounce
+for 750 ms. Returning to the saved baseline or completing a primary save
+deletes the recovery record.
+
 On startup:
 
 - compare saved project audit time with recovery time;
 - offer recovery only when it is newer;
 - allow discard.
+
+Startup validates the matching record before comparison. A native confirmation
+keeps startup independent from React; accepting loads the newer snapshot and
+declining deletes it. Missing, stale, mismatched, and corrupt records never
+partially load.
 
 ## Single-file build
 

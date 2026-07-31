@@ -10,9 +10,14 @@ import {
 } from "@testing-library/react";
 import JSZip from "jszip";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { App, ROW_VIRTUALIZATION_THRESHOLD } from "./App";
+import {
+  App,
+  PROJECT_RECOVERY_DEBOUNCE_MS,
+  ROW_VIRTUALIZATION_THRESHOLD,
+} from "./App";
 import { loadEmbeddedProject } from "./project/loadProject";
 import type { Project } from "./project/projectSchema";
+import * as recoveryStore from "./project/recoveryStore";
 import { initialPanelWeights, useAppStore } from "./store";
 
 class ResizeObserverMock {
@@ -355,6 +360,59 @@ describe("App", () => {
           .revokeObjectURL;
       }
     }
+  });
+
+  it("debounces dirty recovery snapshots and clears them after reverting", async () => {
+    const loadedProject = project();
+    useAppStore.setState({ project: loadedProject });
+    const saveRecovery = vi
+      .spyOn(recoveryStore, "saveRecoveryProject")
+      .mockResolvedValue(undefined);
+    const deleteRecovery = vi
+      .spyOn(recoveryStore, "deleteRecoveryProject")
+      .mockResolvedValue(undefined);
+
+    render(
+      <MantineProvider>
+        <App projectDocument={cleanProjectDocument()} />
+      </MantineProvider>,
+    );
+
+    const filenameTemplate = screen.getByRole("textbox", {
+      name: "Filename template",
+    });
+    fireEvent.change(filenameTemplate, {
+      target: { value: "cards-{row}" },
+    });
+
+    await waitFor(
+      () =>
+        expect(
+          saveRecovery.mock.calls.some(
+            ([snapshot]) =>
+              snapshot.exportSettings.filenameTemplate === "cards-{row}",
+          ),
+        ).toBe(true),
+      { timeout: PROJECT_RECOVERY_DEBOUNCE_MS + 2_000 },
+    );
+    const finalRecovery = saveRecovery.mock.calls.find(
+      ([snapshot]) =>
+        snapshot.exportSettings.filenameTemplate === "cards-{row}",
+    )![0];
+    expect(finalRecovery).toMatchObject({
+      projectId: "project-1",
+      exportSettings: { filenameTemplate: "cards-{row}" },
+    });
+    expect(finalRecovery.audit.updatedAt).not.toBe(
+      loadedProject.audit.updatedAt,
+    );
+
+    fireEvent.change(filenameTemplate, {
+      target: { value: "row-{row}" },
+    });
+    await waitFor(() =>
+      expect(deleteRecovery).toHaveBeenCalledWith("project-1"),
+    );
   });
 
   it("shows row-grouped validation issues and clears stale results", async () => {
