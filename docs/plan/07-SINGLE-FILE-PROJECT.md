@@ -126,6 +126,10 @@ Fallback:
 - trigger download;
 - revoke URL.
 
+When the picker is unavailable, the same validated HTML is downloaded with the
+sanitized project filename. The short-lived object URL is revoked even if the
+browser click fails.
+
 ## Recovery
 
 After meaningful edits, debounce a recovery snapshot into IndexedDB.

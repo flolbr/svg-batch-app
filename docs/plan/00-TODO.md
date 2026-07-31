@@ -561,7 +561,17 @@ Only one implementation item should normally be `[-]`.
     src/project/serializeProjectHtml.test.ts src/App.test.tsx`;
     `bunx tsc -b`; `bun run check`; Browser Harness recording
     `phase6-file-save`.
-- [ ] Add download fallback.
+- [x] Add download fallback.
+  - Browsers without `showSaveFilePicker` download the same validated project
+    HTML through a short-lived Blob URL and sanitized project filename.
+  - The object URL is revoked after the click and also when the click throws.
+  - Main files: `src/project/downloadProjectFile.ts`,
+    `src/project/downloadProjectFile.test.ts`, `src/App.tsx`,
+    `src/App.test.tsx`.
+  - Tests: `bun run test -- src/project/downloadProjectFile.test.ts
+    src/App.test.tsx`; `bunx tsc -b`; `bun run check`; Browser Harness
+    recording `phase6-download-fallback` with a parsed downloaded HTML
+    artifact.
 - [ ] Add browser recovery snapshot in IndexedDB.
 - [ ] Verify a saved HTML reopens with no network access and restores state.
 - [ ] Verify generated outputs are not embedded in the project HTML.

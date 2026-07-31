@@ -101,6 +101,7 @@ import { createZipExport, downloadZipExport } from "./export/zipExport";
 import { getMappingStatus } from "./mappings/mappingStatus";
 import type { ValidationIssue } from "./mappings/validation";
 import { createProjectSnapshot } from "./project/createProjectSnapshot";
+import { downloadProjectHtml } from "./project/downloadProjectFile";
 import {
   saveProjectWithFilePicker,
   type ProjectFileHandle,
@@ -854,15 +855,7 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
 
   async function saveProject() {
     const picker = showSaveFilePicker ?? browserSaveFilePicker();
-    if (!project || !picker) {
-      notifications.show({
-        color: "orange",
-        message:
-          "Direct file saving is not available in this browser. Download fallback is not implemented yet.",
-        title: "Project was not saved",
-      });
-      return;
-    }
+    if (!project) return;
 
     setIsSavingProject(true);
     try {
@@ -885,17 +878,26 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
         cleanProjectDocumentRef.current!,
         snapshot,
       );
-      projectFileHandleRef.current = await saveProjectWithFilePicker({
-        html,
-        suggestedName: projectHtmlFileName(project.name),
-        existingHandle: projectFileHandleRef.current ?? undefined,
-        showSaveFilePicker: picker,
-      });
+      const filename = projectHtmlFileName(project.name);
+      if (picker) {
+        projectFileHandleRef.current = await saveProjectWithFilePicker({
+          html,
+          suggestedName: filename,
+          existingHandle: projectFileHandleRef.current ?? undefined,
+          showSaveFilePicker: picker,
+        });
+      } else {
+        downloadProjectHtml(html, filename);
+      }
       useAppStore.setState({ project: snapshot });
       notifications.show({
         color: "green",
-        message: "The self-contained project HTML was written successfully.",
-        title: `${project.name} saved`,
+        message: picker
+          ? "The self-contained project HTML was written successfully."
+          : "The self-contained project HTML download has started.",
+        title: picker
+          ? `${project.name} saved`
+          : `${project.name} download started`,
       });
     } catch (error) {
       if (!isPickerCancellation(error)) {

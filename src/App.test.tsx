@@ -288,6 +288,75 @@ describe("App", () => {
     expect(useAppStore.getState().project?.audit).toEqual(loadedProject.audit);
   });
 
+  it("downloads project HTML when the file picker is unavailable", async () => {
+    const user = userEvent.setup();
+    useAppStore.setState({ project: project() });
+    const blobs: Blob[] = [];
+    const downloadedNames: string[] = [];
+    const originalCreateObjectUrl = URL.createObjectURL;
+    const originalRevokeObjectUrl = URL.revokeObjectURL;
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: vi.fn((blob: Blob) => {
+        blobs.push(blob);
+        return "blob:project-download";
+      }),
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: vi.fn(),
+    });
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      downloadedNames.push(this.download);
+    });
+
+    try {
+      render(
+        <MantineProvider>
+          <App projectDocument={cleanProjectDocument()} />
+        </MantineProvider>,
+      );
+
+      await user.click(screen.getByRole("button", { name: "Save project" }));
+      await waitFor(() => expect(downloadedNames).toEqual(["Member cards.html"]));
+
+      expect(blobs).toHaveLength(1);
+      expect(blobs[0].type).toBe("text/html;charset=utf-8");
+      const savedDocument = new DOMParser().parseFromString(
+        await blobs[0].text(),
+        "text/html",
+      );
+      expect(loadEmbeddedProject(savedDocument)).toMatchObject({
+        success: true,
+        project: { projectId: "project-1" },
+      });
+      expect(URL.revokeObjectURL).toHaveBeenCalledExactlyOnceWith(
+        "blob:project-download",
+      );
+    } finally {
+      if (originalCreateObjectUrl) {
+        Object.defineProperty(URL, "createObjectURL", {
+          configurable: true,
+          value: originalCreateObjectUrl,
+        });
+      } else {
+        delete (URL as { createObjectURL?: typeof URL.createObjectURL })
+          .createObjectURL;
+      }
+      if (originalRevokeObjectUrl) {
+        Object.defineProperty(URL, "revokeObjectURL", {
+          configurable: true,
+          value: originalRevokeObjectUrl,
+        });
+      } else {
+        delete (URL as { revokeObjectURL?: typeof URL.revokeObjectURL })
+          .revokeObjectURL;
+      }
+    }
+  });
+
   it("shows row-grouped validation issues and clears stale results", async () => {
     const user = userEvent.setup();
     const downloadClick = vi.spyOn(HTMLAnchorElement.prototype, "click");
