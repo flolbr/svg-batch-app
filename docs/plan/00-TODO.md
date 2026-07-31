@@ -488,7 +488,17 @@ Only one implementation item should normally be `[-]`.
     src/App.test.tsx`; `bunx tsc -b`; `bun run check`; Browser Harness
     canonical nine-row PDF check with visible `1/9` progress, an available
     Cancel control, confirmed cancellation, and no downloaded archive.
-- [ ] Keep batch processing sequential initially. Add concurrency only if measured.
+- [x] Keep batch processing sequential initially. Add concurrency only if measured.
+  - `runExportBatch` uses one ordered loop and awaits each row creator before
+    advancing. No worker, `Promise.all`, or alternate concurrent path exists.
+  - The runner test holds the first creator open and proves the second cannot
+    start until it finishes, while retaining input/output/progress order.
+  - Add concurrency only after a measured export bottleneck justifies the extra
+    cancellation, ordering, and memory complexity.
+  - Main files: `src/export/runExportBatch.ts`,
+    `src/export/runExportBatch.test.ts`, `docs/plan/10-DECISIONS.md`.
+  - Tests: `bun run test -- src/export/runExportBatch.test.ts`;
+    `bunx tsc -b`; `bun run check`.
 - [ ] Add filename sanitation and collision rules.
 
 ## Phase 6 — Single-file project save

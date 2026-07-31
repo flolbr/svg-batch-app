@@ -2,6 +2,14 @@
 
 Keep this file concise. Record decisions, not discussion.
 
+## 2026-07-31
+
+### Batch execution
+
+Keep row export sequential. Each row finishes before the next starts.
+
+Add concurrency only after measurement shows a material bottleneck.
+
 ## 2026-07-30
 
 ### One self-contained HTML project
