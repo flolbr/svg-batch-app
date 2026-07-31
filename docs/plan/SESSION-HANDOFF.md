@@ -4,7 +4,7 @@ Last updated: 2026-07-31
 
 ## Current task
 
-No implementation task is active. Phase 5 export execution controls are complete.
+No implementation task is active. Phase 5 sequential execution is confirmed.
 
 ## What works
 
@@ -265,38 +265,30 @@ No implementation task is active. Phase 5 export execution controls are complete
 
 ## What remains
 
-The explicit sequential-processing TODO is next.
+Filename sanitation and collision rules are next.
 
 ## Next concrete step
 
 Continue `Phase 5 — Validation and export` in `00-TODO.md`:
 
-1. mark “Keep batch processing sequential initially. Add concurrency only if
-   measured” `[-]`;
-2. confirm the runner's no-overlap test and implementation are sufficient
-   evidence without adding another abstraction or worker path;
-3. record the decision and move to filename sanitation/collision rules.
+1. mark “Add filename sanitation and collision rules” `[-]`;
+2. derive requested names without adding a general expression language, then
+   sanitize and allocate deterministic suffixes in worksheet order;
+3. pass requested names into validation and preserve requested versus actual
+   names in the manifest.
 
 ## Files changed
 
-- `src/export/runExportBatch.ts`
-- `src/export/runExportBatch.test.ts`
-- `src/App.tsx`
-- `src/App.test.tsx`
 - `docs/plan/00-TODO.md`
-- `docs/plan/06-EXPORT-AND-VALIDATION.md`
+- `docs/plan/10-DECISIONS.md`
 - `docs/plan/SESSION-HANDOFF.md`
 
 ## Tests run
 
-- `bun run test -- src/export/runExportBatch.test.ts src/App.test.tsx`
+- `bun run test -- src/export/runExportBatch.test.ts`
 - `bunx tsc -b`
 - `bun run check`
-- Browser Harness canonical nine-row PDF check under moderate Chrome CPU
-  throttling with visible `1/9` progress, an available Cancel control,
-  confirmed cancellation, and no downloaded archive. Recording:
-  `/home/flo/.config/browser-harness/agent-workspace/recordings/export-controls-cancel-confirmed`.
 
-## Latest substantive commit
+## Latest commit
 
-`ce26072 feat: add export execution controls`
+`bd213d7 docs: confirm sequential export`
