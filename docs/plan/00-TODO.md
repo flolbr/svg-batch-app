@@ -428,7 +428,20 @@ Only one implementation item should normally be `[-]`.
     src/export/svgExport.test.ts src/App.test.tsx`; `bunx tsc -b`;
     `bun run check`; Browser Harness canonical fixture check for a valid
     `row-1.pdf`, one 1200 × 800 pt page, and the validated footer state.
-- [ ] Bundle multiple outputs with JSZip.
+- [x] Bundle multiple outputs with JSZip.
+  - A single generated SVG or PDF keeps its direct download. Two or more files
+    are added to `svg-batch-export.zip` in worksheet order with their existing
+    filenames and exact text or binary contents.
+  - ZIP creation is independent of its Blob/object-URL download boundary and
+    accepts both SVG strings and PDF buffers without mutating them.
+  - Main files: `src/export/zipExport.ts`,
+    `src/export/zipExport.test.ts`, `src/App.tsx`, `src/App.test.tsx`.
+  - Tests: `bun run test -- src/export/zipExport.test.ts
+    src/export/svgExport.test.ts src/export/pdfExport.test.ts src/App.test.tsx`;
+    `bunx tsc -b`; `bun run check`; Browser Harness canonical fixture check for
+    one `svg-batch-export.zip` containing ordered `row-1.svg` and `row-2.svg`
+    files with their expected XML declarations/content and a clean validation
+    footer.
 - [ ] Export selected source columns as CSV.
 - [ ] Add `manifest.json` with requested name, actual name, status, and warnings.
 - [ ] Add progress, cancel, continue-on-error, and retry-failed controls.

@@ -8,6 +8,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import JSZip from "jszip";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App, ROW_VIRTUALIZATION_THRESHOLD } from "./App";
 import { initialPanelWeights, useAppStore } from "./store";
@@ -283,10 +284,14 @@ describe("App", () => {
       act(() => useAppStore.getState().selectRows(rows.map((row) => row.id)));
       await user.click(screen.getByRole("button", { name: "Export selected" }));
 
-      expect(downloadedNames).toEqual(["row-1.svg", "row-2.svg"]);
-      expect(objectUrls).toHaveLength(2);
-      expect(objectUrls[0].type).toBe("image/svg+xml");
-      expect(await objectUrls[0].text()).toContain(
+      await waitFor(() =>
+        expect(downloadedNames).toEqual(["svg-batch-export.zip"]),
+      );
+      expect(objectUrls).toHaveLength(1);
+      expect(objectUrls[0].type).toBe("application/zip");
+      const archive = await JSZip.loadAsync(await objectUrls[0].arrayBuffer());
+      expect(Object.keys(archive.files)).toEqual(["row-1.svg", "row-2.svg"]);
+      expect(await archive.file("row-1.svg")!.async("string")).toContain(
         '<rect id="shape" width="120" height="80"/>',
       );
       expect(screen.getByText(/Validated, no issues$/)).toBeInTheDocument();

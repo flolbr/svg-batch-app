@@ -171,6 +171,14 @@ Until filename rules are complete, requested PDF names are
 `row-{worksheet position}.pdf`. Multiple PDFs remain direct downloads until
 the ZIP task replaces that browser-facing behavior.
 
+### ZIP bundling
+
+Exactly one generated SVG or PDF keeps its individual browser download. When
+an export produces two or more files, JSZip writes them to
+`svg-batch-export.zip` in worksheet order using their existing filenames and
+exact text or binary contents. ZIP creation remains separate from the small
+Blob/object-URL download boundary.
+
 ## Batch execution
 
 Start sequentially:

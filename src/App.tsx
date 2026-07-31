@@ -86,6 +86,7 @@ import {
 import { createRowSearchIndex, searchRows } from "./data/searchRows";
 import { createPdfExportFiles, downloadPdfFile } from "./export/pdfExport";
 import { createSvgExportFiles, downloadSvgFile } from "./export/svgExport";
+import { createZipExport, downloadZipExport } from "./export/zipExport";
 import { getMappingStatus } from "./mappings/mappingStatus";
 import { type PanelWeights, useAppStore } from "./store";
 import { importSvgFile, type SvgSourceStatus } from "./svg/importSvg";
@@ -759,9 +760,19 @@ export function App() {
         svg: row.svg,
       }));
       if (exportFormat === "pdf") {
-        (await createPdfExportFiles(requests)).forEach(downloadPdfFile);
+        const files = await createPdfExportFiles(requests);
+        if (files.length === 1) {
+          downloadPdfFile(files[0]);
+        } else {
+          downloadZipExport(await createZipExport(files));
+        }
       } else {
-        createSvgExportFiles(requests).forEach(downloadSvgFile);
+        const files = createSvgExportFiles(requests);
+        if (files.length === 1) {
+          downloadSvgFile(files[0]);
+        } else {
+          downloadZipExport(await createZipExport(files));
+        }
       }
     } catch (error) {
       notifications.show({
