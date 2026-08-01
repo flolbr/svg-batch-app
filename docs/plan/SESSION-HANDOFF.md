@@ -1,10 +1,31 @@
 # Session handoff
 
-Last updated: 2026-07-31
+Last updated: 2026-08-01
 
 ## Current task
 
-Phase 6 is complete. Stop before Phase 7.
+Phase 7 local and HTTPS linked-SVG reload is complete. The Drive-linked SVG
+item is blocked until the Phase 8 hosted Drive adapter exists.
+
+Latest implementation commit: `a7bb7fc feat: add linked SVG reload`.
+
+## Latest milestone
+
+- Local SVG links use a File System Access handle stored in IndexedDB under a
+  project-scoped portable reference; project HTML keeps only the reference.
+- HTTPS links fetch without credentials and surface CORS/network failures while
+  retaining the accepted embedded snapshot.
+- Manual reload validates the candidate, compares SHA-256 hashes, keeps only
+  compatible mappings, reports missing/incompatible/new objects, and offers one
+  undo until the next successful project save.
+- Main files: `src/svg/linkedSvg.ts`, `src/App.tsx`, `src/store.ts`.
+- Tests: `bun run test -- src/svg/linkedSvg.test.ts src/store.test.ts` (19
+  passed); `bun run verify:single` (passed). `bun run check` starts cleanly but
+  this execution environment stops reporting during Vitest's parallel run,
+  before its final summary.
+
+Next concrete step: implement the Phase 8 hosted Google Drive adapter, then
+connect its SVG read flow to the existing Drive-source reload branch.
 
 ## What works
 
