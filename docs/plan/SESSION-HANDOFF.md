@@ -8,7 +8,7 @@ Phase 8 hosted Google Drive adapter is complete. Phase 9 release checks are
 next; real Drive acceptance requires configured Google deployment identifiers
 and allowed localhost/production origins.
 
-Latest implementation commit: `1bcfa35 fix: harden linked SVG reload`.
+Latest implementation commit: `5f6fe65 feat: add hosted Google Drive adapter`.
 
 ## Latest milestone
 
@@ -363,4 +363,4 @@ acceptance checks.
 
 ## Latest commit
 
-`1bcfa35 fix: harden linked SVG reload`
+`5f6fe65 feat: add hosted Google Drive adapter`
