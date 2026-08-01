@@ -203,6 +203,89 @@ describe("useAppStore", () => {
     expect(useAppStore.getState().selection.svgObjectId).toBe("badge");
   });
 
+  it("keeps one linked template update in memory and can undo it", () => {
+    useAppStore.getState().setProject(
+      project({
+        template: {
+          fileName: "before.svg",
+          fileSize: 1,
+          acceptedSvg:
+            '<svg xmlns="http://www.w3.org/2000/svg"><text id="name">Before</text></svg>',
+          sourceStatus: "embedded",
+          selectedObjectId: "name",
+        },
+        mappings: [
+          {
+            id: "mapping-name",
+            targetId: "name",
+            columnId: "member-name",
+            type: "text",
+            fit: "keep",
+          },
+        ],
+      }),
+    );
+    const before = useAppStore.getState();
+    const next = {
+      ...before.sources.svg!,
+      fileName: "after.svg",
+      acceptedSvg:
+        '<svg xmlns="http://www.w3.org/2000/svg"><text id="name">After</text></svg>',
+      sourceStatus: "linked" as const,
+    };
+
+    before.applyLinkedSvgUpdate({
+      svg: next,
+      mappings: before.mappings,
+      source: {
+        id: "svg-source",
+        kind: "svg",
+        location: "linked",
+        reference: "local-svg:project-1",
+        fileName: "after.svg",
+        fileSize: 1,
+      },
+      oldHash: "before-hash",
+      newHash: "after-hash",
+      missingTargetIds: [],
+    });
+
+    expect(useAppStore.getState().sources.svg?.fileName).toBe("after.svg");
+    expect(
+      useAppStore.getState().project?.audit.lastTemplateUpdate,
+    ).toMatchObject({
+      oldHash: "before-hash",
+      newHash: "after-hash",
+    });
+    expect(useAppStore.getState().sources.previousTemplate?.svg.fileName).toBe(
+      "before.svg",
+    );
+
+    useAppStore.getState().undoTemplateUpdate();
+
+    expect(useAppStore.getState().sources.svg?.fileName).toBe("before.svg");
+    expect(useAppStore.getState().mappings).toEqual(before.mappings);
+    expect(useAppStore.getState().sources.previousTemplate).toBeUndefined();
+
+    before.applyLinkedSvgUpdate({
+      svg: next,
+      mappings: before.mappings,
+      source: {
+        id: "svg-source",
+        kind: "svg",
+        location: "linked",
+        reference: "local-svg:project-1",
+        fileName: "after.svg",
+        fileSize: 1,
+      },
+      oldHash: "before-hash",
+      newHash: "after-hash",
+      missingTargetIds: [],
+    });
+    useAppStore.getState().clearTemplateUpdateUndo();
+    expect(useAppStore.getState().sources.previousTemplate).toBeUndefined();
+  });
+
   it("adds, replaces, and removes one mapping per SVG target", () => {
     const store = useAppStore.getState();
     const sourcesBefore = store.sources;
@@ -326,8 +409,9 @@ describe("useAppStore", () => {
     });
 
     expect(
-      useAppStore.getState().sources.spreadsheet?.data.rows[0]
-        ?.displayedValues["col-0"],
+      useAppStore.getState().sources.spreadsheet?.data.rows[0]?.displayedValues[
+        "col-0"
+      ],
     ).toBe("Ada");
 
     const initialState = useAppStore.getState();
@@ -335,12 +419,13 @@ describe("useAppStore", () => {
     expect(useAppStore.getState()).toBe(initialState);
 
     useAppStore.getState().setSelectedWorksheet("Mapping Guide");
+    expect(useAppStore.getState().sources.spreadsheet?.selectedSheetName).toBe(
+      "Mapping Guide",
+    );
     expect(
-      useAppStore.getState().sources.spreadsheet?.selectedSheetName,
-    ).toBe("Mapping Guide");
-    expect(
-      useAppStore.getState().sources.spreadsheet?.data.rows[0]
-        ?.displayedValues["col-0"],
+      useAppStore.getState().sources.spreadsheet?.data.rows[0]?.displayedValues[
+        "col-0"
+      ],
     ).toBe("Keep IDs stable");
 
     const stateAfterSelection = useAppStore.getState();
@@ -467,13 +552,13 @@ describe("useAppStore", () => {
       workbook,
     });
 
-    useAppStore.getState().setManualRows([
-      { id: "manual-member", values: { "col-0": "Ada" } },
-    ]);
+    useAppStore
+      .getState()
+      .setManualRows([{ id: "manual-member", values: { "col-0": "Ada" } }]);
     useAppStore.getState().setSelectedWorksheet("Plans");
-    useAppStore.getState().setManualRows([
-      { id: "manual-plan", values: { "col-0": "Premium" } },
-    ]);
+    useAppStore
+      .getState()
+      .setManualRows([{ id: "manual-plan", values: { "col-0": "Premium" } }]);
 
     const spreadsheet = useAppStore.getState().sources.spreadsheet;
     expect(spreadsheet?.manualRowsBySheet).toEqual({
@@ -659,7 +744,9 @@ describe("useAppStore", () => {
       memberRowId,
       "manual-member",
     ]);
-    expect(restored?.normalizedDataBySheet.Members.rows[0].id).toBe(memberRowId);
+    expect(restored?.normalizedDataBySheet.Members.rows[0].id).toBe(
+      memberRowId,
+    );
     expect(restored?.columnFiltersBySheet.Members).toEqual([
       {
         type: "text",

@@ -20,7 +20,10 @@ import {
 import type { RowOverride } from "./data/rowOverrides";
 import type { Mapping, Mappings } from "./mappings/schema";
 import type { DataProjectState } from "./project/dataProjectState";
-import type { Project } from "./project/loadProject";
+import type {
+  Project,
+  PersistedSourceReference,
+} from "./project/projectSchema";
 import { restoreImportedSvg, type ImportedSvg } from "./svg/importSvg";
 
 export type PanelWeights = [number, number, number];
@@ -45,6 +48,12 @@ type AppStore = {
   sources: {
     spreadsheet: SpreadsheetSource | null;
     svg: ImportedSvg | null;
+    previousTemplate?: {
+      svg: ImportedSvg;
+      mappings: Mappings;
+      project: Project | null;
+      svgObjectId: string | null;
+    } | null;
   };
   selection: {
     activeRowId: string | null;
@@ -61,6 +70,16 @@ type AppStore = {
   setRowOverrides: (overrides: RowOverride[]) => void;
   setSpreadsheetSource: (spreadsheet: ImportedSpreadsheet) => void;
   setSvgSource: (svg: ImportedSvg) => void;
+  applyLinkedSvgUpdate: (input: {
+    svg: ImportedSvg;
+    mappings: Mappings;
+    source: PersistedSourceReference;
+    oldHash: string;
+    newHash: string;
+    missingTargetIds: string[];
+  }) => void;
+  undoTemplateUpdate: () => void;
+  clearTemplateUpdateUndo: () => void;
   removeMapping: (targetId: string) => void;
   setSvgObjectSelection: (id: string | null) => void;
   setActiveRow: (rowId: RowId | null) => void;
@@ -85,17 +104,17 @@ function getProjectData(spreadsheet: SpreadsheetSource): DataProjectState {
           data: spreadsheet.normalizedDataBySheet[sheetName],
           selectedRowIds: spreadsheet.selectedRowIdsBySheet[sheetName] ?? [],
           filters: spreadsheet.columnFiltersBySheet[sheetName] ?? [],
-          rowOverrides: (
-            spreadsheet.rowOverridesBySheet[sheetName] ?? []
-          ).map((override) => ({
-            rowId: override.rowId,
-            values: Object.fromEntries(
-              Object.entries(override.values).filter(
-                (entry): entry is [string, CellValue] =>
-                  entry[1] !== undefined,
+          rowOverrides: (spreadsheet.rowOverridesBySheet[sheetName] ?? []).map(
+            (override) => ({
+              rowId: override.rowId,
+              values: Object.fromEntries(
+                Object.entries(override.values).filter(
+                  (entry): entry is [string, CellValue] =>
+                    entry[1] !== undefined,
+                ),
               ),
-            ),
-          })),
+            }),
+          ),
           manualRows: spreadsheet.manualRowsBySheet[sheetName] ?? [],
           columnPreferences:
             spreadsheet.columnPreferencesBySheet[sheetName] ??
@@ -243,9 +262,8 @@ export const useAppStore = create<AppStore>()((set) => ({
         ? restoreImportedSvg(project.template)
         : null;
       const selectedRowIds = spreadsheet
-        ? (spreadsheet.selectedRowIdsBySheet[
-            spreadsheet.selectedSheetName
-          ] ?? [])
+        ? (spreadsheet.selectedRowIdsBySheet[spreadsheet.selectedSheetName] ??
+          [])
         : [];
       const svgObjectId =
         project.template?.selectedObjectId &&
@@ -330,17 +348,79 @@ export const useAppStore = create<AppStore>()((set) => ({
       );
     }),
   setSvgSource: (svg) =>
+    set((state) => {
+      const { previousTemplate: _previousTemplate, ...sources } = state.sources;
+      return {
+        mappings: [],
+        selection: { ...state.selection, svgObjectId: null },
+        sources: { ...sources, svg },
+      };
+    }),
+  applyLinkedSvgUpdate: ({
+    svg,
+    mappings,
+    source,
+    oldHash,
+    newHash,
+    missingTargetIds,
+  }) =>
     set((state) => ({
-      mappings: [],
-      selection: {
-        ...state.selection,
-        svgObjectId: null,
-      },
+      mappings,
+      project: state.project
+        ? {
+            ...state.project,
+            sources: [
+              ...state.project.sources.filter(
+                (candidate) => candidate.kind !== "svg",
+              ),
+              source,
+            ],
+            audit: {
+              ...state.project.audit,
+              templateHash: newHash,
+              lastTemplateUpdate: {
+                oldHash,
+                newHash,
+                updatedAt: new Date().toISOString(),
+                missingTargetIds,
+              },
+            },
+          }
+        : null,
+      selection: { ...state.selection, svgObjectId: null },
       sources: {
         ...state.sources,
         svg,
+        previousTemplate: state.sources.svg
+          ? {
+              svg: state.sources.svg,
+              mappings: state.mappings,
+              project: state.project,
+              svgObjectId: state.selection.svgObjectId,
+            }
+          : null,
       },
     })),
+  undoTemplateUpdate: () =>
+    set((state) => {
+      const previous = state.sources.previousTemplate;
+      if (!previous) return state;
+      return {
+        mappings: previous.mappings,
+        project: previous.project,
+        selection: { ...state.selection, svgObjectId: previous.svgObjectId },
+        sources: (() => {
+          const { previousTemplate: _previousTemplate, ...sources } =
+            state.sources;
+          return { ...sources, svg: previous.svg };
+        })(),
+      };
+    }),
+  clearTemplateUpdateUndo: () =>
+    set((state) => {
+      const { previousTemplate: _previousTemplate, ...sources } = state.sources;
+      return { sources };
+    }),
   setMapping: (mapping) =>
     set((state) => {
       const existingIndex = state.mappings.findIndex(

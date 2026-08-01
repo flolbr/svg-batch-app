@@ -42,6 +42,7 @@ import {
   IconSearch,
   IconSettings,
   IconRestore,
+  IconRefresh,
   IconTrash,
   IconUpload,
 } from "@tabler/icons-react";
@@ -115,6 +116,15 @@ import { serializeProjectHtml } from "./project/serializeProjectHtml";
 import type { Project } from "./project/projectSchema";
 import { type PanelWeights, useAppStore } from "./store";
 import { importSvgFile, type SvgSourceStatus } from "./svg/importSvg";
+import {
+  compareTemplateMappings,
+  localSvgReference,
+  readHttpsLinkedSvg,
+  readLocalLinkedSvg,
+  saveLocalSvgHandle,
+  sha256,
+  type LocalSvgFileHandle,
+} from "./svg/linkedSvg";
 import type { SvgTreeNode } from "./svg/buildSvgTree";
 import {
   validateRows,
@@ -140,6 +150,7 @@ type FailedExportRetry = {
 type AppProps = {
   projectDocument?: Document;
   showSaveFilePicker?: ShowSaveProjectFilePicker;
+  showOpenFilePicker?: () => Promise<LocalSvgFileHandle[]>;
 };
 const svgSourceStatusPresentation: Record<
   SvgSourceStatus,
@@ -172,6 +183,28 @@ function browserSaveFilePicker(): ShowSaveProjectFilePicker | undefined {
       showSaveFilePicker?: ShowSaveProjectFilePicker;
     }
   ).showSaveFilePicker?.bind(window);
+}
+
+function browserOpenFilePicker():
+  (() => Promise<LocalSvgFileHandle[]>) | undefined {
+  return (
+    window as unknown as {
+      showOpenFilePicker?: (options: {
+        types: Array<{ accept: Record<string, string[]> }>;
+      }) => Promise<LocalSvgFileHandle[]>;
+    }
+  ).showOpenFilePicker
+    ? () =>
+        (
+          window as unknown as {
+            showOpenFilePicker: (options: {
+              types: Array<{ accept: Record<string, string[]> }>;
+            }) => Promise<LocalSvgFileHandle[]>;
+          }
+        ).showOpenFilePicker({
+          types: [{ accept: { "image/svg+xml": [".svg"] } }],
+        })
+    : undefined;
 }
 
 function isPickerCancellation(error: unknown): boolean {
@@ -311,9 +344,7 @@ function DataRow({
 }) {
   return (
     <Table.Tr
-      aria-rowindex={
-        virtualIndex === undefined ? undefined : virtualIndex + 2
-      }
+      aria-rowindex={virtualIndex === undefined ? undefined : virtualIndex + 2}
       data-index={virtualIndex}
     >
       <Table.Td className="data-table-selection">
@@ -465,7 +496,11 @@ function findSvgNode(
   }
 }
 
-export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
+export function App({
+  projectDocument,
+  showSaveFilePicker,
+  showOpenFilePicker,
+}: AppProps = {}) {
   const workspaceRef = useRef<HTMLElement>(null);
   const dataTableScrollRef = useRef<HTMLDivElement>(null);
   const resizeSession = useRef<ResizeSession | null>(null);
@@ -481,6 +516,8 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
   }
   const [isImportingSpreadsheet, setIsImportingSpreadsheet] = useState(false);
   const [isImportingSvg, setIsImportingSvg] = useState(false);
+  const [linkedSvgUrl, setLinkedSvgUrl] = useState("");
+  const [isReloadingSvg, setIsReloadingSvg] = useState(false);
   const [editingManualRowId, setEditingManualRowId] = useState<string | null>(
     null,
   );
@@ -551,6 +588,16 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
     (state) => state.setSpreadsheetSource,
   );
   const setSvgSource = useAppStore((state) => state.setSvgSource);
+  const applyLinkedSvgUpdate = useAppStore(
+    (state) => state.applyLinkedSvgUpdate,
+  );
+  const undoTemplateUpdate = useAppStore((state) => state.undoTemplateUpdate);
+  const clearTemplateUpdateUndo = useAppStore(
+    (state) => state.clearTemplateUpdateUndo,
+  );
+  const previousTemplate = useAppStore(
+    (state) => state.sources.previousTemplate,
+  );
   const removeMapping = useAppStore((state) => state.removeMapping);
   const setSvgObjectSelection = useAppStore(
     (state) => state.setSvgObjectSelection,
@@ -579,11 +626,7 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
     return Object.fromEntries(
       (svg?.targets ?? []).map((target) => [
         target.id,
-        getMappingStatus(
-          target,
-          mappingsByTargetId.get(target.id),
-          columnIds,
-        ),
+        getMappingStatus(target, mappingsByTargetId.get(target.id), columnIds),
       ]),
     );
   }, [mappings, sourceColumns, svg?.targets]);
@@ -690,9 +733,7 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
     ? previewRowIds.indexOf(activeRowId)
     : -1;
   const activePreviewRow =
-    activePreviewRowIndex >= 0
-      ? selectedRows[activePreviewRowIndex]
-      : null;
+    activePreviewRowIndex >= 0 ? selectedRows[activePreviewRowIndex] : null;
   const previewSvg = useMemo(() => {
     if (!svg || !activePreviewRow) return svg?.acceptedSvg ?? null;
 
@@ -725,8 +766,7 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
     getRowId: (row) => row.id,
   });
   const dataRows = dataTable.getRowModel().rows;
-  const shouldVirtualizeRows =
-    dataRows.length > ROW_VIRTUALIZATION_THRESHOLD;
+  const shouldVirtualizeRows = dataRows.length > ROW_VIRTUALIZATION_THRESHOLD;
   const rowVirtualizer = useVirtualizer({
     count: dataRows.length,
     enabled: shouldVirtualizeRows,
@@ -756,8 +796,7 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
   const topSpacerHeight = virtualRows[0]?.start ?? 0;
   const bottomSpacerHeight =
     virtualRows.length > 0
-      ? rowVirtualizer.getTotalSize() -
-        virtualRows[virtualRows.length - 1].end
+      ? rowVirtualizer.getTotalSize() - virtualRows[virtualRows.length - 1].end
       : 0;
 
   useEffect(() => {
@@ -1011,6 +1050,7 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
       recoveryWasDirtyRef.current = false;
       void deleteRecoveryProject(snapshot.projectId).catch(() => {});
       useAppStore.setState({ project: snapshot });
+      clearTemplateUpdateUndo();
       notifications.show({
         color: "green",
         message: picker
@@ -1178,11 +1218,7 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
       return;
     }
 
-    await exportRows(
-      rows,
-      failedExportRetry.settings,
-      true,
-    );
+    await exportRows(rows, failedExportRetry.settings, true);
   }
 
   async function handleSpreadsheetFile(event: ChangeEvent<HTMLInputElement>) {
@@ -1241,6 +1277,147 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
       });
     } finally {
       setIsImportingSvg(false);
+    }
+  }
+
+  async function applyLinkedTemplate(
+    nextSvg: NonNullable<typeof svg>,
+    source: NonNullable<Project["sources"][number]>,
+  ) {
+    if (!svg || !project) {
+      throw new Error("Import an SVG into a saved project before linking it.");
+    }
+    const comparison = compareTemplateMappings(svg, nextSvg, mappings);
+    const [oldHash, newHash] = await Promise.all([
+      sha256(svg.acceptedSvg),
+      sha256(nextSvg.acceptedSvg),
+    ]);
+    applyLinkedSvgUpdate({
+      svg: nextSvg,
+      mappings: comparison.preserved,
+      source: {
+        ...source,
+        fileName: nextSvg.fileName,
+        fileSize: nextSvg.fileSize,
+      },
+      oldHash,
+      newHash,
+      missingTargetIds: comparison.missingTargetIds,
+    });
+    const discarded =
+      comparison.missingTargetIds.length +
+      comparison.incompatibleTargetIds.length;
+    notifications.show({
+      color: discarded ? "orange" : "green",
+      title: oldHash === newHash ? "Linked SVG checked" : "Linked SVG updated",
+      message: `${comparison.preserved.length} mapping${comparison.preserved.length === 1 ? "" : "s"} preserved${discarded ? `; ${comparison.missingTargetIds.length} missing and ${comparison.incompatibleTargetIds.length} incompatible.` : "."} ${comparison.newTargetIds.length} new object${comparison.newTargetIds.length === 1 ? "" : "s"}.`,
+    });
+  }
+
+  async function linkLocalSvg() {
+    if (!project) {
+      notifications.show({
+        color: "orange",
+        title: "Save a project first",
+        message:
+          "A local link needs a project ID for its portable lookup reference.",
+      });
+      return;
+    }
+    const picker = showOpenFilePicker ?? browserOpenFilePicker();
+    if (!picker) {
+      notifications.show({
+        color: "orange",
+        title: "Local linking unavailable",
+        message: "This browser does not support the File System Access API.",
+      });
+      return;
+    }
+    try {
+      setIsReloadingSvg(true);
+      const handle = (await picker())[0];
+      if (!handle) return;
+      const reference = localSvgReference(project.projectId);
+      await saveLocalSvgHandle(reference, handle);
+      await applyLinkedTemplate(await readLocalLinkedSvg(reference), {
+        id: "svg-source",
+        kind: "svg",
+        location: "linked",
+        reference,
+        fileName: "linked.svg",
+        fileSize: 0,
+      });
+    } catch (error) {
+      if (!isPickerCancellation(error))
+        notifications.show({
+          color: "red",
+          title: "Local SVG link failed",
+          message:
+            error instanceof Error
+              ? error.message
+              : "The SVG could not be linked.",
+        });
+    } finally {
+      setIsReloadingSvg(false);
+    }
+  }
+
+  async function linkHttpsSvg() {
+    try {
+      const url = new URL(linkedSvgUrl);
+      if (url.protocol !== "https:")
+        throw new Error("Linked SVG URLs must use HTTPS.");
+      setIsReloadingSvg(true);
+      await applyLinkedTemplate(await readHttpsLinkedSvg(url.toString()), {
+        id: "svg-source",
+        kind: "svg",
+        location: "https",
+        url: url.toString(),
+        fileName: "linked.svg",
+        fileSize: 0,
+      });
+      setLinkedSvgUrl("");
+    } catch (error) {
+      notifications.show({
+        color: "red",
+        title: "HTTPS SVG link failed",
+        message:
+          error instanceof Error
+            ? error.message
+            : "The SVG could not be linked.",
+      });
+    } finally {
+      setIsReloadingSvg(false);
+    }
+  }
+
+  async function reloadLinkedSvg() {
+    const source = project?.sources.find(
+      (candidate) => candidate.kind === "svg",
+    );
+    if (!source || source.location === "embedded") return;
+    try {
+      setIsReloadingSvg(true);
+      if (source.location === "linked") {
+        await applyLinkedTemplate(
+          await readLocalLinkedSvg(source.reference),
+          source,
+        );
+      } else if (source.location === "https") {
+        await applyLinkedTemplate(await readHttpsLinkedSvg(source.url), source);
+      } else if (source.location === "drive") {
+        throw new Error(
+          "Google Drive SVG reload is available when the hosted Drive adapter is configured.",
+        );
+      }
+    } catch (error) {
+      notifications.show({
+        color: "orange",
+        title: "Linked SVG unavailable",
+        message: `${error instanceof Error ? error.message : "Reload failed."} The embedded SVG remains active.`,
+      });
+    } finally {
+      setIsReloadingSvg(false);
     }
   }
 
@@ -1319,11 +1496,7 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
       measuredWidths.reduce((total, width) => total + width, 0) > 0
         ? measuredWidths
         : panelWeights.map((weight) => weight * 12);
-    resizePanelPair(
-      dividerIndex,
-      widths,
-      event.key === "ArrowLeft" ? -24 : 24,
-    );
+    resizePanelPair(dividerIndex, widths, event.key === "ArrowLeft" ? -24 : 24);
   }
 
   const panelTotal = panelWeights.reduce((total, weight) => total + weight, 0);
@@ -1396,6 +1569,34 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
                   type="file"
                 />
               </Button>
+              <Button
+                disabled={!project || isReloadingSvg}
+                leftSection={<IconFolderOpen size={16} />}
+                onClick={() => void linkLocalSvg()}
+                variant="subtle"
+              >
+                Link local SVG
+              </Button>
+              {svg?.sourceStatus === "linked" && (
+                <Button
+                  disabled={isReloadingSvg}
+                  leftSection={<IconRefresh size={16} />}
+                  loading={isReloadingSvg}
+                  onClick={() => void reloadLinkedSvg()}
+                  variant="subtle"
+                >
+                  Reload linked SVG
+                </Button>
+              )}
+              {previousTemplate && (
+                <Button
+                  leftSection={<IconRestore size={16} />}
+                  onClick={undoTemplateUpdate}
+                  variant="subtle"
+                >
+                  Undo template update
+                </Button>
+              )}
               <Button
                 variant="default"
                 leftSection={<IconFolderOpen />}
@@ -1732,14 +1933,28 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
             <Text size="sm" c={svg ? "blue" : "dimmed"} fw={svg ? 600 : 400}>
               {svg ? svg.fileName : "No SVG loaded"}
             </Text>
+            <Group align="end" gap="xs" wrap="nowrap">
+              <TextInput
+                aria-label="HTTPS SVG URL"
+                disabled={!project || isReloadingSvg}
+                onChange={(event) => setLinkedSvgUrl(event.currentTarget.value)}
+                placeholder="https://example.com/template.svg"
+                value={linkedSvgUrl}
+              />
+              <Button
+                disabled={!project || !linkedSvgUrl.trim() || isReloadingSvg}
+                onClick={() => void linkHttpsSvg()}
+                variant="default"
+              >
+                Link HTTPS
+              </Button>
+            </Group>
             <TextInput
               aria-label="Search SVG objects"
               disabled={!svg}
               placeholder="Search objects..."
               leftSection={<IconSearch size={16} />}
-              onChange={(event) =>
-                setSvgSearchQuery(event.currentTarget.value)
-              }
+              onChange={(event) => setSvgSearchQuery(event.currentTarget.value)}
               value={svgSearchQuery}
             />
 
@@ -1943,9 +2158,7 @@ export function App({ projectDocument, showSaveFilePicker }: AppProps = {}) {
           <TextInput
             aria-label="Filename template"
             disabled={isExporting}
-            onChange={(event) =>
-              setFilenameTemplate(event.currentTarget.value)
-            }
+            onChange={(event) => setFilenameTemplate(event.currentTarget.value)}
             placeholder="row-{row}"
             value={filenameTemplate}
             w={180}

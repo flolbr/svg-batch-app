@@ -621,17 +621,22 @@ Only one implementation item should normally be `[-]`.
 
 ## Phase 7 — Linked SVG manual reload
 
-- [ ] Link a local SVG with a file handle.
-- [ ] Store the handle in IndexedDB and a portable lookup reference in project data.
-- [ ] Add remote HTTPS SVG link support with CORS-aware errors.
-- [ ] Add Google Drive SVG link support through the Drive adapter.
-- [ ] Implement the manual “Reload linked SVG” flow.
-- [ ] Compare SHA-256 hashes.
-- [ ] Validate and compare mappings before applying.
-- [ ] Show preserved, missing, incompatible, and new objects.
-- [ ] Keep the previous SVG in memory until the project is saved.
-- [ ] Add “Undo template update”.
-- [ ] Fall back to the embedded SVG when the link is unavailable.
+- [x] Link a local SVG with a file handle.
+- [x] Store the handle in IndexedDB and a portable lookup reference in project data.
+- [x] Add remote HTTPS SVG link support with CORS-aware errors.
+- [!] Add Google Drive SVG link support through the Drive adapter. Blocked by the
+  Phase 8 hosted Drive adapter.
+- [x] Implement the manual “Reload linked SVG” flow.
+- [x] Compare SHA-256 hashes.
+- [x] Validate and compare mappings before applying.
+- [x] Show preserved, missing, incompatible, and new objects.
+- [x] Keep the previous SVG in memory until the project is saved.
+- [x] Add “Undo template update”.
+- [x] Fall back to the embedded SVG when the link is unavailable.
+  - Main files: `src/svg/linkedSvg.ts`, `src/store.ts`, `src/App.tsx`.
+  - Tests: `bun run test -- src/svg/linkedSvg.test.ts src/store.test.ts`; `bun run verify:single`.
+    `bun run check` was started but this environment ended its parallel Vitest
+    output before a result summary.
 
 ## Phase 8 — Google Drive hosted adapter
 

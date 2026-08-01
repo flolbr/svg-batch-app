@@ -162,6 +162,21 @@ keeps startup independent from React; accepting loads the newer snapshot and
 declining deletes it. Missing, stale, mismatched, and corrupt records never
 partially load.
 
+## Linked SVG reload
+
+A project always retains its accepted embedded SVG snapshot. A local link keeps
+its File System Access handle in IndexedDB under a project-scoped portable
+reference; the project HTML stores only that reference. HTTPS links store their
+HTTPS URL and are fetched without credentials, with a specific CORS/network
+error when the browser cannot read them.
+
+Reload is manual. The candidate SVG is imported through the normal untrusted
+SVG validation path, SHA-256 hashes are compared, and mappings are retained
+only for targets whose IDs and mapping-compatible element types remain. The UI
+reports retained mappings plus missing, incompatible, and new targets. The
+previous template and mappings remain in memory for one undo until save; a
+failed or unavailable link continues to use the embedded snapshot.
+
 ## Single-file build
 
 `vite build --mode single` must emit one HTML file with no local JS or CSS dependencies.
