@@ -11,20 +11,25 @@ Latest implementation commit: `a7bb7fc feat: add linked SVG reload`.
 
 ## Latest milestone
 
-- Local SVG links use a File System Access handle stored in IndexedDB under a
-  project-scoped portable reference; project HTML keeps only the reference.
-- HTTPS links fetch without credentials and surface CORS/network failures while
-  retaining the accepted embedded snapshot.
-- Manual reload validates the candidate, compares SHA-256 hashes, keeps only
-  compatible mappings, reports missing/incompatible/new objects, and offers one
-  undo until the next successful project save.
-- Main files: `src/svg/linkedSvg.ts`, `src/App.tsx`, `src/store.ts`.
-- Tests: `bun run test -- src/svg/linkedSvg.test.ts src/store.test.ts` (19
-  passed); `bun run verify:single` (passed). `bun run check` starts cleanly but
-  this execution environment stops reporting during Vitest's parallel run,
-  before its final summary.
+- A valid project can link a local SVG as its first or replacement template.
+  The validated File System Access handle is stored in IndexedDB under a
+  project-scoped portable reference; HTML stores only that reference plus the
+  currently accepted SVG snapshot.
+- HTTPS links accept HTTPS URLs only, fetch with credentials omitted, and show
+  CORS/network errors without replacing the current accepted snapshot.
+- Manual reload validates the candidate, treats identical hashes as a no-op,
+  stores old/new SHA-256 audit hashes for changes, retains only ID- and
+  mapping-type-compatible mappings, names affected target IDs in the SVG panel,
+  and keeps one in-memory undo state. Successful project save or a later source
+  replacement clears that undo state.
+- Main files: `src/svg/linkedSvg.ts`, `src/svg/linkedSvg.test.ts`,
+  `src/App.tsx`, `src/store.ts`, `src/store.test.ts`.
+- Focused tests: `bun run test -- src/App.test.tsx
+  src/svg/linkedSvg.test.ts src/store.test.ts` (58 passed).
+- Full check: `bun run check` (49 test files, 315 tests; self-contained
+  `dist/index.html` verified at 2,296,262 bytes).
 
-Next concrete step: implement the Phase 8 hosted Google Drive adapter, then
+Next concrete step: implement the Phase 8 hosted Google Drive adapter and
 connect its SVG read flow to the existing Drive-source reload branch.
 
 ## What works
@@ -315,28 +320,36 @@ connect its SVG read flow to the existing Drive-source reload branch.
 
 ## What remains
 
-Phase 7 and later remain intentionally unchecked.
+The Drive-linked SVG item is blocked by Phase 8; later items remain unchecked.
 
 ## Next concrete step
 
-Stop here. If work resumes, begin with the first Phase 7 linked-SVG TODO.
+Begin the Phase 8 hosted Google Drive adapter.
 
 ## Files changed
 
 - `docs/plan/00-TODO.md`
 - `docs/plan/05-SVG-AND-MAPPINGS.md`
 - `docs/plan/07-SINGLE-FILE-PROJECT.md`
+- `src/svg/linkedSvg.ts`
+- `src/svg/linkedSvg.test.ts`
+- `src/store.ts`
+- `src/store.test.ts`
 - `src/App.tsx`
 - `src/App.test.tsx`
 
 ## Tests run
 
-- `bun run test -- src/App.test.tsx` (30 tests)
-- `bun run check` (48 test files, 303 tests)
-- Browser Harness recordings `phase6-file-save`,
-  `phase6-download-fallback`, `phase6-indexeddb-recovery`,
-  `phase6-offline-reopen`, and `preview-mapped-row-switch`
+- `bun run test -- src/App.test.tsx src/svg/linkedSvg.test.ts
+src/store.test.ts` (58 tests)
+- `bun run check` (49 test files, 315 tests; verified 2,296,262-byte
+  self-contained `dist/index.html`)
+- Earlier Phase 6 checks: `bun run test -- src/App.test.tsx` (30 tests),
+  `bun run check` (48 test files, 303 tests), and Browser Harness recordings
+  `phase6-file-save`, `phase6-download-fallback`,
+  `phase6-indexeddb-recovery`, `phase6-offline-reopen`, and
+  `preview-mapped-row-switch`
 
 ## Latest commit
 
-`5634d8b test: verify project output exclusion`
+`c2dfa1d docs: update linked SVG handoff`

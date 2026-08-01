@@ -106,6 +106,7 @@ describe("App", () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   beforeEach(() => {
@@ -220,6 +221,45 @@ describe("App", () => {
       })),
     };
     const showSaveFilePicker = vi.fn().mockResolvedValue(handle);
+    const originalSvg = {
+      acceptedSvg:
+        '<svg xmlns="http://www.w3.org/2000/svg"><text id="name">Old</text></svg>',
+      fileName: "old.svg",
+      fileSize: 1,
+      sourceStatus: "embedded" as const,
+      targets: [{ id: "name", tagName: "text" }],
+      tree: [
+        {
+          children: [],
+          id: "name",
+          label: "Name",
+          tagName: "text",
+        },
+      ],
+    };
+    useAppStore.getState().setSvgSource(originalSvg);
+    useAppStore.getState().applyLinkedSvgUpdate({
+      svg: {
+        ...originalSvg,
+        acceptedSvg:
+          '<svg xmlns="http://www.w3.org/2000/svg"><text id="name">New</text></svg>',
+        fileName: "new.svg",
+        sourceStatus: "linked",
+      },
+      mappings: [],
+      source: {
+        id: "svg-source",
+        kind: "svg",
+        location: "https",
+        url: "https://example.test/new.svg",
+        fileName: "new.svg",
+        fileSize: 1,
+      },
+      oldHash: "old-hash",
+      newHash: "new-hash",
+      missingTargetIds: [],
+    });
+    expect(useAppStore.getState().sources.previousTemplate).toBeDefined();
 
     render(
       <MantineProvider>
@@ -232,6 +272,7 @@ describe("App", () => {
 
     await user.click(screen.getByRole("button", { name: "Save project" }));
     await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
+    expect(useAppStore.getState().sources.previousTemplate).toBeUndefined();
 
     expect(showSaveFilePicker).toHaveBeenCalledWith(
       expect.objectContaining({ suggestedName: "Member cards.html" }),
@@ -1218,6 +1259,239 @@ describe("App", () => {
     expect(
       screen.getByRole("button", { name: "Open from Google Drive" }),
     ).toBeDisabled();
+  });
+
+  it("links a local SVG as the initial template from the SVG panel", async () => {
+    const user = userEvent.setup();
+    useAppStore.getState().setProject(project());
+    const handle = {
+      getFile: vi
+        .fn()
+        .mockResolvedValue(
+          new File(
+            [
+              '<svg xmlns="http://www.w3.org/2000/svg"><text id="name">Name</text></svg>',
+            ],
+            "linked.svg",
+            { type: "image/svg+xml" },
+          ),
+        ),
+    };
+    const saveLinkedSvgHandle = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <MantineProvider>
+        <App
+          saveLinkedSvgHandle={saveLinkedSvgHandle}
+          showOpenFilePicker={vi.fn().mockResolvedValue([handle])}
+        />
+      </MantineProvider>,
+    );
+
+    const linkButton = screen.getByRole("button", { name: "Link local SVG" });
+    const svgPanel = screen
+      .getByRole("heading", { name: "SVG Objects" })
+      .closest("section");
+    const dataPanel = screen
+      .getByRole("heading", { name: "Data" })
+      .closest("section");
+    expect(svgPanel).toContainElement(linkButton);
+    expect(dataPanel).not.toContainElement(linkButton);
+
+    await user.click(linkButton);
+
+    await waitFor(() =>
+      expect(useAppStore.getState().sources.svg).toMatchObject({
+        fileName: "linked.svg",
+        sourceStatus: "linked",
+      }),
+    );
+    expect(saveLinkedSvgHandle).toHaveBeenCalledWith(
+      "local-svg:project-1",
+      handle,
+    );
+    expect(useAppStore.getState().project?.sources).toContainEqual(
+      expect.objectContaining({
+        kind: "svg",
+        location: "linked",
+        reference: "local-svg:project-1",
+      }),
+    );
+    expect(useAppStore.getState().project?.audit.templateHash).toHaveLength(64);
+    expect(
+      useAppStore.getState().project?.audit.lastTemplateUpdate,
+    ).toBeUndefined();
+    expect(screen.getByLabelText("Template update summary")).toHaveTextContent(
+      "New: name",
+    );
+    expect(
+      screen.getByLabelText("SVG source status: Linked"),
+    ).toBeInTheDocument();
+  });
+
+  it("validates local and HTTPS candidates before persisting or fetching", async () => {
+    const user = userEvent.setup();
+    useAppStore.getState().setProject(project());
+    const handle = {
+      getFile: vi
+        .fn()
+        .mockResolvedValue(
+          new File(["not svg"], "invalid.svg", { type: "image/svg+xml" }),
+        ),
+    };
+    const saveLinkedSvgHandle = vi.fn().mockResolvedValue(undefined);
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+
+    render(
+      <MantineProvider>
+        <App
+          saveLinkedSvgHandle={saveLinkedSvgHandle}
+          showOpenFilePicker={vi.fn().mockResolvedValue([handle])}
+        />
+      </MantineProvider>,
+    );
+
+    const localLink = screen.getByRole("button", { name: "Link local SVG" });
+    await user.click(localLink);
+    await waitFor(() => expect(handle.getFile).toHaveBeenCalled());
+    await waitFor(() => expect(localLink).toBeEnabled());
+    expect(saveLinkedSvgHandle).not.toHaveBeenCalled();
+    expect(useAppStore.getState().sources.svg).toBeNull();
+
+    await user.type(
+      screen.getByRole("textbox", { name: "HTTPS SVG URL" }),
+      "http://example.test/card.svg",
+    );
+    await user.click(screen.getByRole("button", { name: "Link HTTPS" }));
+    expect(fetch).not.toHaveBeenCalled();
+    expect(useAppStore.getState().sources.svg).toBeNull();
+  });
+
+  it("reloads an HTTPS SVG, reports target IDs, preserves mappings, and supports undo", async () => {
+    const user = userEvent.setup();
+    const oldSvg =
+      '<svg xmlns="http://www.w3.org/2000/svg"><text id="name">Old</text><path id="removed" d="M0 0"/></svg>';
+    useAppStore.getState().setProject(
+      project({
+        template: {
+          fileName: "card.svg",
+          fileSize: oldSvg.length,
+          acceptedSvg: oldSvg,
+          sourceStatus: "linked",
+          selectedObjectId: "name",
+        },
+        mappings: [
+          {
+            id: "name-mapping",
+            targetId: "name",
+            columnId: "name",
+            type: "text",
+            fit: "keep",
+          },
+        ],
+        sources: [
+          {
+            id: "svg-source",
+            kind: "svg",
+            location: "https",
+            url: "https://example.test/card.svg",
+            fileName: "card.svg",
+            fileSize: oldSvg.length,
+          },
+        ],
+      }),
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            '<svg xmlns="http://www.w3.org/2000/svg"><text id="name">New</text><g id="added"/></svg>',
+            { status: 200 },
+          ),
+        ),
+    );
+
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+    await user.click(screen.getByRole("button", { name: "Reload linked SVG" }));
+
+    const summary = await screen.findByLabelText("Template update summary");
+    expect(summary).toHaveTextContent("Preserved: name");
+    expect(summary).toHaveTextContent("Missing: removed");
+    expect(summary).toHaveTextContent("New: added");
+    expect(useAppStore.getState().mappings).toHaveLength(1);
+    expect(useAppStore.getState().sources.svg?.acceptedSvg).toContain(
+      'id="added"',
+    );
+    expect(useAppStore.getState().sources.previousTemplate).toBeDefined();
+
+    await user.click(
+      screen.getByRole("button", { name: "Undo template update" }),
+    );
+    expect(useAppStore.getState().sources.svg?.acceptedSvg).toContain(
+      'id="removed"',
+    );
+    expect(
+      screen.queryByLabelText("Template update summary"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not mutate state for an unchanged reload and keeps the snapshot on fetch failure", async () => {
+    const user = userEvent.setup();
+    const acceptedSvg =
+      '<svg xmlns="http://www.w3.org/2000/svg"><text id="name">Old</text></svg>';
+    useAppStore.getState().setProject(
+      project({
+        template: {
+          fileName: "card.svg",
+          fileSize: acceptedSvg.length,
+          acceptedSvg,
+          sourceStatus: "linked",
+          selectedObjectId: "name",
+        },
+        sources: [
+          {
+            id: "svg-source",
+            kind: "svg",
+            location: "https",
+            url: "https://example.test/card.svg",
+            fileName: "card.svg",
+            fileSize: acceptedSvg.length,
+          },
+        ],
+      }),
+    );
+    const fetch = vi.fn().mockResolvedValue(new Response(acceptedSvg));
+    vi.stubGlobal("fetch", fetch);
+
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+    const reload = screen.getByRole("button", { name: "Reload linked SVG" });
+    await user.click(reload);
+    await screen.findByLabelText("Template update summary");
+    await waitFor(() => expect(reload).toBeEnabled());
+
+    expect(useAppStore.getState().selection.svgObjectId).toBe("name");
+    expect(useAppStore.getState().sources.previousTemplate).toBeUndefined();
+    expect(
+      useAppStore.getState().project?.audit.lastTemplateUpdate,
+    ).toBeUndefined();
+
+    fetch.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    await user.click(reload);
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(reload).toBeEnabled());
+    expect(useAppStore.getState().sources.svg?.acceptedSvg).toBe(acceptedSvg);
+    expect(useAppStore.getState().sources.previousTemplate).toBeUndefined();
   });
 
   it("imports a local spreadsheet and reports the available worksheets", async () => {

@@ -1,6 +1,6 @@
 # 00 — TODO
 
-Last updated: 2026-07-31
+Last updated: 2026-08-01
 
 ## Status legend
 
@@ -622,21 +622,48 @@ Only one implementation item should normally be `[-]`.
 ## Phase 7 — Linked SVG manual reload
 
 - [x] Link a local SVG with a file handle.
+  - The SVG-panel picker can establish the first template or replace an active
+    one. It requests read permission, validates the selected SVG before
+    persistence, and leaves state unchanged after cancellation or rejection.
 - [x] Store the handle in IndexedDB and a portable lookup reference in project data.
+  - File handles live in the `svg-batch-linked-svg` IndexedDB database. Project
+    data stores only `local-svg:{projectId}` plus the accepted SVG snapshot;
+    reopening on another device therefore keeps the snapshot available.
 - [x] Add remote HTTPS SVG link support with CORS-aware errors.
+  - URLs must use HTTPS. Fetch omits credentials and distinguishes HTTP status
+    failures from network/likely-CORS failures before SVG validation.
 - [!] Add Google Drive SVG link support through the Drive adapter. Blocked by the
   Phase 8 hosted Drive adapter.
 - [x] Implement the manual “Reload linked SVG” flow.
+  - Reload resolves the persisted local or HTTPS source only after explicit
+    user action. Matching SHA-256 content is a no-op; unavailable, denied,
+    failed, and invalid candidates retain the active template.
 - [x] Compare SHA-256 hashes.
+  - Hashes use the sanitized accepted SVG text. Successful changes update
+    `templateHash` and the old/new template audit; unchanged reloads do not
+    create audit or undo state.
 - [x] Validate and compare mappings before applying.
+  - Candidates run through the existing untrusted import pipeline. Mappings
+    survive only when their target ID remains and their type is compatible with
+    the replacement target element.
 - [x] Show preserved, missing, incompatible, and new objects.
+  - A persistent SVG-panel summary names target IDs in all four categories,
+    showing the first 20 IDs and an additional-count suffix for larger sets.
 - [x] Keep the previous SVG in memory until the project is saved.
+  - One runtime-only snapshot retains the previous SVG, mappings, project
+    metadata, and selected object. It is never serialized.
 - [x] Add “Undo template update”.
+  - Undo restores the retained state and clears the comparison summary. A
+    successful project save or later source replacement clears the undo state.
 - [x] Fall back to the embedded SVG when the link is unavailable.
-  - Main files: `src/svg/linkedSvg.ts`, `src/store.ts`, `src/App.tsx`.
-  - Tests: `bun run test -- src/svg/linkedSvg.test.ts src/store.test.ts`; `bun run verify:single`.
-    `bun run check` was started but this environment ended its parallel Vitest
-    output before a result summary.
+  - Source failures report why reload failed and continue using the current
+    accepted project snapshot without changing mappings or selection.
+  - Main files: `src/svg/linkedSvg.ts`, `src/svg/linkedSvg.test.ts`,
+    `src/store.ts`, `src/store.test.ts`, `src/App.tsx`, `src/App.test.tsx`.
+  - Focused tests: `bun run test -- src/App.test.tsx
+    src/svg/linkedSvg.test.ts src/store.test.ts` (58 tests).
+  - Full check: `bun run check` (49 test files, 315 tests; verified one
+    self-contained `dist/index.html`, 2,296,262 bytes).
 
 ## Phase 8 — Google Drive hosted adapter
 

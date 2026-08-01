@@ -74,7 +74,7 @@ type AppStore = {
     svg: ImportedSvg;
     mappings: Mappings;
     source: PersistedSourceReference;
-    oldHash: string;
+    oldHash?: string;
     newHash: string;
     missingTargetIds: string[];
   }) => void;
@@ -364,43 +364,53 @@ export const useAppStore = create<AppStore>()((set) => ({
     newHash,
     missingTargetIds,
   }) =>
-    set((state) => ({
-      mappings,
-      project: state.project
+    set((state) => {
+      const project = state.project;
+      const audit = project ? { ...project.audit } : null;
+      if (audit && !oldHash) delete audit.lastTemplateUpdate;
+      const updatedProject = project
         ? {
-            ...state.project,
+            ...project,
             sources: [
-              ...state.project.sources.filter(
+              ...project.sources.filter(
                 (candidate) => candidate.kind !== "svg",
               ),
               source,
             ],
             audit: {
-              ...state.project.audit,
+              ...audit!,
               templateHash: newHash,
-              lastTemplateUpdate: {
-                oldHash,
-                newHash,
-                updatedAt: new Date().toISOString(),
-                missingTargetIds,
-              },
+              ...(oldHash
+                ? {
+                    lastTemplateUpdate: {
+                      oldHash,
+                      newHash,
+                      updatedAt: new Date().toISOString(),
+                      missingTargetIds,
+                    },
+                  }
+                : {}),
             },
           }
-        : null,
-      selection: { ...state.selection, svgObjectId: null },
-      sources: {
-        ...state.sources,
-        svg,
-        previousTemplate: state.sources.svg
-          ? {
-              svg: state.sources.svg,
-              mappings: state.mappings,
-              project: state.project,
-              svgObjectId: state.selection.svgObjectId,
-            }
-          : null,
-      },
-    })),
+        : null;
+      return {
+        mappings,
+        project: updatedProject,
+        selection: { ...state.selection, svgObjectId: null },
+        sources: {
+          ...state.sources,
+          svg,
+          previousTemplate: state.sources.svg
+            ? {
+                svg: state.sources.svg,
+                mappings: state.mappings,
+                project: state.project,
+                svgObjectId: state.selection.svgObjectId,
+              }
+            : null,
+        },
+      };
+    }),
   undoTemplateUpdate: () =>
     set((state) => {
       const previous = state.sources.previousTemplate;

@@ -57,6 +57,12 @@ export async function readLocalLinkedSvg(
   const handle = await loadLocalSvgHandle(reference);
   if (!handle)
     throw new Error("The linked local SVG is unavailable on this device.");
+  return readLocalSvgHandle(handle);
+}
+
+export async function readLocalSvgHandle(
+  handle: LocalSvgFileHandle,
+): Promise<ImportedSvg> {
   let permission = await handle.queryPermission?.({ mode: "read" });
   if (permission === "prompt")
     permission = await handle.requestPermission?.({ mode: "read" });
@@ -99,6 +105,7 @@ export async function sha256(source: string): Promise<string> {
 
 export type TemplateMappingComparison = {
   preserved: Mapping[];
+  preservedTargetIds: string[];
   missingTargetIds: string[];
   incompatibleTargetIds: string[];
   newTargetIds: string[];
@@ -115,15 +122,13 @@ export function compareTemplateMappings(
   const previousTargetIds = new Set(
     previous.targets.map((target) => target.id),
   );
-  const preserved: Mapping[] = [];
-  const missingTargetIds: string[] = [];
   const incompatibleTargetIds: string[] = [];
+  const preserved: Mapping[] = [];
 
   for (const mapping of mappings) {
     const target = nextTargets.get(mapping.targetId);
-    if (!target) {
-      missingTargetIds.push(mapping.targetId);
-    } else if (!mappingTypesForTarget(target.tagName).includes(mapping.type)) {
+    if (!target) continue;
+    if (!mappingTypesForTarget(target.tagName).includes(mapping.type)) {
       incompatibleTargetIds.push(mapping.targetId);
     } else {
       preserved.push(mapping);
@@ -132,7 +137,14 @@ export function compareTemplateMappings(
 
   return {
     preserved,
-    missingTargetIds,
+    preservedTargetIds: previous.targets
+      .map((target) => target.id)
+      .filter(
+        (id) => nextTargets.has(id) && !incompatibleTargetIds.includes(id),
+      ),
+    missingTargetIds: previous.targets
+      .map((target) => target.id)
+      .filter((id) => !nextTargets.has(id)),
     incompatibleTargetIds,
     newTargetIds: next.targets
       .map((target) => target.id)

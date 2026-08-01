@@ -164,18 +164,29 @@ partially load.
 
 ## Linked SVG reload
 
-A project always retains its accepted embedded SVG snapshot. A local link keeps
-its File System Access handle in IndexedDB under a project-scoped portable
-reference; the project HTML stores only that reference. HTTPS links store their
-HTTPS URL and are fetched without credentials, with a specific CORS/network
-error when the browser cannot read them.
+A project persists its currently accepted SVG snapshot in `template` even when
+the SVG is linked. Local linking can establish the first template or replace an
+active one. The candidate is validated before its File System Access handle is
+stored in IndexedDB under a project-scoped portable reference; project HTML
+stores only that reference. HTTPS links store an HTTPS URL, fetch with
+credentials omitted, and explain HTTP or failed CORS/network reads. Google
+Drive source records are schema-supported, but their reload adapter belongs to
+Phase 8.
 
-Reload is manual. The candidate SVG is imported through the normal untrusted
-SVG validation path, SHA-256 hashes are compared, and mappings are retained
-only for targets whose IDs and mapping-compatible element types remain. The UI
-reports retained mappings plus missing, incompatible, and new targets. The
-previous template and mappings remain in memory for one undo until save; a
-failed or unavailable link continues to use the embedded snapshot.
+Reload is manual. Every candidate goes through the normal untrusted SVG import
+validation path. The app computes SHA-256 hashes over accepted sanitized SVG
+text; byte-identical reloads leave template, selection, audit, and undo state
+unchanged. Changed candidates retain only mappings whose target IDs still
+exist and whose mapping types remain compatible with the new target elements.
+The SVG panel keeps a comparison summary naming preserved, missing,
+incompatible, and new target IDs, capped at 20 displayed IDs per category with
+the remaining count shown.
+
+A failed, unavailable, or rejected link does not replace the current accepted
+snapshot. After a successful linked update, one prior template, mapping set,
+project metadata, and object selection are retained in memory for Undo. That
+undo state is cleared by a successful project save and when a source is later
+replaced; it is not persisted.
 
 ## Single-file build
 

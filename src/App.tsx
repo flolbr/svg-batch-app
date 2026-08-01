@@ -121,9 +121,11 @@ import {
   localSvgReference,
   readHttpsLinkedSvg,
   readLocalLinkedSvg,
-  saveLocalSvgHandle,
+  readLocalSvgHandle,
+  saveLocalSvgHandle as persistLocalSvgHandle,
   sha256,
   type LocalSvgFileHandle,
+  type TemplateMappingComparison,
 } from "./svg/linkedSvg";
 import type { SvgTreeNode } from "./svg/buildSvgTree";
 import {
@@ -151,6 +153,10 @@ type AppProps = {
   projectDocument?: Document;
   showSaveFilePicker?: ShowSaveProjectFilePicker;
   showOpenFilePicker?: () => Promise<LocalSvgFileHandle[]>;
+  saveLinkedSvgHandle?: (
+    reference: string,
+    handle: LocalSvgFileHandle,
+  ) => Promise<void>;
 };
 const svgSourceStatusPresentation: Record<
   SvgSourceStatus,
@@ -209,6 +215,12 @@ function browserOpenFilePicker():
 
 function isPickerCancellation(error: unknown): boolean {
   return error instanceof DOMException && error.name === "AbortError";
+}
+
+function targetIdSummary(ids: readonly string[]): string {
+  if (ids.length === 0) return "None";
+  const visible = ids.slice(0, 20).join(", ");
+  return ids.length > 20 ? `${visible}, and ${ids.length - 20} more` : visible;
 }
 
 function recoveryFingerprint(project: Project): string {
@@ -500,6 +512,7 @@ export function App({
   projectDocument,
   showSaveFilePicker,
   showOpenFilePicker,
+  saveLinkedSvgHandle = persistLocalSvgHandle,
 }: AppProps = {}) {
   const workspaceRef = useRef<HTMLElement>(null);
   const dataTableScrollRef = useRef<HTMLDivElement>(null);
@@ -518,6 +531,8 @@ export function App({
   const [isImportingSvg, setIsImportingSvg] = useState(false);
   const [linkedSvgUrl, setLinkedSvgUrl] = useState("");
   const [isReloadingSvg, setIsReloadingSvg] = useState(false);
+  const [templateUpdateSummary, setTemplateUpdateSummary] =
+    useState<TemplateMappingComparison | null>(null);
   const [editingManualRowId, setEditingManualRowId] = useState<string | null>(
     null,
   );
@@ -1262,6 +1277,7 @@ export function App({
     try {
       const importedSvg = await importSvgFile(file);
       setSvgSearchQuery("");
+      setTemplateUpdateSummary(null);
       setSvgSource(importedSvg);
       notifications.show({
         color: "green",
@@ -1283,15 +1299,31 @@ export function App({
   async function applyLinkedTemplate(
     nextSvg: NonNullable<typeof svg>,
     source: NonNullable<Project["sources"][number]>,
+    establishLink = false,
   ) {
-    if (!svg || !project) {
-      throw new Error("Import an SVG into a saved project before linking it.");
-    }
-    const comparison = compareTemplateMappings(svg, nextSvg, mappings);
+    if (!project) throw new Error("A valid project is required.");
+    const comparison = svg
+      ? compareTemplateMappings(svg, nextSvg, mappings)
+      : {
+          preserved: [],
+          preservedTargetIds: [],
+          missingTargetIds: [],
+          incompatibleTargetIds: [],
+          newTargetIds: nextSvg.targets.map((target) => target.id),
+        };
     const [oldHash, newHash] = await Promise.all([
-      sha256(svg.acceptedSvg),
+      svg ? sha256(svg.acceptedSvg) : Promise.resolve(undefined),
       sha256(nextSvg.acceptedSvg),
     ]);
+    setTemplateUpdateSummary(comparison);
+    if (oldHash === newHash && !establishLink) {
+      notifications.show({
+        color: "green",
+        title: "Linked SVG is unchanged",
+        message: "The SHA-256 hash matches the active template.",
+      });
+      return;
+    }
     applyLinkedSvgUpdate({
       svg: nextSvg,
       mappings: comparison.preserved,
@@ -1309,8 +1341,8 @@ export function App({
       comparison.incompatibleTargetIds.length;
     notifications.show({
       color: discarded ? "orange" : "green",
-      title: oldHash === newHash ? "Linked SVG checked" : "Linked SVG updated",
-      message: `${comparison.preserved.length} mapping${comparison.preserved.length === 1 ? "" : "s"} preserved${discarded ? `; ${comparison.missingTargetIds.length} missing and ${comparison.incompatibleTargetIds.length} incompatible.` : "."} ${comparison.newTargetIds.length} new object${comparison.newTargetIds.length === 1 ? "" : "s"}.`,
+      title: svg ? "Linked SVG updated" : "Linked SVG added",
+      message: `${comparison.preserved.length} mapping${comparison.preserved.length === 1 ? "" : "s"} preserved. Review the object summary in the SVG panel.`,
     });
   }
 
@@ -1334,19 +1366,25 @@ export function App({
       return;
     }
     try {
+      setTemplateUpdateSummary(null);
       setIsReloadingSvg(true);
       const handle = (await picker())[0];
       if (!handle) return;
       const reference = localSvgReference(project.projectId);
-      await saveLocalSvgHandle(reference, handle);
-      await applyLinkedTemplate(await readLocalLinkedSvg(reference), {
-        id: "svg-source",
-        kind: "svg",
-        location: "linked",
-        reference,
-        fileName: "linked.svg",
-        fileSize: 0,
-      });
+      const importedSvg = await readLocalSvgHandle(handle);
+      await saveLinkedSvgHandle(reference, handle);
+      await applyLinkedTemplate(
+        importedSvg,
+        {
+          id: "svg-source",
+          kind: "svg",
+          location: "linked",
+          reference,
+          fileName: "linked.svg",
+          fileSize: 0,
+        },
+        true,
+      );
     } catch (error) {
       if (!isPickerCancellation(error))
         notifications.show({
@@ -1364,18 +1402,23 @@ export function App({
 
   async function linkHttpsSvg() {
     try {
+      setTemplateUpdateSummary(null);
       const url = new URL(linkedSvgUrl);
       if (url.protocol !== "https:")
         throw new Error("Linked SVG URLs must use HTTPS.");
       setIsReloadingSvg(true);
-      await applyLinkedTemplate(await readHttpsLinkedSvg(url.toString()), {
-        id: "svg-source",
-        kind: "svg",
-        location: "https",
-        url: url.toString(),
-        fileName: "linked.svg",
-        fileSize: 0,
-      });
+      await applyLinkedTemplate(
+        await readHttpsLinkedSvg(url.toString()),
+        {
+          id: "svg-source",
+          kind: "svg",
+          location: "https",
+          url: url.toString(),
+          fileName: "linked.svg",
+          fileSize: 0,
+        },
+        true,
+      );
       setLinkedSvgUrl("");
     } catch (error) {
       notifications.show({
@@ -1397,6 +1440,7 @@ export function App({
     );
     if (!source || source.location === "embedded") return;
     try {
+      setTemplateUpdateSummary(null);
       setIsReloadingSvg(true);
       if (source.location === "linked") {
         await applyLinkedTemplate(
@@ -1569,34 +1613,6 @@ export function App({
                   type="file"
                 />
               </Button>
-              <Button
-                disabled={!project || isReloadingSvg}
-                leftSection={<IconFolderOpen size={16} />}
-                onClick={() => void linkLocalSvg()}
-                variant="subtle"
-              >
-                Link local SVG
-              </Button>
-              {svg?.sourceStatus === "linked" && (
-                <Button
-                  disabled={isReloadingSvg}
-                  leftSection={<IconRefresh size={16} />}
-                  loading={isReloadingSvg}
-                  onClick={() => void reloadLinkedSvg()}
-                  variant="subtle"
-                >
-                  Reload linked SVG
-                </Button>
-              )}
-              {previousTemplate && (
-                <Button
-                  leftSection={<IconRestore size={16} />}
-                  onClick={undoTemplateUpdate}
-                  variant="subtle"
-                >
-                  Undo template update
-                </Button>
-              )}
               <Button
                 variant="default"
                 leftSection={<IconFolderOpen />}
@@ -1917,6 +1933,41 @@ export function App({
                   type="file"
                 />
               </Button>
+              <Button
+                disabled={!project || isReloadingSvg}
+                leftSection={<IconFolderOpen size={16} />}
+                onClick={() => void linkLocalSvg()}
+                variant="subtle"
+              >
+                Link local SVG
+              </Button>
+              {svg &&
+                project?.sources.some(
+                  (source) =>
+                    source.kind === "svg" && source.location !== "embedded",
+                ) && (
+                  <Button
+                    disabled={isReloadingSvg}
+                    leftSection={<IconRefresh size={16} />}
+                    loading={isReloadingSvg}
+                    onClick={() => void reloadLinkedSvg()}
+                    variant="subtle"
+                  >
+                    Reload linked SVG
+                  </Button>
+                )}
+              {previousTemplate && (
+                <Button
+                  leftSection={<IconRestore size={16} />}
+                  onClick={() => {
+                    undoTemplateUpdate();
+                    setTemplateUpdateSummary(null);
+                  }}
+                  variant="subtle"
+                >
+                  Undo template update
+                </Button>
+              )}
               {svg && (
                 <Badge color="green" variant="light">
                   Sanitized
@@ -1949,6 +2000,32 @@ export function App({
                 Link HTTPS
               </Button>
             </Group>
+            {templateUpdateSummary && (
+              <Paper aria-label="Template update summary" p="xs" withBorder>
+                <Stack gap={2}>
+                  <Text size="xs" fw={600}>
+                    Template object comparison
+                  </Text>
+                  <Text size="xs">
+                    Preserved:{" "}
+                    {targetIdSummary(templateUpdateSummary.preservedTargetIds)}
+                  </Text>
+                  <Text size="xs">
+                    Missing:{" "}
+                    {targetIdSummary(templateUpdateSummary.missingTargetIds)}
+                  </Text>
+                  <Text size="xs">
+                    Incompatible:{" "}
+                    {targetIdSummary(
+                      templateUpdateSummary.incompatibleTargetIds,
+                    )}
+                  </Text>
+                  <Text size="xs">
+                    New: {targetIdSummary(templateUpdateSummary.newTargetIds)}
+                  </Text>
+                </Stack>
+              </Paper>
+            )}
             <TextInput
               aria-label="Search SVG objects"
               disabled={!svg}
