@@ -7,7 +7,7 @@ Last updated: 2026-08-01
 Phase 7 local and HTTPS linked-SVG reload is complete. The Drive-linked SVG
 item is blocked until the Phase 8 hosted Drive adapter exists.
 
-Latest implementation commit: `a7bb7fc feat: add linked SVG reload`.
+Latest implementation commit: `1bcfa35 fix: harden linked SVG reload`.
 
 ## Latest milestone
 
@@ -329,8 +329,8 @@ Begin the Phase 8 hosted Google Drive adapter.
 ## Files changed
 
 - `docs/plan/00-TODO.md`
-- `docs/plan/05-SVG-AND-MAPPINGS.md`
 - `docs/plan/07-SINGLE-FILE-PROJECT.md`
+- `docs/plan/SESSION-HANDOFF.md`
 - `src/svg/linkedSvg.ts`
 - `src/svg/linkedSvg.test.ts`
 - `src/store.ts`
@@ -352,4 +352,4 @@ src/store.test.ts` (58 tests)
 
 ## Latest commit
 
-`c2dfa1d docs: update linked SVG handoff`
+`1bcfa35 fix: harden linked SVG reload`
