@@ -65,6 +65,10 @@ import { MappingEditor } from "./MappingEditor";
 import { SvgObjectTree } from "./SvgObjectTree";
 import { SvgPreview } from "./SvgPreview";
 import { ValidationReportModal } from "./ValidationReportModal";
+import {
+  detectBrowserCapabilities,
+  type Capabilities,
+} from "./capabilities";
 import type { ColumnPreferences } from "./data/columnPreferences";
 import { filterRows, type ColumnFilter } from "./data/filterRows";
 import { importSpreadsheet } from "./data/importSpreadsheet";
@@ -150,6 +154,7 @@ type FailedExportRetry = {
   settings: ExportSettings;
 };
 type AppProps = {
+  capabilities?: Capabilities;
   projectDocument?: Document;
   showSaveFilePicker?: ShowSaveProjectFilePicker;
   showOpenFilePicker?: () => Promise<LocalSvgFileHandle[]>;
@@ -509,6 +514,7 @@ function findSvgNode(
 }
 
 export function App({
+  capabilities = detectBrowserCapabilities(),
   projectDocument,
   showSaveFilePicker,
   showOpenFilePicker,
@@ -1553,7 +1559,7 @@ export function App({
           </div>
           <Title order={1}>SVG Batch Generator</Title>
           <Badge variant="light" color="gray">
-            Local project
+            {capabilities.hostedOrigin ? "Hosted project" : "Local project"}
           </Badge>
         </Group>
 
@@ -1616,7 +1622,14 @@ export function App({
               <Button
                 variant="default"
                 leftSection={<IconFolderOpen />}
-                disabled
+                disabled={!capabilities.googleDriveConfigured}
+                title={
+                  capabilities.hostedOrigin
+                    ? capabilities.googleDriveConfigured
+                      ? "Open a spreadsheet from Google Drive"
+                      : "Google Drive is not configured for this hosted origin"
+                    : "Open this project through the hosted app to use Google Drive"
+                }
               >
                 Open from Google Drive
               </Button>

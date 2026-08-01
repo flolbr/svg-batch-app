@@ -667,8 +667,15 @@ Only one implementation item should normally be `[-]`.
 
 ## Phase 8 — Google Drive hosted adapter
 
-- [ ] Add hosted-mode capability detection.
-- [ ] Load Google Identity Services and Picker lazily.
+- [x] Add hosted-mode capability detection.
+  - One capability object detects File System Access, IndexedDB, hosted
+    HTTP(S), and exact allow-listed Drive configuration from deployment env.
+    Drive controls remain disabled with a hosted-app explanation in `file://`.
+  - Main files: `src/capabilities.ts`, `src/capabilities.test.ts`,
+    `src/App.tsx`, `src/App.test.tsx`.
+  - Tests: `bun run test -- src/capabilities.test.ts src/App.test.tsx`
+    (40 tests).
+- [-] Load Google Identity Services and Picker lazily.
 - [ ] Authenticate with `drive.file`.
 - [ ] Open SVG, spreadsheet, and project HTML files from Picker.
 - [ ] Export native Google Sheets to XLSX for the MVP.

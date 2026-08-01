@@ -4,8 +4,8 @@ Last updated: 2026-08-01
 
 ## Current task
 
-Phase 7 local and HTTPS linked-SVG reload is complete. The Drive-linked SVG
-item is blocked until the Phase 8 hosted Drive adapter exists.
+Phase 8 is in progress. Hosted-mode capability detection is complete; lazy
+Google Identity Services and Picker loading is the active item.
 
 Latest implementation commit: `1bcfa35 fix: harden linked SVG reload`.
 
@@ -29,8 +29,9 @@ Latest implementation commit: `1bcfa35 fix: harden linked SVG reload`.
 - Full check: `bun run check` (49 test files, 315 tests; self-contained
   `dist/index.html` verified at 2,296,262 bytes).
 
-Next concrete step: implement the Phase 8 hosted Google Drive adapter and
-connect its SVG read flow to the existing Drive-source reload branch.
+Next concrete step: implement lazy Google Identity Services and Picker loading
+behind the configured hosted capability, followed by in-memory `drive.file`
+authentication.
 
 ## What works
 

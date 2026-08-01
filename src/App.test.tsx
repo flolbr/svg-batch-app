@@ -15,6 +15,7 @@ import {
   PROJECT_RECOVERY_DEBOUNCE_MS,
   ROW_VIRTUALIZATION_THRESHOLD,
 } from "./App";
+import type { Capabilities } from "./capabilities";
 import { loadEmbeddedProject } from "./project/loadProject";
 import type { Project } from "./project/projectSchema";
 import * as recoveryStore from "./project/recoveryStore";
@@ -25,6 +26,13 @@ class ResizeObserverMock {
   unobserve() {}
   disconnect() {}
 }
+
+const localCapabilities: Capabilities = {
+  fileSystemAccess: false,
+  indexedDb: true,
+  hostedOrigin: false,
+  googleDriveConfigured: false,
+};
 
 function setSpreadsheetRows(rowCount: number) {
   useAppStore.getState().setSpreadsheetSource({
@@ -204,6 +212,39 @@ describe("App", () => {
     expect(workspace.style.getPropertyValue("--data-panel-width")).not.toBe(
       initialDataPanelWidth,
     );
+  });
+
+  it("derives hosted and Google Drive availability from capabilities", () => {
+    const { rerender } = render(
+      <MantineProvider>
+        <App capabilities={localCapabilities} />
+      </MantineProvider>,
+    );
+
+    expect(screen.getByText("Local project")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Open from Google Drive" }),
+    ).toHaveAttribute(
+      "title",
+      "Open this project through the hosted app to use Google Drive",
+    );
+
+    rerender(
+      <MantineProvider>
+        <App
+          capabilities={{
+            ...localCapabilities,
+            hostedOrigin: true,
+            googleDriveConfigured: true,
+          }}
+        />
+      </MantineProvider>,
+    );
+
+    expect(screen.getByText("Hosted project")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Open from Google Drive" }),
+    ).toBeEnabled();
   });
 
   it("saves the current project through a reusable file handle", async () => {
