@@ -171,7 +171,11 @@ describe("Google Picker", () => {
     const { environment, scripts } = createEnvironment();
     const installed = installPicker(environment);
     const selected = pickGoogleDriveFile(
-      { accessToken: "token", configuration },
+      {
+        accessToken: "token",
+        configuration,
+        mimeTypes: ["image/svg+xml"],
+      },
       environment,
     );
     finishScripts(scripts);
@@ -185,9 +189,7 @@ describe("Google Picker", () => {
       name: "art.svg",
       mimeType: "image/svg+xml",
     });
-    expect(installed.view.setMimeTypes).toHaveBeenCalledWith(
-      expect.stringContaining("image/svg+xml"),
-    );
+    expect(installed.view.setMimeTypes).toHaveBeenCalledWith("image/svg+xml");
   });
 
   it("configures folder-only selection and returns null on cancel", async () => {

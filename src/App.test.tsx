@@ -34,6 +34,12 @@ const localCapabilities: Capabilities = {
   googleDriveConfigured: false,
 };
 
+const hostedDriveCapabilities: Capabilities = {
+  ...localCapabilities,
+  hostedOrigin: true,
+  googleDriveConfigured: true,
+};
+
 function setSpreadsheetRows(rowCount: number) {
   useAppStore.getState().setSpreadsheetSource({
     fileName: "many-members.xlsx",
@@ -228,14 +234,18 @@ describe("App", () => {
       "title",
       "Open this project through the hosted app to use Google Drive",
     );
+    expect(
+      screen.getByRole("button", { name: "Save to Drive" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Export to Drive" }),
+    ).toBeDisabled();
 
     rerender(
       <MantineProvider>
         <App
           capabilities={{
-            ...localCapabilities,
-            hostedOrigin: true,
-            googleDriveConfigured: true,
+            ...hostedDriveCapabilities,
           }}
         />
       </MantineProvider>,
@@ -245,6 +255,135 @@ describe("App", () => {
     expect(
       screen.getByRole("button", { name: "Open from Google Drive" }),
     ).toBeEnabled();
+  });
+
+  it("opens a Drive spreadsheet through the existing import and store paths", async () => {
+    const user = userEvent.setup();
+    useAppStore.setState({ project: project() });
+    const requestDriveAccessToken = vi.fn().mockResolvedValue("token");
+    const pickDriveFile = vi.fn().mockResolvedValue({
+      id: "sheet-1",
+      name: "members.csv",
+      mimeType: "text/csv",
+    });
+    const driveFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            id: "sheet-1",
+            name: "members.csv",
+            mimeType: "text/csv",
+            modifiedTime: "2026-08-01T10:00:00.000Z",
+            version: "1",
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response("Name,City\nAda,Paris", { status: 200 }),
+      );
+
+    render(
+      <MantineProvider>
+        <App
+          capabilities={hostedDriveCapabilities}
+          driveFetch={driveFetch}
+          googleDriveConfiguration={{
+            clientId: "client",
+            apiKey: "key",
+            appId: "app",
+          }}
+          pickDriveFile={pickDriveFile}
+          requestDriveAccessToken={requestDriveAccessToken}
+        />
+      </MantineProvider>,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Open from Google Drive" }),
+    );
+
+    await waitFor(() => {
+      expect(useAppStore.getState().sources.spreadsheet?.fileName).toBe(
+        "members.csv",
+      );
+    });
+    expect(useAppStore.getState().project?.sources).toContainEqual({
+      id: "spreadsheet-source",
+      kind: "spreadsheet",
+      location: "drive",
+      fileId: "sheet-1",
+      fileName: "members.csv",
+      fileSize: 19,
+    });
+    expect(requestDriveAccessToken).toHaveBeenCalledTimes(1);
+    expect(driveFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("creates and then updates an app-created Drive project", async () => {
+    const user = userEvent.setup();
+    useAppStore.setState({ project: project() });
+    const requestDriveAccessToken = vi.fn().mockResolvedValue("token");
+    const pickDriveFile = vi.fn().mockResolvedValue({
+      id: "folder-1",
+      name: "Projects",
+      mimeType: "application/vnd.google-apps.folder",
+    });
+    const metadata = (version: string, modifiedTime: string) =>
+      new Response(
+        JSON.stringify({
+          id: "project-file-1",
+          name: "Member cards.html",
+          mimeType: "text/html",
+          version,
+          modifiedTime,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    const driveFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            id: "folder-1",
+            name: "Projects",
+            mimeType: "application/vnd.google-apps.folder",
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      )
+      .mockResolvedValueOnce(metadata("1", "2026-08-01T10:00:00.000Z"))
+      .mockResolvedValueOnce(metadata("1", "2026-08-01T10:00:00.000Z"))
+      .mockResolvedValueOnce(metadata("2", "2026-08-01T11:00:00.000Z"));
+
+    render(
+      <MantineProvider>
+        <App
+          capabilities={hostedDriveCapabilities}
+          driveFetch={driveFetch}
+          googleDriveConfiguration={{
+            clientId: "client",
+            apiKey: "key",
+            appId: "app",
+          }}
+          pickDriveFile={pickDriveFile}
+          projectDocument={cleanProjectDocument()}
+          requestDriveAccessToken={requestDriveAccessToken}
+        />
+      </MantineProvider>,
+    );
+
+    const save = screen.getByRole("button", { name: "Save to Drive" });
+    await user.click(save);
+    await waitFor(() => expect(driveFetch).toHaveBeenCalledTimes(2));
+    expect(driveFetch.mock.calls[1][1]?.method).toBe("POST");
+
+    await user.click(save);
+    await waitFor(() => expect(driveFetch).toHaveBeenCalledTimes(4));
+    expect(driveFetch.mock.calls[3][1]?.method).toBe("PATCH");
+    expect(pickDriveFile).toHaveBeenCalledTimes(1);
+    expect(requestDriveAccessToken).toHaveBeenCalledTimes(1);
   });
 
   it("saves the current project through a reusable file handle", async () => {
@@ -1481,6 +1620,73 @@ describe("App", () => {
     expect(
       screen.queryByLabelText("Template update summary"),
     ).not.toBeInTheDocument();
+  });
+
+  it("reloads a linked Drive SVG only after validation and confirmation", async () => {
+    const user = userEvent.setup();
+    const oldSvg =
+      '<svg xmlns="http://www.w3.org/2000/svg"><text id="name">Old</text></svg>';
+    useAppStore.getState().setProject(
+      project({
+        template: {
+          fileName: "card.svg",
+          fileSize: oldSvg.length,
+          acceptedSvg: oldSvg,
+          sourceStatus: "drive",
+          selectedObjectId: null,
+        },
+        sources: [
+          {
+            id: "svg-source",
+            kind: "svg",
+            location: "drive",
+            fileId: "svg-1",
+            fileName: "card.svg",
+            fileSize: oldSvg.length,
+          },
+        ],
+      }),
+    );
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    const driveFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            id: "svg-1",
+            name: "card.svg",
+            mimeType: "image/svg+xml",
+            version: "2",
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          '<svg xmlns="http://www.w3.org/2000/svg"><text id="name">New</text></svg>',
+          { status: 200 },
+        ),
+      );
+
+    render(
+      <MantineProvider>
+        <App
+          capabilities={hostedDriveCapabilities}
+          driveFetch={driveFetch}
+          googleDriveConfiguration={{ clientId: "client" }}
+          requestDriveAccessToken={vi.fn().mockResolvedValue("token")}
+        />
+      </MantineProvider>,
+    );
+    await user.click(screen.getByRole("button", { name: "Reload linked SVG" }));
+
+    await waitFor(() =>
+      expect(useAppStore.getState().sources.svg?.acceptedSvg).toContain("New"),
+    );
+    expect(confirm).toHaveBeenCalledWith(
+      "The linked Drive SVG passed validation. Apply this template update now?",
+    );
+    expect(useAppStore.getState().sources.previousTemplate).toBeDefined();
   });
 
   it("does not mutate state for an unchanged reload and keeps the snapshot on fetch failure", async () => {

@@ -233,12 +233,18 @@ export async function requestGoogleAccessToken(
 export type GooglePickerOptions = {
   accessToken: string;
   configuration: GoogleDriveConfiguration;
+  mimeTypes?: readonly string[];
   mode?: "file" | "folder";
 };
 
 /** Open a Picker and return the selected file or folder, or null when cancelled. */
 export async function pickGoogleDriveFile(
-  { accessToken, configuration, mode = "file" }: GooglePickerOptions,
+  {
+    accessToken,
+    configuration,
+    mimeTypes = supportedGoogleDriveMimeTypes,
+    mode = "file",
+  }: GooglePickerOptions,
   environment: GoogleClientEnvironment = browserEnvironment(),
 ): Promise<GoogleDriveFileReference | null> {
   const apiKey = requireValue(configuration.apiKey, "API key");
@@ -256,7 +262,7 @@ export async function pickGoogleDriveFile(
       view.setIncludeFolders?.(true);
       view.setSelectFolderEnabled?.(true);
     } else {
-      view.setMimeTypes?.(supportedGoogleDriveMimeTypes.join(","));
+      view.setMimeTypes?.(mimeTypes.join(","));
     }
 
     new picker.PickerBuilder()

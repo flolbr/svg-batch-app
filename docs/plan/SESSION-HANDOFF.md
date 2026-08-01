@@ -4,34 +4,38 @@ Last updated: 2026-08-01
 
 ## Current task
 
-Phase 8 is in progress. Hosted capability detection, lazy Google client
-loading, and in-memory `drive.file` authentication are complete. Picker file
-imports are the active item.
+Phase 8 hosted Google Drive adapter is complete. Phase 9 release checks are
+next; real Drive acceptance requires configured Google deployment identifiers
+and allowed localhost/production origins.
 
 Latest implementation commit: `1bcfa35 fix: harden linked SVG reload`.
 
 ## Latest milestone
 
-- A valid project can link a local SVG as its first or replacement template.
-  The validated File System Access handle is stored in IndexedDB under a
-  project-scoped portable reference; HTML stores only that reference plus the
-  currently accepted SVG snapshot.
-- HTTPS links accept HTTPS URLs only, fetch with credentials omitted, and show
-  CORS/network errors without replacing the current accepted snapshot.
-- Manual reload validates the candidate, treats identical hashes as a no-op,
-  stores old/new SHA-256 audit hashes for changes, retains only ID- and
-  mapping-type-compatible mappings, names affected target IDs in the SVG panel,
-  and keeps one in-memory undo state. Successful project save or a later source
-  replacement clears that undo state.
-- Main files: `src/svg/linkedSvg.ts`, `src/svg/linkedSvg.test.ts`,
-  `src/App.tsx`, `src/store.ts`, `src/store.test.ts`.
-- Focused tests: `bun run test -- src/App.test.tsx
-  src/svg/linkedSvg.test.ts src/store.test.ts` (58 passed).
-- Full check: `bun run check` (49 test files, 315 tests; self-contained
-  `dist/index.html` verified at 2,296,262 bytes).
+- One capability object enables Drive only on configured, exact allow-listed
+  HTTP(S) origins; all Drive controls remain disabled with an explanation in
+  `file://` mode.
+- Google Identity Services and Picker load lazily after a Drive action. OAuth
+  requests only `drive.file`, stores the token in memory, and retries an
+  expired token once.
+- Picker opens SVG, CSV/XLS/XLSX, native Sheets, and project HTML. Downloaded
+  files reuse the local sanitization, parsing, and validation paths; native
+  Sheets export to XLSX.
+- New project HTML and output ZIPs save to a selected Drive folder. Existing
+  app-created/opened project files update in place after metadata conflict
+  checks, with save-copy, reload, overwrite, and cancel choices.
+- Drive-linked SVG reload uses the existing hash and mapping-compatibility
+  flow, retains the embedded snapshot on failure, and requires confirmation
+  before applying a validated candidate.
+- Main files: `src/capabilities.ts`, `src/drive/googleClient.ts`,
+  `src/drive/driveFiles.ts`, `src/drive/importDriveFile.ts`, `src/App.tsx` and
+  their tests.
+- Focused tests: 80 passed across App, Drive, linked SVG, and store suites.
+- Full check: `bun run check` (53 test files, 342 tests; self-contained
+  `dist/index.html` verified at 2,310,112 bytes).
 
-Next concrete step: connect Picker selection and Drive downloads to the
-existing SVG, spreadsheet, and project HTML import paths.
+Next concrete step: begin Phase 9 release checks, including real hosted Drive
+import/save/conflict acceptance on localhost and the production origin.
 
 ## What works
 
@@ -321,29 +325,35 @@ existing SVG, spreadsheet, and project HTML import paths.
 
 ## What remains
 
-The Drive-linked SVG item is blocked by Phase 8; later items remain unchecked.
+Phase 9 release checks remain unchecked. Real hosted Drive acceptance still
+needs deployment configuration and an authorized test account.
 
 ## Next concrete step
 
-Begin the Phase 8 hosted Google Drive adapter.
+Run the Phase 9 representative fixture, scale, browser, and hosted Drive
+acceptance checks.
 
 ## Files changed
 
 - `docs/plan/00-TODO.md`
-- `docs/plan/07-SINGLE-FILE-PROJECT.md`
 - `docs/plan/SESSION-HANDOFF.md`
-- `src/svg/linkedSvg.ts`
-- `src/svg/linkedSvg.test.ts`
-- `src/store.ts`
-- `src/store.test.ts`
+- `src/capabilities.ts`
+- `src/capabilities.test.ts`
+- `src/drive/googleClient.ts`
+- `src/drive/googleClient.test.ts`
+- `src/drive/driveFiles.ts`
+- `src/drive/driveFiles.test.ts`
+- `src/drive/importDriveFile.ts`
+- `src/drive/importDriveFile.test.ts`
 - `src/App.tsx`
 - `src/App.test.tsx`
 
 ## Tests run
 
-- `bun run test -- src/App.test.tsx src/svg/linkedSvg.test.ts
-src/store.test.ts` (58 tests)
-- `bun run check` (49 test files, 315 tests; verified 2,296,262-byte
+- `bun run test -- src/App.test.tsx src/drive/googleClient.test.ts
+  src/drive/driveFiles.test.ts src/drive/importDriveFile.test.ts
+  src/svg/linkedSvg.test.ts src/store.test.ts` (80 tests)
+- `bun run check` (53 test files, 342 tests; verified 2,310,112-byte
   self-contained `dist/index.html`)
 - Earlier Phase 6 checks: `bun run test -- src/App.test.tsx` (30 tests),
   `bun run check` (48 test files, 303 tests), and Browser Harness recordings

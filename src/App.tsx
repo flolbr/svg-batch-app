@@ -67,7 +67,9 @@ import { SvgPreview } from "./SvgPreview";
 import { ValidationReportModal } from "./ValidationReportModal";
 import {
   detectBrowserCapabilities,
+  googleDriveConfigurationFromEnv,
   type Capabilities,
+  type GoogleDriveConfiguration,
 } from "./capabilities";
 import type { ColumnPreferences } from "./data/columnPreferences";
 import { filterRows, type ColumnFilter } from "./data/filterRows";
@@ -103,6 +105,22 @@ import {
 } from "./export/runExportBatch";
 import { createSvgExportFiles } from "./export/svgExport";
 import { createZipExport, downloadZipExport } from "./export/zipExport";
+import {
+  createDriveFile,
+  downloadDriveFile,
+  DriveRequestError,
+  driveErrorMessage,
+  getDriveMetadata,
+  saveExistingDriveFile,
+  type DriveReference,
+} from "./drive/driveFiles";
+import {
+  pickGoogleDriveFile,
+  requestGoogleAccessToken,
+  type GoogleDriveFileReference,
+  type GooglePickerOptions,
+} from "./drive/googleClient";
+import { importDriveFile } from "./drive/importDriveFile";
 import { getMappingStatus } from "./mappings/mappingStatus";
 import type { ValidationIssue } from "./mappings/validation";
 import { createProjectSnapshot } from "./project/createProjectSnapshot";
@@ -155,7 +173,15 @@ type FailedExportRetry = {
 };
 type AppProps = {
   capabilities?: Capabilities;
+  driveFetch?: typeof fetch;
+  googleDriveConfiguration?: GoogleDriveConfiguration;
+  pickDriveFile?: (
+    options: GooglePickerOptions,
+  ) => Promise<GoogleDriveFileReference | null>;
   projectDocument?: Document;
+  requestDriveAccessToken?: (
+    configuration: GoogleDriveConfiguration,
+  ) => Promise<string>;
   showSaveFilePicker?: ShowSaveProjectFilePicker;
   showOpenFilePicker?: () => Promise<LocalSvgFileHandle[]>;
   saveLinkedSvgHandle?: (
@@ -515,7 +541,11 @@ function findSvgNode(
 
 export function App({
   capabilities = detectBrowserCapabilities(),
+  driveFetch = fetch,
+  googleDriveConfiguration = googleDriveConfigurationFromEnv(import.meta.env),
+  pickDriveFile = pickGoogleDriveFile,
   projectDocument,
+  requestDriveAccessToken = requestGoogleAccessToken,
   showSaveFilePicker,
   showOpenFilePicker,
   saveLinkedSvgHandle = persistLocalSvgHandle,
@@ -526,6 +556,8 @@ export function App({
   const cancelExportRef = useRef(false);
   const cleanProjectDocumentRef = useRef<Document | null>(null);
   const projectFileHandleRef = useRef<ProjectFileHandle | null>(null);
+  const driveTokenRef = useRef<string | null>(null);
+  const driveProjectReferenceRef = useRef<DriveReference | null>(null);
   const recoveryProjectIdRef = useRef<string | null>(null);
   const recoveryBaselineRef = useRef<string | null>(null);
   const recoveryWasDirtyRef = useRef(false);
@@ -579,6 +611,7 @@ export function App({
     useState<FailedExportRetry | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isSavingProject, setIsSavingProject] = useState(false);
+  const [isUsingDrive, setIsUsingDrive] = useState(false);
   const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 150);
   const project = useAppStore((state) => state.project);
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
@@ -1030,32 +1063,46 @@ export function App({
     setValidationReportOpened(true);
   }
 
+  function createCurrentProjectFile() {
+    if (!project) throw new Error("A valid project is required.");
+    const snapshot = createProjectSnapshot({
+      project,
+      spreadsheet,
+      svg,
+      selectedSvgObjectId,
+      mappings,
+      exportSettings: {
+        format: exportFormat,
+        includeCsv,
+        filenameTemplate,
+        collisionPolicy: filenameCollisionPolicy,
+        continueOnError,
+      },
+      updatedAt: new Date().toISOString(),
+    });
+    return {
+      snapshot,
+      html: serializeProjectHtml(cleanProjectDocumentRef.current!, snapshot),
+      filename: projectHtmlFileName(project.name),
+    };
+  }
+
+  function finishProjectSave(snapshot: Project) {
+    recoveryProjectIdRef.current = snapshot.projectId;
+    recoveryBaselineRef.current = recoveryFingerprint(snapshot);
+    recoveryWasDirtyRef.current = false;
+    void deleteRecoveryProject(snapshot.projectId).catch(() => {});
+    useAppStore.setState({ project: snapshot });
+    clearTemplateUpdateUndo();
+  }
+
   async function saveProject() {
     const picker = showSaveFilePicker ?? browserSaveFilePicker();
     if (!project) return;
 
     setIsSavingProject(true);
     try {
-      const snapshot = createProjectSnapshot({
-        project,
-        spreadsheet,
-        svg,
-        selectedSvgObjectId,
-        mappings,
-        exportSettings: {
-          format: exportFormat,
-          includeCsv,
-          filenameTemplate,
-          collisionPolicy: filenameCollisionPolicy,
-          continueOnError,
-        },
-        updatedAt: new Date().toISOString(),
-      });
-      const html = serializeProjectHtml(
-        cleanProjectDocumentRef.current!,
-        snapshot,
-      );
-      const filename = projectHtmlFileName(project.name);
+      const { snapshot, html, filename } = createCurrentProjectFile();
       if (picker) {
         projectFileHandleRef.current = await saveProjectWithFilePicker({
           html,
@@ -1066,12 +1113,7 @@ export function App({
       } else {
         downloadProjectHtml(html, filename);
       }
-      recoveryProjectIdRef.current = snapshot.projectId;
-      recoveryBaselineRef.current = recoveryFingerprint(snapshot);
-      recoveryWasDirtyRef.current = false;
-      void deleteRecoveryProject(snapshot.projectId).catch(() => {});
-      useAppStore.setState({ project: snapshot });
-      clearTemplateUpdateUndo();
+      finishProjectSave(snapshot);
       notifications.show({
         color: "green",
         message: picker
@@ -1097,10 +1139,100 @@ export function App({
     }
   }
 
+  function chooseDriveConflict():
+    "save-copy" | "reload" | "overwrite" | "cancel" {
+    const choice = window.prompt(
+      "This Drive project changed since it was opened. Choose save-copy (recommended), reload, overwrite, or cancel.",
+      "save-copy",
+    );
+    if (choice === null) return "cancel";
+    if (choice === "reload" || choice === "overwrite" || choice === "cancel") {
+      return choice;
+    }
+    return "save-copy";
+  }
+
+  async function loadDriveProject(reference: DriveReference) {
+    const file = await withDriveToken((token) =>
+      downloadDriveFile(token, reference, driveFetch),
+    );
+    const imported = await importDriveFile(file);
+    if (imported.kind !== "project") {
+      throw new Error("The Drive file is no longer a valid project HTML file.");
+    }
+    useAppStore.getState().setProject(imported.project);
+    driveProjectReferenceRef.current = reference;
+  }
+
+  async function saveProjectToDrive() {
+    if (!project || !capabilities.googleDriveConfigured) return;
+    setIsSavingProject(true);
+    setIsUsingDrive(true);
+    try {
+      const { snapshot, html, filename } = createCurrentProjectFile();
+      const known = driveProjectReferenceRef.current;
+      if (known) {
+        const result = await withDriveToken((token) =>
+          saveExistingDriveFile({
+            token,
+            known,
+            content: html,
+            mimeType: "text/html",
+            chooseConflict: chooseDriveConflict,
+            fetchImpl: driveFetch,
+          }),
+        );
+        if (result.status === "cancelled") return;
+        if (result.status === "reload") {
+          await loadDriveProject(result.reference);
+          notifications.show({
+            color: "orange",
+            title: "Drive project reloaded",
+            message:
+              "The newer Drive version replaced the current project state.",
+          });
+          return;
+        }
+        driveProjectReferenceRef.current = result.reference;
+      } else {
+        const folder = await selectDriveItem({ mode: "folder" });
+        if (!folder) return;
+        driveProjectReferenceRef.current = await withDriveToken((token) =>
+          createDriveFile(
+            token,
+            {
+              name: filename,
+              mimeType: "text/html",
+              content: html,
+              parentId: folder.fileId,
+            },
+            driveFetch,
+          ),
+        );
+      }
+      finishProjectSave(snapshot);
+      notifications.show({
+        color: "green",
+        title: `${project.name} saved to Drive`,
+        message: "The self-contained project HTML was written successfully.",
+      });
+    } catch (error) {
+      notifications.show({
+        color: "red",
+        title: "Drive project save failed",
+        message: driveErrorMessage(error),
+      });
+    } finally {
+      setIsSavingProject(false);
+      setIsUsingDrive(false);
+    }
+  }
+
   async function exportRows(
     rows: readonly SourceRow[],
     settings: ExportSettings,
     allowPartialErrors: boolean,
+    destination: "download" | "drive" = "download",
   ) {
     const filenamePlan = resolveExportFilenames({
       rows,
@@ -1118,6 +1250,21 @@ export function App({
     if (hasProjectErrors || (result.hasErrors && !allowPartialErrors)) {
       setValidationReportOpened(true);
       return;
+    }
+
+    let driveFolder: DriveReference | null = null;
+    if (destination === "drive") {
+      try {
+        driveFolder = await selectDriveItem({ mode: "folder" });
+        if (!driveFolder) return;
+      } catch (error) {
+        notifications.show({
+          color: "red",
+          title: "Drive export failed",
+          message: driveErrorMessage(error),
+        });
+        return;
+      }
     }
 
     cancelExportRef.current = false;
@@ -1202,7 +1349,22 @@ export function App({
         notifyCancelled();
         return;
       }
-      downloadZipExport(archive);
+      if (destination === "drive") {
+        await withDriveToken((token) =>
+          createDriveFile(
+            token,
+            {
+              name: archive.filename,
+              mimeType: archive.mimeType,
+              content: archive.content,
+              parentId: driveFolder!.fileId,
+            },
+            driveFetch,
+          ),
+        );
+      } else {
+        downloadZipExport(archive);
+      }
 
       if (batch.failedRowIds.length > 0) {
         const skippedCount = batch.entries.filter(
@@ -1213,14 +1375,22 @@ export function App({
           message: `${batch.failedRowIds.length} failed${skippedCount > 0 ? ` and ${skippedCount} skipped` : ""}. Use Retry failed to try the failed rows again.`,
           title: "Partial export created",
         });
+      } else if (destination === "drive") {
+        notifications.show({
+          color: "green",
+          title: "Export saved to Drive",
+          message: `${archive.filename} was saved in the selected folder.`,
+        });
       }
     } catch (error) {
       notifications.show({
         color: "red",
         message:
-          error instanceof Error
-            ? error.message
-            : "The export could not be created.",
+          destination === "drive"
+            ? driveErrorMessage(error)
+            : error instanceof Error
+              ? error.message
+              : "The export could not be created.",
         title: `${settings.format.toUpperCase()} export failed`,
       });
     } finally {
@@ -1240,6 +1410,148 @@ export function App({
     }
 
     await exportRows(rows, failedExportRetry.settings, true);
+  }
+
+  async function withDriveToken<T>(
+    operation: (token: string) => Promise<T>,
+  ): Promise<T> {
+    const token =
+      driveTokenRef.current ??
+      (await requestDriveAccessToken(googleDriveConfiguration));
+    driveTokenRef.current = token;
+    try {
+      return await operation(token);
+    } catch (error) {
+      if (!(error instanceof DriveRequestError) || error.status !== 401) {
+        throw error;
+      }
+      driveTokenRef.current = null;
+      const renewedToken = await requestDriveAccessToken(
+        googleDriveConfiguration,
+      );
+      driveTokenRef.current = renewedToken;
+      return operation(renewedToken);
+    }
+  }
+
+  async function selectDriveItem(options: {
+    mimeTypes?: readonly string[];
+    mode?: "file" | "folder";
+  }): Promise<DriveReference | null> {
+    const selected = await withDriveToken((accessToken) =>
+      pickDriveFile({
+        accessToken,
+        configuration: googleDriveConfiguration,
+        ...options,
+      }),
+    );
+    if (!selected) return null;
+    return withDriveToken((token) =>
+      getDriveMetadata(token, selected.id, driveFetch),
+    );
+  }
+
+  function storeDriveSource(
+    kind: "svg" | "spreadsheet",
+    reference: DriveReference,
+    file: File,
+  ) {
+    useAppStore.setState((state) => {
+      if (!state.project) return state;
+      return {
+        project: {
+          ...state.project,
+          sources: [
+            ...state.project.sources.filter((source) => source.kind !== kind),
+            {
+              id: `${kind}-source`,
+              kind,
+              location: "drive",
+              fileId: reference.fileId,
+              fileName: file.name,
+              fileSize: file.size,
+            },
+          ],
+        },
+      };
+    });
+  }
+
+  async function openFromGoogleDrive() {
+    if (!capabilities.googleDriveConfigured) return;
+    setIsUsingDrive(true);
+    try {
+      const reference = await selectDriveItem({});
+      if (!reference) return;
+      const file = await withDriveToken((token) =>
+        downloadDriveFile(token, reference, driveFetch),
+      );
+      const imported = await importDriveFile(file);
+      if (imported.kind === "project") {
+        useAppStore.getState().setProject(imported.project);
+        driveProjectReferenceRef.current = reference;
+      } else if (imported.kind === "spreadsheet") {
+        setSpreadsheetSource(imported.spreadsheet);
+        storeDriveSource("spreadsheet", reference, file);
+      } else {
+        setSvgSearchQuery("");
+        setTemplateUpdateSummary(null);
+        setSvgSource(imported.svg);
+        storeDriveSource("svg", reference, file);
+      }
+      notifications.show({
+        color: "green",
+        title: `${file.name} opened from Drive`,
+        message:
+          imported.kind === "project"
+            ? "The self-contained project passed validation."
+            : "The file passed the existing local import checks.",
+      });
+    } catch (error) {
+      notifications.show({
+        color: "red",
+        title: "Google Drive open failed",
+        message: driveErrorMessage(error),
+      });
+    } finally {
+      setIsUsingDrive(false);
+    }
+  }
+
+  async function linkDriveSvg() {
+    if (!project || !capabilities.googleDriveConfigured) return;
+    setIsUsingDrive(true);
+    try {
+      const reference = await selectDriveItem({ mimeTypes: ["image/svg+xml"] });
+      if (!reference) return;
+      const file = await withDriveToken((token) =>
+        downloadDriveFile(token, reference, driveFetch),
+      );
+      const imported = await importDriveFile(file);
+      if (imported.kind !== "svg") {
+        throw new Error("Choose an SVG file from Google Drive.");
+      }
+      await applyLinkedTemplate(
+        imported.svg,
+        {
+          id: "svg-source",
+          kind: "svg",
+          location: "drive",
+          fileId: reference.fileId,
+          fileName: file.name,
+          fileSize: file.size,
+        },
+        true,
+      );
+    } catch (error) {
+      notifications.show({
+        color: "red",
+        title: "Drive SVG link failed",
+        message: driveErrorMessage(error),
+      });
+    } finally {
+      setIsUsingDrive(false);
+    }
   }
 
   async function handleSpreadsheetFile(event: ChangeEvent<HTMLInputElement>) {
@@ -1456,9 +1768,35 @@ export function App({
       } else if (source.location === "https") {
         await applyLinkedTemplate(await readHttpsLinkedSvg(source.url), source);
       } else if (source.location === "drive") {
-        throw new Error(
-          "Google Drive SVG reload is available when the hosted Drive adapter is configured.",
+        if (!capabilities.googleDriveConfigured) {
+          throw new Error(
+            capabilities.hostedOrigin
+              ? "Google Drive is not configured for this hosted origin."
+              : "Open this project through the hosted app to use Google Drive.",
+          );
+        }
+        const reference = await withDriveToken((token) =>
+          getDriveMetadata(token, source.fileId, driveFetch),
         );
+        const file = await withDriveToken((token) =>
+          downloadDriveFile(token, reference, driveFetch),
+        );
+        const imported = await importDriveFile(file);
+        if (imported.kind !== "svg") {
+          throw new Error("The linked Drive file is no longer an SVG.");
+        }
+        if (
+          !window.confirm(
+            "The linked Drive SVG passed validation. Apply this template update now?",
+          )
+        ) {
+          return;
+        }
+        await applyLinkedTemplate(imported.svg, {
+          ...source,
+          fileName: file.name,
+          fileSize: file.size,
+        });
       }
     } catch (error) {
       notifications.show({
@@ -1622,11 +1960,13 @@ export function App({
               <Button
                 variant="default"
                 leftSection={<IconFolderOpen />}
-                disabled={!capabilities.googleDriveConfigured}
+                disabled={!capabilities.googleDriveConfigured || isUsingDrive}
+                loading={isUsingDrive}
+                onClick={() => void openFromGoogleDrive()}
                 title={
                   capabilities.hostedOrigin
                     ? capabilities.googleDriveConfigured
-                      ? "Open a spreadsheet from Google Drive"
+                      ? "Open a supported file from Google Drive"
                       : "Google Drive is not configured for this hosted origin"
                     : "Open this project through the hosted app to use Google Drive"
                 }
@@ -1954,6 +2294,26 @@ export function App({
               >
                 Link local SVG
               </Button>
+              <Button
+                disabled={
+                  !project ||
+                  !capabilities.googleDriveConfigured ||
+                  isReloadingSvg ||
+                  isUsingDrive
+                }
+                leftSection={<IconFolderOpen size={16} />}
+                onClick={() => void linkDriveSvg()}
+                title={
+                  capabilities.hostedOrigin
+                    ? capabilities.googleDriveConfigured
+                      ? "Link an SVG selected through Google Drive"
+                      : "Google Drive is not configured for this hosted origin"
+                    : "Open this project through the hosted app to use Google Drive"
+                }
+                variant="subtle"
+              >
+                Link Drive SVG
+              </Button>
               {svg &&
                 project?.sources.some(
                   (source) =>
@@ -2231,6 +2591,26 @@ export function App({
           >
             Save project
           </Button>
+          <Button
+            disabled={
+              !project ||
+              !capabilities.googleDriveConfigured ||
+              isSavingProject ||
+              isUsingDrive
+            }
+            leftSection={<IconFolderOpen />}
+            onClick={() => void saveProjectToDrive()}
+            title={
+              capabilities.hostedOrigin
+                ? capabilities.googleDriveConfigured
+                  ? "Save the self-contained project HTML to Google Drive"
+                  : "Google Drive is not configured for this hosted origin"
+                : "Open this project through the hosted app to use Google Drive"
+            }
+            variant="default"
+          >
+            Save to Drive
+          </Button>
           <Select
             allowDeselect={false}
             aria-label="Export format"
@@ -2306,6 +2686,39 @@ export function App({
             }
           >
             Export selected
+          </Button>
+          <Button
+            disabled={
+              !svg ||
+              selectedRows.length === 0 ||
+              !capabilities.googleDriveConfigured ||
+              isExporting ||
+              isUsingDrive
+            }
+            leftSection={<IconFolderOpen />}
+            onClick={() =>
+              void exportRows(
+                selectedRows,
+                {
+                  format: exportFormat,
+                  includeCsv,
+                  filenameTemplate,
+                  collisionPolicy: filenameCollisionPolicy,
+                },
+                continueOnError,
+                "drive",
+              )
+            }
+            title={
+              capabilities.hostedOrigin
+                ? capabilities.googleDriveConfigured
+                  ? "Save the generated output archive to Google Drive"
+                  : "Google Drive is not configured for this hosted origin"
+                : "Open this project through the hosted app to use Google Drive"
+            }
+            variant="default"
+          >
+            Export to Drive
           </Button>
           {isExporting && (
             <Button

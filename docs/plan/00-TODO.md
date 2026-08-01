@@ -632,8 +632,10 @@ Only one implementation item should normally be `[-]`.
 - [x] Add remote HTTPS SVG link support with CORS-aware errors.
   - URLs must use HTTPS. Fetch omits credentials and distinguishes HTTP status
     failures from network/likely-CORS failures before SVG validation.
-- [!] Add Google Drive SVG link support through the Drive adapter. Blocked by the
-  Phase 8 hosted Drive adapter.
+- [x] Add Google Drive SVG link support through the Drive adapter.
+  - Drive-selected SVGs use the existing sanitizer and linked-template
+    compatibility path. Reload keeps the embedded snapshot on failure and
+    applies a validated candidate only after explicit confirmation.
 - [x] Implement the manual “Reload linked SVG” flow.
   - Reload resolves the persisted local or HTTPS source only after explicit
     user action. Matching SHA-256 content is a no-op; unavailable, denied,
@@ -686,13 +688,34 @@ Only one implementation item should normally be `[-]`.
     `src/drive/googleClient.test.ts`.
   - Tests: `bun run test -- src/drive/googleClient.test.ts` (7 tests);
     `bunx tsc -b`; `bun run lint`.
-- [-] Open SVG, spreadsheet, and project HTML files from Picker.
-- [ ] Export native Google Sheets to XLSX for the MVP.
-- [ ] Save new project and output files to a selected Drive folder.
-- [ ] Update an existing app-created project file.
-- [ ] Handle expired auth, revoked access, missing files, and file conflicts.
-- [ ] Never expose Drive controls as functional in `file://` mode.
-- [ ] Verify local core remains usable when Google scripts are blocked.
+- [x] Open SVG, spreadsheet, and project HTML files from Picker.
+  - Downloaded files pass through the same spreadsheet parser, SVG sanitizer,
+    and embedded-project validator as local files.
+- [x] Export native Google Sheets to XLSX for the MVP.
+  - Native Sheets use the Drive export endpoint and then the existing XLSX
+    import path; export-size failures receive a specific message.
+- [x] Save new project and output files to a selected Drive folder.
+  - New self-contained project HTML and generated ZIP output archives use a
+    folder-only Picker and multipart Drive upload.
+- [x] Update an existing app-created project file.
+  - The in-memory safe Drive reference supports repeated project saves during
+    the session and is also established when project HTML is opened by Picker.
+- [x] Handle expired auth, revoked access, missing files, and file conflicts.
+  - HTTP 401 retries once with a new in-memory token. Revoked/missing errors
+    remain recoverable. Updates compare version/modified time and offer save a
+    copy (default), reload, overwrite, or cancel.
+- [x] Never expose Drive controls as functional in `file://` mode.
+- [x] Verify local core remains usable when Google scripts are blocked.
+  - Drive controls derive from capabilities, scripts load only after a Drive
+    action, and script failures are isolated and retryable.
+  - Main files: `src/drive/googleClient.ts`, `src/drive/driveFiles.ts`,
+    `src/drive/importDriveFile.ts`, `src/App.tsx` and their tests.
+  - Focused tests: `bun run test -- src/App.test.tsx
+    src/drive/googleClient.test.ts src/drive/driveFiles.test.ts
+    src/drive/importDriveFile.test.ts src/svg/linkedSvg.test.ts
+    src/store.test.ts` (80 tests).
+  - Full check: `bun run check` (53 test files, 342 tests; verified one
+    self-contained `dist/index.html`, 2,310,112 bytes).
 
 ## Phase 9 — Release checks
 
