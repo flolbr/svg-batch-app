@@ -4,8 +4,9 @@ Last updated: 2026-08-01
 
 ## Current task
 
-Phase 8 is in progress. Hosted-mode capability detection is complete; lazy
-Google Identity Services and Picker loading is the active item.
+Phase 8 is in progress. Hosted capability detection, lazy Google client
+loading, and in-memory `drive.file` authentication are complete. Picker file
+imports are the active item.
 
 Latest implementation commit: `1bcfa35 fix: harden linked SVG reload`.
 
@@ -29,9 +30,8 @@ Latest implementation commit: `1bcfa35 fix: harden linked SVG reload`.
 - Full check: `bun run check` (49 test files, 315 tests; self-contained
   `dist/index.html` verified at 2,296,262 bytes).
 
-Next concrete step: implement lazy Google Identity Services and Picker loading
-behind the configured hosted capability, followed by in-memory `drive.file`
-authentication.
+Next concrete step: connect Picker selection and Drive downloads to the
+existing SVG, spreadsheet, and project HTML import paths.
 
 ## What works
 

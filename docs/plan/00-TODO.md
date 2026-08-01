@@ -675,9 +675,18 @@ Only one implementation item should normally be `[-]`.
     `src/App.tsx`, `src/App.test.tsx`.
   - Tests: `bun run test -- src/capabilities.test.ts src/App.test.tsx`
     (40 tests).
-- [-] Load Google Identity Services and Picker lazily.
-- [ ] Authenticate with `drive.file`.
-- [ ] Open SVG, spreadsheet, and project HTML files from Picker.
+- [x] Load Google Identity Services and Picker lazily.
+  - GIS and Google API scripts load only after an explicit Drive action.
+    Concurrent calls share script/module loads, and failed loads remain
+    retryable without affecting the local core.
+- [x] Authenticate with `drive.file`.
+  - OAuth requests exactly `drive.file`, keeps the token in memory only, and
+    retries an unavailable silent grant through interactive consent.
+  - Main files: `src/drive/googleClient.ts`,
+    `src/drive/googleClient.test.ts`.
+  - Tests: `bun run test -- src/drive/googleClient.test.ts` (7 tests);
+    `bunx tsc -b`; `bun run lint`.
+- [-] Open SVG, spreadsheet, and project HTML files from Picker.
 - [ ] Export native Google Sheets to XLSX for the MVP.
 - [ ] Save new project and output files to a selected Drive folder.
 - [ ] Update an existing app-created project file.
