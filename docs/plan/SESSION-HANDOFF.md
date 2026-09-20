@@ -380,6 +380,8 @@ artifact publication, and a previous-version update.
   src/update/releaseManifest.test.ts src/update/releaseArtifact.test.ts
   src/update/buildUpdatedProject.test.ts` (18 tests).
 - `bunx tsc -b`.
+- `bun run check` (58 test files, 364 tests; self-contained
+  `dist/index.html` verified at 2,317,000 bytes; one pre-existing lint warning).
 - `bun run verify:single` (self-contained `dist/index.html` verified at
   2,310,275 bytes).
 - `bun run test -- src/update/releaseManifest.test.ts` (6 tests).
