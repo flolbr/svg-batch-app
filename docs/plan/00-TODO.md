@@ -832,9 +832,16 @@ Only one implementation item should normally be `[-]`.
 - [ ] Test one current Firefox/Safari fallback path for download-based saving.
 - [ ] Test hosted Drive import/save on localhost and production origin.
 - [ ] Test a signed update from the previous published application version.
-- [-] Implement GitHub Pages and GitHub Release publication.
+- [x] Implement GitHub Pages and GitHub Release publication.
   - Keep signing local and offline; publish the signed manifest and immutable
     artifact to Pages, then attach the same bytes to a matching Release.
+  - `scripts/publishRelease.ts` builds, signs, publishes the `gh-pages` branch,
+    configures Pages, and creates the matching Release without CI key access.
+  - Published `v0.1.0`; Pages and Release artifact hashes match.
+  - Main files: `scripts/publishRelease.ts`, `src/update/releaseManifest.ts`,
+    `package.json`.
+  - Tests: `bunx tsc -b`; focused signing/manifest tests (12 passed);
+    live Pages and Release hash verification.
 - [ ] Rehearse GitHub Pages publication with a byte-identical GitHub Release
   asset, including `file://` CORS fetch and rollback checks.
 - [ ] Record practical file-size guidance in the UI.
