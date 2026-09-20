@@ -65,6 +65,7 @@ import { MappingEditor } from "./MappingEditor";
 import { SvgObjectTree } from "./SvgObjectTree";
 import { SvgPreview } from "./SvgPreview";
 import { ValidationReportModal } from "./ValidationReportModal";
+import { APP_VERSION } from "./appInfo";
 import {
   detectBrowserCapabilities,
   googleDriveConfigurationFromEnv,
@@ -125,7 +126,6 @@ import { getMappingStatus } from "./mappings/mappingStatus";
 import type { ValidationIssue } from "./mappings/validation";
 import { createProjectSnapshot } from "./project/createProjectSnapshot";
 import { downloadProjectHtml } from "./project/downloadProjectFile";
-import { APP_VERSION } from "./appInfo";
 import {
   deleteRecoveryProject,
   saveRecoveryProject,
@@ -151,6 +151,13 @@ import {
   type TemplateMappingComparison,
 } from "./svg/linkedSvg";
 import type { SvgTreeNode } from "./svg/buildSvgTree";
+import { buildUpdatedProjectHtml } from "./update/buildUpdatedProject";
+import {
+  checkForUpdates,
+  RELEASE_PUBLIC_KEY,
+  type UpdateCheck,
+} from "./update/releaseManifest";
+import { fetchVerifiedRelease } from "./update/releaseArtifact";
 import {
   validateRows,
   type ValidationPipelineResult,
@@ -175,6 +182,7 @@ type FailedExportRetry = {
 type AppProps = {
   capabilities?: Capabilities;
   driveFetch?: typeof fetch;
+  updateFetch?: typeof fetch;
   googleDriveConfiguration?: GoogleDriveConfiguration;
   pickDriveFile?: (
     options: GooglePickerOptions,
@@ -189,6 +197,7 @@ type AppProps = {
     reference: string,
     handle: LocalSvgFileHandle,
   ) => Promise<void>;
+  updatePublicKey?: JsonWebKey;
 };
 const svgSourceStatusPresentation: Record<
   SvgSourceStatus,
@@ -543,6 +552,7 @@ function findSvgNode(
 export function App({
   capabilities = detectBrowserCapabilities(),
   driveFetch = fetch,
+  updateFetch = fetch,
   googleDriveConfiguration = googleDriveConfigurationFromEnv(import.meta.env),
   pickDriveFile = pickGoogleDriveFile,
   projectDocument,
@@ -550,6 +560,7 @@ export function App({
   showSaveFilePicker,
   showOpenFilePicker,
   saveLinkedSvgHandle = persistLocalSvgHandle,
+  updatePublicKey = RELEASE_PUBLIC_KEY,
 }: AppProps = {}) {
   const workspaceRef = useRef<HTMLElement>(null);
   const dataTableScrollRef = useRef<HTMLDivElement>(null);
@@ -613,6 +624,10 @@ export function App({
   const [isExporting, setIsExporting] = useState(false);
   const [isSavingProject, setIsSavingProject] = useState(false);
   const [isUsingDrive, setIsUsingDrive] = useState(false);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
+  const [updateCheck, setUpdateCheck] = useState<UpdateCheck | null>(null);
+  const [updatesOffline, setUpdatesOffline] = useState(false);
   const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 150);
   const project = useAppStore((state) => state.project);
   const panelWeights = useAppStore((state) => state.ui.panelWeights);
@@ -1065,7 +1080,7 @@ export function App({
     setValidationReportOpened(true);
   }
 
-  function createCurrentProjectFile() {
+  function createCurrentProjectFile(appVersion = APP_VERSION) {
     if (!project) throw new Error("A valid project is required.");
     const snapshot = createProjectSnapshot({
       project,
@@ -1081,13 +1096,79 @@ export function App({
         continueOnError,
       },
       updatedAt: new Date().toISOString(),
-      appVersion: APP_VERSION,
+      appVersion,
     });
     return {
       snapshot,
       html: serializeProjectHtml(cleanProjectDocumentRef.current!, snapshot),
       filename: projectHtmlFileName(project.name),
     };
+  }
+
+  async function checkApplicationUpdates() {
+    if (updatesOffline || isCheckingUpdate || isApplyingUpdate) return;
+    setIsCheckingUpdate(true);
+    try {
+      const result = await checkForUpdates({
+        fetchImpl: updateFetch,
+        publicKey: updatePublicKey,
+      });
+      setUpdateCheck(result);
+      if (result.status === "update") {
+        notifications.show({
+          color: "blue",
+          message: `Version ${result.release.version} is ready to download.`,
+          title: "Application update available",
+        });
+      } else if (result.status === "error") {
+        notifications.show({
+          color: "orange",
+          message: result.message,
+          title: "Update check unavailable",
+        });
+      }
+    } finally {
+      setIsCheckingUpdate(false);
+    }
+  }
+
+  async function downloadApplicationUpdate() {
+    if (
+      updatesOffline ||
+      updateCheck?.status !== "update" ||
+      !project ||
+      isApplyingUpdate
+    ) {
+      return;
+    }
+    setIsApplyingUpdate(true);
+    try {
+      const artifact = await fetchVerifiedRelease(
+        updateCheck.release,
+        updateFetch,
+      );
+      const { snapshot, filename } = createCurrentProjectFile(
+        updateCheck.release.version,
+      );
+      const html = buildUpdatedProjectHtml(artifact.html, snapshot);
+      downloadProjectHtml(html, filename);
+      notifications.show({
+        color: "green",
+        message: `Downloaded ${filename} with application version ${updateCheck.release.version}.`,
+        title: "Application update ready",
+      });
+    } catch (error) {
+      notifications.show({
+        color: "red",
+        message:
+          error instanceof Error
+            ? error.message
+            : "The application update could not be downloaded.",
+        title: "Application update failed",
+      });
+    } finally {
+      setIsApplyingUpdate(false);
+    }
   }
 
   function finishProjectSave(snapshot: Project) {
@@ -1905,6 +1986,52 @@ export function App({
         </Group>
 
         <Group gap="xs">
+          <Text size="xs" c="dimmed">
+            v{APP_VERSION}
+          </Text>
+          <Checkbox
+            aria-label="Disable application update checks"
+            checked={updatesOffline}
+            label="Offline updates"
+            onChange={(event) => {
+              setUpdatesOffline(event.currentTarget.checked);
+              if (event.currentTarget.checked) setUpdateCheck(null);
+            }}
+          />
+          {updateCheck?.status === "update" && (
+            <Text size="xs" c="dimmed" maw={180} truncate="end">
+              {updateCheck.release.notes ?? "A newer application release is available."}
+            </Text>
+          )}
+          {updateCheck?.status === "current" && (
+            <Text aria-live="polite" size="xs" c="dimmed">
+              Up to date
+            </Text>
+          )}
+          {updateCheck?.status === "error" && (
+            <Text aria-live="polite" size="xs" c="orange" maw={180} truncate="end">
+              Update check: {updateCheck.message}
+            </Text>
+          )}
+          {updateCheck?.status === "update" && (
+            <Button
+              loading={isApplyingUpdate}
+              onClick={() => void downloadApplicationUpdate()}
+              size="sm"
+              variant="light"
+            >
+              Update to v{updateCheck.release.version}
+            </Button>
+          )}
+          <Button
+            disabled={updatesOffline || isApplyingUpdate}
+            loading={isCheckingUpdate}
+            onClick={() => void checkApplicationUpdates()}
+            size="sm"
+            variant="subtle"
+          >
+            Check for updates
+          </Button>
           <Button
             variant="subtle"
             color="dark"

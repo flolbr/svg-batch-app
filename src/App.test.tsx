@@ -1,5 +1,6 @@
 import { MantineProvider } from "@mantine/core";
 import userEvent from "@testing-library/user-event";
+import { webcrypto } from "node:crypto";
 import {
   act,
   cleanup,
@@ -218,6 +219,84 @@ describe("App", () => {
     expect(workspace.style.getPropertyValue("--data-panel-width")).not.toBe(
       initialDataPanelWidth,
     );
+  });
+
+  it("keeps update checks recoverable and supports the offline control", async () => {
+    const user = userEvent.setup();
+    const updateFetch = vi.fn(async () =>
+      ({ ok: false, status: 503, text: async () => "" }) as Response,
+    );
+    render(
+      <MantineProvider>
+        <App updateFetch={updateFetch} />
+      </MantineProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Check for updates" }));
+    expect(updateFetch).toHaveBeenCalledTimes(1);
+    expect(
+      await screen.findByText(
+        "Update check: Update server responded with HTTP 503.",
+      ),
+    ).toBeInTheDocument();
+
+    const offline = screen.getByRole("checkbox", {
+      name: "Disable application update checks",
+    });
+    await user.click(offline);
+    expect(
+      screen.getByRole("button", { name: "Check for updates" }),
+    ).toBeDisabled();
+  });
+
+  it("shows a verified newer release and its notes", async () => {
+    vi.stubGlobal("crypto", webcrypto);
+    const user = userEvent.setup();
+    const keyPair = (await webcrypto.subtle.generateKey(
+      { name: "ECDSA", namedCurve: "P-256" },
+      true,
+      ["sign", "verify"],
+    )) as CryptoKeyPair;
+    const payload = JSON.stringify({
+      app: "svg-batch-generator",
+      version: "1.2.0",
+      sha256: "a".repeat(64),
+      url: "https://releases.example.test/app-1.2.0.html",
+      notes: "Faster release checks.",
+    });
+    const signature = await webcrypto.subtle.sign(
+      { name: "ECDSA", hash: "SHA-256" },
+      keyPair.privateKey,
+      new TextEncoder().encode(payload),
+    );
+    const updateFetch = vi.fn(async () =>
+      ({
+        ok: true,
+        status: 200,
+        text: async () =>
+          JSON.stringify({
+            payload,
+            sig: Buffer.from(signature).toString("base64"),
+          }),
+      }) as Response,
+    );
+    render(
+      <MantineProvider>
+        <App
+          updateFetch={updateFetch}
+          updatePublicKey={await webcrypto.subtle.exportKey(
+            "jwk",
+            keyPair.publicKey,
+          )}
+        />
+      </MantineProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Check for updates" }));
+    expect(await screen.findByText("Faster release checks.")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Update to v1.2.0" }),
+    ).toBeInTheDocument();
   });
 
   it("derives hosted and Google Drive availability from capabilities", () => {

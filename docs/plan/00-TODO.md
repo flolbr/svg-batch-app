@@ -775,7 +775,12 @@ Only one implementation item should normally be `[-]`.
     leave the existing file untouched as rollback.
   - Do not transfer runtime-only handles, OAuth tokens, recovery records,
     preview DOM, or generated exports.
-- [ ] Add focused update UI.
+- [x] Add focused update UI.
+  - The header exposes the current version, manual check, update-offline toggle,
+    current/error status, release notes, and a download action for verified
+    newer releases.
+  - Main files: `src/App.tsx`, `src/App.test.tsx`.
+  - Tests: `bun run test -- src/App.test.tsx` (40 tests); `bunx tsc -b`.
   - Show current version, check status, offered version, concise release notes,
     update action, offline state, and recoverable verification failures.
 - [ ] Add local release signing and publication tooling.

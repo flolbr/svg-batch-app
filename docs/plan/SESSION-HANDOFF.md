@@ -35,8 +35,8 @@ Latest planning commit: `e7496e1 docs: plan signed application updates`.
 - Full check: `bun run check` (53 test files, 342 tests; self-contained
   `dist/index.html` verified at 2,310,112 bytes).
 
-Next concrete step: add the focused update UI and download action around the
-verified manifest/artifact/splice pipeline.
+Next concrete step: add the local release signing/publication tooling and the
+remaining update-artifact acceptance tests.
 
 ## What works
 
@@ -332,8 +332,8 @@ and an authorized test account.
 
 ## Next concrete step
 
-Add the focused update UI and download action around the verified
-manifest/artifact/splice pipeline.
+Add local release signing/publication tooling and the remaining
+update-artifact acceptance tests.
 
 ## Files changed
 
@@ -367,6 +367,8 @@ manifest/artifact/splice pipeline.
 - `bun run test -- src/update/releaseArtifact.test.ts` (4 tests).
 - `bunx tsc -b`.
 - `bun run test -- src/update/buildUpdatedProject.test.ts` (2 tests).
+- `bunx tsc -b`.
+- `bun run test -- src/App.test.tsx` (40 tests).
 - `bunx tsc -b`.
 - `bun run verify:single` (self-contained `dist/index.html` verified at
   2,310,275 bytes).
