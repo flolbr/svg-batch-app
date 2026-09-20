@@ -1,5 +1,14 @@
 # 01 — Context and scope
 
+## Product inspiration
+
+The single-file product model is inspired by
+[Bento](https://github.com/nyblnet/bento): the document carries its own
+viewer/editor, saves its data back into the file, and can move that data into a
+newer verified application shell. SVG Batch Generator remains its own focused
+product; Bento is architectural inspiration, not a dependency or a feature
+checklist.
+
 ## Product summary
 
 A desktop-first browser application for generating personalized SVG and PDF files from spreadsheet rows.
@@ -27,6 +36,8 @@ The project itself is saved as one self-contained HTML file containing the appli
 9. Validate.
 10. Export SVG/PDF/CSV/manifest, usually as a ZIP.
 11. Save the project HTML locally or to Google Drive in hosted mode.
+12. When online and permitted, check for a signed newer application release and
+    download an updated project HTML without replacing the existing file.
 
 ## Mapping types
 
@@ -94,6 +105,10 @@ Available:
 - local export;
 - self-contained project save;
 - linked local file reload when browser permission is available.
+- manual signed update checks when networking is permitted.
+
+The local application remains fully usable without an update check. Automatic
+launch checks are optional and can be disabled; offline mode blocks them.
 
 Unavailable:
 
@@ -123,4 +138,7 @@ Do not implement these until the MVP is complete and a real requirement exists:
 - multipage PDF unless individual-PDF export proves insufficient;
 - Shared Drive support unless requested;
 - a plugin system;
-- a generic workflow engine.
+- a generic workflow engine;
+- multiple application release channels;
+- background update polling;
+- silent application updates without an explicit user action.

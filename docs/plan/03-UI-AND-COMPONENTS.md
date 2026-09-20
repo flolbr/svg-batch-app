@@ -151,6 +151,16 @@ Also show:
 - validation error count;
 - current output formats.
 
+## Application updates
+
+Expose the current application version and “Check for updates” in the existing
+project/header actions. When a verified newer release exists, show its version,
+concise release notes, and one action that downloads the updated project HTML.
+
+Keep update feedback non-blocking. The current file remains usable after
+network or verification failure. An offline control clearly disables launch
+and manual checks; the optional launch check can be disabled independently.
+
 ## Feedback
 
 Use:

@@ -1,12 +1,12 @@
 # Session handoff
 
-Last updated: 2026-08-01
+Last updated: 2026-09-20
 
 ## Current task
 
-Phase 8 hosted Google Drive adapter is complete. Phase 9 release checks are
-next; real Drive acceptance requires configured Google deployment identifiers
-and allowed localhost/production origins.
+Phase 8 hosted Google Drive adapter is complete. The product plan now records
+the missing Bento-inspired signed application-update phase before release
+checks. Phase 9 signed updates are next; Phase 10 contains final acceptance.
 
 Latest implementation commit: `5f6fe65 feat: add hosted Google Drive adapter`.
 
@@ -34,8 +34,9 @@ Latest implementation commit: `5f6fe65 feat: add hosted Google Drive adapter`.
 - Full check: `bun run check` (53 test files, 342 tests; self-contained
   `dist/index.html` verified at 2,310,112 bytes).
 
-Next concrete step: begin Phase 9 release checks, including real hosted Drive
-import/save/conflict acceptance on localhost and the production origin.
+Next concrete step: begin Phase 9 by replacing the placeholder `0.0.0` with a
+build-time semantic application version and stable application ID, then add the
+signed manifest verification boundary.
 
 ## What works
 
@@ -325,41 +326,33 @@ import/save/conflict acceptance on localhost and the production origin.
 
 ## What remains
 
-Phase 9 release checks remain unchecked. Real hosted Drive acceptance still
-needs deployment configuration and an authorized test account.
+Phase 9 signed application updates and Phase 10 release checks remain
+unchecked. Real hosted Drive acceptance still needs deployment configuration
+and an authorized test account.
 
 ## Next concrete step
 
-Run the Phase 9 representative fixture, scale, browser, and hosted Drive
-acceptance checks.
+Implement the Phase 9 application identity/version boundary and signed release
+manifest verifier. Keep the updater download-based and dependency-free.
 
 ## Files changed
 
 - `docs/plan/00-TODO.md`
+- `docs/plan/01-CONTEXT-AND-SCOPE.md`
+- `docs/plan/02-ARCHITECTURE.md`
+- `docs/plan/03-UI-AND-COMPONENTS.md`
+- `docs/plan/07-SINGLE-FILE-PROJECT.md`
+- `docs/plan/09-TEST-PLAN.md`
+- `docs/plan/10-DECISIONS.md`
+- `docs/plan/README.md`
 - `docs/plan/SESSION-HANDOFF.md`
-- `src/capabilities.ts`
-- `src/capabilities.test.ts`
-- `src/drive/googleClient.ts`
-- `src/drive/googleClient.test.ts`
-- `src/drive/driveFiles.ts`
-- `src/drive/driveFiles.test.ts`
-- `src/drive/importDriveFile.ts`
-- `src/drive/importDriveFile.test.ts`
-- `src/App.tsx`
-- `src/App.test.tsx`
 
 ## Tests run
 
-- `bun run test -- src/App.test.tsx src/drive/googleClient.test.ts
-  src/drive/driveFiles.test.ts src/drive/importDriveFile.test.ts
-  src/svg/linkedSvg.test.ts src/store.test.ts` (80 tests)
-- `bun run check` (53 test files, 342 tests; verified 2,310,112-byte
-  self-contained `dist/index.html`)
-- Earlier Phase 6 checks: `bun run test -- src/App.test.tsx` (30 tests),
-  `bun run check` (48 test files, 303 tests), and Browser Harness recordings
-  `phase6-file-save`, `phase6-download-fallback`,
-  `phase6-indexeddb-recovery`, `phase6-offline-reopen`, and
-  `preview-mapped-row-switch`
+- `git diff --check`.
+- No runtime behavior changed; the last implementation check remains
+  `bun run check` (53 test files, 342 tests; verified 2,310,112-byte
+  self-contained `dist/index.html`).
 
 ## Latest commit
 

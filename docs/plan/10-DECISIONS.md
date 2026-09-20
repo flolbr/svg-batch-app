@@ -2,6 +2,24 @@
 
 Keep this file concise. Record decisions, not discussion.
 
+## 2026-09-20
+
+### Bento-inspired signed application updates
+
+Use [Bento](https://github.com/nyblnet/bento) as architectural inspiration for
+the single-file application and update model.
+
+Ship one stable signed release channel. The application verifies an ECDSA P-256
+manifest, application identity, strictly newer version, and release SHA-256
+before inserting the current validated project into the new shell.
+
+Applying an update downloads a new HTML file and retains the old file as
+rollback. Update checks are optional, disclose network use, send no project
+data, and are blocked by offline mode.
+
+Keep the signing key offline. Do not add a runtime crypto dependency, background
+polling, delta updates, multiple channels, or a generic updater framework.
+
 ## 2026-07-31
 
 ### Batch execution

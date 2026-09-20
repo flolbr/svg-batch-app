@@ -82,6 +82,9 @@ src/
     auth.ts
     picker.ts
     files.ts
+  update/
+    releaseManifest.ts
+    buildUpdatedProject.ts
   ui/
     AppLayout.tsx
     DataPanel.tsx
@@ -130,6 +133,12 @@ Transient:
 - unsaved rollback SVG;
 - File System handles;
 - parsed workbook object.
+- offered release metadata and update-check status.
+
+The updater is a narrow boundary rather than a service framework. Manifest
+verification and release-byte verification stay independently testable; the
+existing project snapshot and HTML serializer own project migration and shell
+splicing.
 
 ## Domain rule
 

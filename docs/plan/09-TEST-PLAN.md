@@ -17,6 +17,10 @@ Required for pure logic:
 - project serialization;
 - project migrations;
 - linked-SVG compatibility comparison.
+- semantic version comparison;
+- signed update-manifest verification;
+- release artifact hash and shell validation;
+- project splicing into a verified release shell.
 
 Use small fixtures and explicit expected objects.
 
@@ -31,6 +35,7 @@ Use React Testing Library for:
 - mapping form behavior;
 - validation report;
 - Drive-disabled state in local mode.
+- update available/current/error states and offline opt-out.
 
 Do not test Mantine internals.
 
@@ -97,6 +102,21 @@ At minimum:
 5. reopen through hosted app;
 6. update same file;
 7. test a conflict.
+
+### Application update
+
+1. open a previous release containing a representative saved project;
+2. check the signed static manifest and offer the newer version;
+3. show the offered version and release notes;
+4. download a new HTML containing the unchanged project snapshot;
+5. reopen it and confirm the newer application version plus restored state;
+6. confirm the original file remains usable as rollback;
+7. repeat with offline mode and confirm no update request occurs.
+
+The release-channel rehearsal must also reject a tampered manifest, tampered
+artifact, wrong application ID, same or older version, malformed application
+shell, and unsafe project-block content. It uses a disposable signing key and
+publishes nothing.
 
 ## Performance checks
 

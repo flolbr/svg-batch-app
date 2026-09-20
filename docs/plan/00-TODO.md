@@ -13,6 +13,12 @@ Only one implementation item should normally be `[-]`.
 
 ## Handoff preparation
 
+- [x] Record the Bento-inspired signed self-update requirements and release boundary.
+  - Main files: `docs/plan/01-CONTEXT-AND-SCOPE.md`,
+    `docs/plan/02-ARCHITECTURE.md`, `docs/plan/03-UI-AND-COMPONENTS.md`,
+    `docs/plan/07-SINGLE-FILE-PROJECT.md`,
+    `docs/plan/09-TEST-PLAN.md`, `docs/plan/10-DECISIONS.md`.
+  - Tests: documentation review; no runtime behavior changed.
 - [x] Record agreed product scope.
 - [x] Record architecture and technology choices.
 - [x] Include the approved UI reference image.
@@ -717,7 +723,46 @@ Only one implementation item should normally be `[-]`.
   - Full check: `bun run check` (53 test files, 342 tests; verified one
     self-contained `dist/index.html`, 2,310,112 bytes).
 
-## Phase 9 — Release checks
+## Phase 9 — Signed application updates
+
+- [ ] Replace the placeholder application version with a build-time semantic version.
+  - `package.json` is the source of truth. Embed the version and stable
+    application ID in the built shell and new project audit snapshots.
+- [ ] Add the signed release-manifest parser and verifier.
+  - Verify ECDSA P-256 with an embedded public key, require the expected
+    application ID, validate manifest shape, and offer only a strictly newer
+    semantic version.
+  - Use Web Crypto directly; add no runtime crypto dependency.
+- [ ] Add manual and optional launch update checks with an offline control.
+  - A failed or blocked check must not affect local startup or project use.
+  - Send no project ID, filename, content, or telemetry.
+- [ ] Download and verify the new single-file release.
+  - Require the SHA-256 from the signed manifest and exactly one valid,
+    replaceable `#svg-batch-project` block in the candidate shell.
+- [ ] Move the current project into the verified release shell.
+  - Reuse the validated snapshot and serializer, download a new HTML file, and
+    leave the existing file untouched as rollback.
+  - Do not transfer runtime-only handles, OAuth tokens, recovery records,
+    preview DOM, or generated exports.
+- [ ] Add focused update UI.
+  - Show current version, check status, offered version, concise release notes,
+    update action, offline state, and recoverable verification failures.
+- [ ] Add local release signing and publication tooling.
+  - Generate and retain the private key outside the repository, build the exact
+    artifact, hash it, sign and self-verify the static manifest, and prepare the
+    HTML plus manifest for static hosting and a GitHub Release.
+  - Do not place the private signing key in GitHub Actions or repository data.
+- [ ] Add release-channel security and migration tests.
+  - Rehearse with a disposable key and reject tampered manifests/artifacts,
+    wrong application IDs, downgrade replays, malformed shells, and unsafe
+    project-block content.
+  - Verify that a previous release updates to the new shell with its complete
+    project state unchanged and that its old file remains usable.
+- [ ] Document and rehearse the release procedure.
+  - Include key custody, version bump, clean tagged build, manifest publication,
+    GitHub Release creation, and live previous-version acceptance.
+
+## Phase 10 — Release checks
 
 - [ ] Test representative SVG fixtures.
 - [ ] Test spreadsheets with duplicate/blank headers, dates, numbers, formulas, and leading zeros.
@@ -726,5 +771,6 @@ Only one implementation item should normally be `[-]`.
 - [ ] Test Chrome and Edge local-file flows.
 - [ ] Test one current Firefox/Safari fallback path for download-based saving.
 - [ ] Test hosted Drive import/save on localhost and production origin.
+- [ ] Test a signed update from the previous published application version.
 - [ ] Record practical file-size guidance in the UI.
 - [ ] Complete `bun run check`.

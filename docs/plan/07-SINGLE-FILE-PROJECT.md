@@ -205,6 +205,53 @@ disables browser networking, and reopens that saved file. Spreadsheet and SVG
 sources, mappings, selections, and export controls must restore with no
 resource requests.
 
+## Signed application updates
+
+The saved HTML contains a fixed application shell and one validated project
+block. A release update replaces the shell, not the project:
+
+1. fetch a small static signed manifest only after a permitted launch check or
+   an explicit “Check for updates” action;
+2. verify its ECDSA P-256 signature with the public key embedded in the shell;
+3. require the expected application ID and a strictly newer semantic version;
+4. fetch the referenced single-file release and verify its SHA-256 hash;
+5. reject a release without exactly one valid, replaceable
+   `#svg-batch-project` block;
+6. serialize the current validated project snapshot into that verified shell;
+7. download a new project HTML, leaving the old file as rollback.
+
+The update path must reuse the normal project serializer and parser. It must
+not copy live DOM, preview output, OAuth tokens, file handles, recovery data,
+or generated exports into the new shell.
+
+The first implementation stays deliberately small: one stable release channel,
+one application ID, manual checking, an optional launch check that can be disabled,
+release notes for the offered version, and download-based application. Do not
+add background polling, delta patches, a service worker, a generic updater
+framework, or a new runtime crypto dependency.
+
+Update checks send no project identifiers or content. Offline mode prevents all
+update network access. Network failure leaves the current file fully usable and
+is reported as a recoverable status rather than a startup error.
+
+### Release channel
+
+`package.json` is the application-version source of truth and the build embeds
+that version in the shell and project audit. A release script builds the exact
+single HTML artifact, computes its SHA-256, signs a manifest locally with an
+offline private key, verifies the result, and prepares the artifact and manifest
+for static hosting and a GitHub Release.
+
+The private signing key never enters the repository or CI. The public key is
+embedded in shipped shells. Losing the private key or rotating the public key
+would strand existing files, so key custody and recovery are release-blocking
+operational requirements.
+
+Release tests must prove refusal of a bad signature, altered artifact, wrong
+application ID, same/older version, malformed shell, and a project block that
+could terminate its script element. A rehearsal uses a disposable key and does
+not publish anything.
+
 ## File size guidance
 
 Expected contributors:

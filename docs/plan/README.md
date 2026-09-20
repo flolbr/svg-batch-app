@@ -12,8 +12,9 @@ Read in this order:
 8. [`06-EXPORT-AND-VALIDATION.md`](06-EXPORT-AND-VALIDATION.md) — validation and output generation
 9. [`07-SINGLE-FILE-PROJECT.md`](07-SINGLE-FILE-PROJECT.md) — project persistence and one-HTML build
 10. [`08-GOOGLE-DRIVE.md`](08-GOOGLE-DRIVE.md) — hosted-only Drive adapter
-11. [`09-TEST-PLAN.md`](09-TEST-PLAN.md) — tests and acceptance checks
-12. [`10-DECISIONS.md`](10-DECISIONS.md) — concise decision log
+11. [`07-SINGLE-FILE-PROJECT.md#signed-application-updates`](07-SINGLE-FILE-PROJECT.md#signed-application-updates) — Bento-inspired signed release updates
+12. [`09-TEST-PLAN.md`](09-TEST-PLAN.md) — tests and acceptance checks
+13. [`10-DECISIONS.md`](10-DECISIONS.md) — concise decision log
 
 Visual reference:
 
