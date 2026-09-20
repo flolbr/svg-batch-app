@@ -1,6 +1,10 @@
 import { webcrypto } from "node:crypto";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { compareVersions, verifyReleaseManifest } from "./releaseManifest";
+import {
+  checkForUpdates,
+  compareVersions,
+  verifyReleaseManifest,
+} from "./releaseManifest";
 
 const subtle = webcrypto.subtle;
 
@@ -111,5 +115,61 @@ describe("verifyReleaseManifest", () => {
         publicKey: old.publicKey,
       }),
     ).rejects.toThrow("not newer");
+  });
+});
+
+describe("checkForUpdates", () => {
+  it("returns an update without leaking project data into the request", async () => {
+    const manifest = await signedManifest(validPayload);
+    let requestedInit: RequestInit | undefined;
+    const fetchImpl = async (_input: RequestInfo | URL, init?: RequestInit) => {
+      requestedInit = init;
+      return {
+        ok: true,
+        status: 200,
+        text: async () => manifest.raw,
+      } as Response;
+    };
+
+    await expect(
+      checkForUpdates({
+        currentVersion: "1.1.0",
+        fetchImpl,
+        publicKey: manifest.publicKey,
+      }),
+    ).resolves.toMatchObject({ status: "update" });
+    expect(requestedInit).toEqual({ cache: "no-store" });
+  });
+
+  it("returns current for a verified release at the current version", async () => {
+    const manifest = await signedManifest(validPayload);
+    const result = await checkForUpdates({
+      currentVersion: "1.2.0",
+      fetchImpl: async () =>
+        ({ ok: true, status: 200, text: async () => manifest.raw }) as Response,
+      publicKey: manifest.publicKey,
+    });
+
+    expect(result).toEqual({ status: "current", version: "1.2.0" });
+  });
+
+  it("turns network and verification failures into recoverable errors", async () => {
+    await expect(
+      checkForUpdates({
+        fetchImpl: async () =>
+          ({ ok: false, status: 503, text: async () => "" }) as Response,
+      }),
+    ).resolves.toEqual({
+      status: "error",
+      message: "Update server responded with HTTP 503.",
+    });
+
+    await expect(
+      checkForUpdates({
+        fetchImpl: async () => {
+          throw new Error("Network unavailable.");
+        },
+      }),
+    ).resolves.toEqual({ status: "error", message: "Network unavailable." });
   });
 });

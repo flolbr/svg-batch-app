@@ -8,6 +8,8 @@ export const RELEASE_PUBLIC_KEY: JsonWebKey = {
   x: "333k_h90DNH21ug_VbNnLeNbt1_ys90Lo4LUlCgp7eU",
   y: "vBm2cLe7NaF4aBR3G5e23I1f3MNVbThncW6A3QP_W9I",
 };
+export const DEFAULT_RELEASE_MANIFEST_URL =
+  "https://github.com/flolbr/svg-batch-app/releases/latest/download/manifest.json";
 
 export type ReleaseInfo = {
   app: string;
@@ -33,6 +35,17 @@ type VerifyReleaseManifestOptions = {
   appId?: string;
   currentVersion?: string;
   publicKey?: JsonWebKey;
+  requireNewer?: boolean;
+};
+
+export type UpdateCheck =
+  | { status: "current"; version: string }
+  | { status: "update"; release: ReleaseInfo }
+  | { status: "error"; message: string };
+
+export type CheckForUpdatesOptions = VerifyReleaseManifestOptions & {
+  fetchImpl?: typeof fetch;
+  manifestUrl?: string;
 };
 
 const semverPattern =
@@ -181,8 +194,41 @@ export async function verifyReleaseManifest(
   if (release.app !== (options.appId ?? APP_ID)) {
     throw new Error("Release manifest belongs to a different application.");
   }
-  if (compareVersions(release.version, options.currentVersion ?? APP_VERSION) <= 0) {
+  if (
+    options.requireNewer !== false &&
+    compareVersions(release.version, options.currentVersion ?? APP_VERSION) <= 0
+  ) {
     throw new Error("Release manifest is not newer than the current version.");
   }
   return release;
+}
+
+export async function checkForUpdates(
+  options: CheckForUpdatesOptions = {},
+): Promise<UpdateCheck> {
+  const currentVersion = options.currentVersion ?? APP_VERSION;
+  const fetchImpl = options.fetchImpl ?? fetch;
+  try {
+    const response = await fetchImpl(
+      options.manifestUrl ?? DEFAULT_RELEASE_MANIFEST_URL,
+      { cache: "no-store" },
+    );
+    if (!response.ok) {
+      throw new Error(`Update server responded with HTTP ${response.status}.`);
+    }
+    const release = await verifyReleaseManifest(await response.text(), {
+      appId: options.appId,
+      currentVersion,
+      publicKey: options.publicKey,
+      requireNewer: false,
+    });
+    return compareVersions(release.version, currentVersion) > 0
+      ? { status: "update", release }
+      : { status: "current", version: currentVersion };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Update check failed.",
+    };
+  }
 }

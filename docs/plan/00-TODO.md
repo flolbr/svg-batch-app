@@ -743,7 +743,14 @@ Only one implementation item should normally be `[-]`.
     application ID, validate manifest shape, and offer only a strictly newer
     semantic version.
   - Use Web Crypto directly; add no runtime crypto dependency.
-- [ ] Add manual and optional launch update checks with an offline control.
+- [x] Add manual and optional launch update checks with an offline control.
+  - `checkForUpdates` fetches the signed manifest with `cache: no-store`,
+    returns current/update/error states, and accepts injected fetch and keys for
+    deterministic tests. UI and startup wiring remain a later sub-item.
+  - Main files: `src/update/releaseManifest.ts`,
+    `src/update/releaseManifest.test.ts`.
+  - Tests: `bun run test -- src/update/releaseManifest.test.ts` (9 tests);
+    `bunx tsc -b`.
   - A failed or blocked check must not affect local startup or project use.
   - Send no project ID, filename, content, or telemetry.
 - [ ] Download and verify the new single-file release.

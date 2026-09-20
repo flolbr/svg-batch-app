@@ -35,8 +35,8 @@ Latest planning commit: `e7496e1 docs: plan signed application updates`.
 - Full check: `bun run check` (53 test files, 342 tests; self-contained
   `dist/index.html` verified at 2,310,112 bytes).
 
-Next concrete step: add the update-check boundary that fetches and verifies a
-signed manifest without affecting local startup when the network is absent.
+Next concrete step: add release-artifact download and SHA-256 verification,
+keeping the verified bytes separate from project-shell splicing.
 
 ## What works
 
@@ -332,8 +332,8 @@ and an authorized test account.
 
 ## Next concrete step
 
-Add the update-check boundary that fetches and verifies a signed manifest
-without affecting local startup when the network is absent.
+Add release-artifact download and SHA-256 verification, keeping the verified
+bytes separate from project-shell splicing.
 
 ## Files changed
 
@@ -365,6 +365,8 @@ without affecting local startup when the network is absent.
 - `bun run test -- src/update/releaseManifest.test.ts` (6 tests).
 - `bunx tsc -b`.
 - `bun run lint` (one pre-existing warning in `src/export/filenameRules.ts`).
+- `bun run test -- src/update/releaseManifest.test.ts` (9 tests).
+- `bunx tsc -b`.
 
 ## Latest commit
 
