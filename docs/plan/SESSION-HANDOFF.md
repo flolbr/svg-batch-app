@@ -35,9 +35,8 @@ Latest planning commit: `e7496e1 docs: plan signed application updates`.
 - Full check: `bun run check` (53 test files, 342 tests; self-contained
   `dist/index.html` verified at 2,310,112 bytes).
 
-Next concrete step: begin Phase 9 by replacing the placeholder `0.0.0` with a
-build-time semantic application version and stable application ID, then add the
-signed manifest verification boundary.
+Next concrete step: add the signed manifest verification boundary, using the
+build-time application ID and version now embedded in the shell.
 
 ## What works
 
@@ -347,13 +346,20 @@ manifest verifier. Keep the updater download-based and dependency-free.
 - `docs/plan/10-DECISIONS.md`
 - `docs/plan/README.md`
 - `docs/plan/SESSION-HANDOFF.md`
+- `vite.config.ts`
+- `src/vite-env.d.ts`
+- `src/appInfo.ts`
+- `src/appInfo.test.ts`
+- `src/App.tsx`
 
 ## Tests run
 
 - `git diff --check`.
-- No runtime behavior changed; the last implementation check remains
-  `bun run check` (53 test files, 342 tests; verified 2,310,112-byte
-  self-contained `dist/index.html`).
+- `bun run test -- src/appInfo.test.ts
+  src/project/createProjectSnapshot.test.ts src/App.test.tsx` (43 tests).
+- `bunx tsc -b`.
+- `bun run verify:single` (self-contained `dist/index.html` verified at
+  2,310,275 bytes).
 
 ## Latest commit
 

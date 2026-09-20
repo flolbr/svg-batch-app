@@ -725,7 +725,12 @@ Only one implementation item should normally be `[-]`.
 
 ## Phase 9 — Signed application updates
 
-- [ ] Replace the placeholder application version with a build-time semantic version.
+- [x] Replace the placeholder application version with a build-time semantic version.
+  - Main files: `vite.config.ts`, `src/vite-env.d.ts`, `src/appInfo.ts`,
+    `src/appInfo.test.ts`, `src/App.tsx`.
+  - Tests: `bun run test -- src/appInfo.test.ts
+    src/project/createProjectSnapshot.test.ts src/App.test.tsx`; `bunx tsc -b`;
+    `bun run verify:single`.
   - `package.json` is the source of truth. Embed the version and stable
     application ID in the built shell and new project audit snapshots.
 - [ ] Add the signed release-manifest parser and verifier.

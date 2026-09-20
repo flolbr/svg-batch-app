@@ -125,6 +125,7 @@ import { getMappingStatus } from "./mappings/mappingStatus";
 import type { ValidationIssue } from "./mappings/validation";
 import { createProjectSnapshot } from "./project/createProjectSnapshot";
 import { downloadProjectHtml } from "./project/downloadProjectFile";
+import { APP_VERSION } from "./appInfo";
 import {
   deleteRecoveryProject,
   saveRecoveryProject,
@@ -936,6 +937,7 @@ export function App({
             continueOnError,
           },
           updatedAt: new Date().toISOString(),
+          appVersion: APP_VERSION,
         });
         void saveRecoveryProject(recovery).catch(() => {});
       } catch {
@@ -1079,6 +1081,7 @@ export function App({
         continueOnError,
       },
       updatedAt: new Date().toISOString(),
+      appVersion: APP_VERSION,
     });
     return {
       snapshot,
