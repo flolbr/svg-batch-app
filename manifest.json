@@ -1,0 +1,4 @@
+{
+  "payload": "{\"app\":\"svg-batch-generator\",\"version\":\"0.1.0\",\"sha256\":\"ba93a7c8ba3806b5df5367aa245327852fdbb18816afdbe84e895577af3d9225\",\"url\":\"https://flolbr.github.io/svg-batch-app/releases/v0.1.0/svg-batch-generator-0.1.0.html\",\"notes\":\"First public release with signed self-update support.\"}",
+  "sig": "xy6UGROGyIG+o6Eb8ZNoEA+zMhCaHVr/p5ztXczMoocA8X/6w2tBJ20hkWEB+ZJ2X8AopVSYRLL6DJ+3he+56A=="
+}
