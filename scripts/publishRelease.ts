@@ -28,6 +28,8 @@ function main(): void {
   }
   const keyPath = process.env.SVG_BATCH_RELEASE_KEY || DEFAULT_KEY_PATH;
   const key = JSON.parse(readFileSync(keyPath, "utf8")) as ReleaseKey;
+  const token = output("gh", ["auth", "token"]);
+  const remote = `https://x-access-token:${token}@github.com/${repo}.git`;
   const tempRoot = mkdtempSync(join(tmpdir(), "svg-batch-release-"));
   const site = join(tempRoot, "site");
   const artifactName = `svg-batch-generator-${version}.html`;
@@ -45,12 +47,12 @@ function main(): void {
     });
     mkdirSync(site, { recursive: true });
     try {
-      run("git", ["clone", "--depth=1", "--branch", "gh-pages", `https://github.com/${repo}.git`, site]);
+      run("git", ["clone", "--depth=1", "--branch", "gh-pages", remote, site]);
     } catch {
       rmSync(site, { recursive: true, force: true });
       mkdirSync(site, { recursive: true });
       run("git", ["init", "-b", "gh-pages"], site);
-      run("git", ["remote", "add", "origin", `https://github.com/${repo}.git`], site);
+      run("git", ["remote", "add", "origin", remote], site);
     }
     mkdirSync(join(site, "releases", `v${version}`), { recursive: true });
     cpSync(artifactPath, join(site, "releases", `v${version}`, artifactName));
