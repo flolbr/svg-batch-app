@@ -1,6 +1,6 @@
 # Session handoff
 
-Last updated: 2026-09-20
+Last updated: 2026-09-21
 
 ## Current task
 
@@ -8,7 +8,7 @@ Phase 8 hosted Google Drive adapter is complete. The product plan now records
 the missing Bento-inspired signed application-update phase before release
 checks. Phase 9 signed updates are next; Phase 10 contains final acceptance.
 
-Latest implementation commit: `5f6fe65 feat: add hosted Google Drive adapter`.
+Latest implementation commit: `fa11e62 test: rehearse signed release verification`.
 Latest planning commit: `e7496e1 docs: plan signed application updates`.
 
 ## Latest milestone
@@ -390,4 +390,4 @@ artifact publication, and a previous-version update.
 
 ## Latest commit
 
-`e7496e1 docs: plan signed application updates`
+`fa11e62 test: rehearse signed release verification`
