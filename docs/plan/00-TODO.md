@@ -796,7 +796,15 @@ Only one implementation item should normally be `[-]`.
     artifact, hash it, sign and self-verify the static manifest, and prepare the
     HTML plus manifest for static hosting and a GitHub Release.
   - Do not place the private signing key in GitHub Actions or repository data.
-- [ ] Add release-channel security and migration tests.
+- [x] Add release-channel security and migration tests.
+  - Disposable-key coverage verifies signer/verifier compatibility; focused
+    tests reject tampered manifests and artifacts, wrong application IDs,
+    downgrade replays, malformed shells, and unsafe project blocks while
+    preserving the original shell/project inputs.
+  - Main files: `scripts/releaseSigning.test.ts`,
+    `src/update/releaseManifest.test.ts`, `src/update/releaseArtifact.test.ts`,
+    `src/update/buildUpdatedProject.test.ts`.
+  - Tests: combined focused suites (18 tests); `bunx tsc -b`.
   - Rehearse with a disposable key and reject tampered manifests/artifacts,
     wrong application IDs, downgrade replays, malformed shells, and unsafe
     project-block content.
