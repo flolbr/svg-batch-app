@@ -9,6 +9,7 @@ the missing Bento-inspired signed application-update phase before release
 checks. Phase 9 signed updates are next; Phase 10 contains final acceptance.
 
 Latest implementation commit: `5f6fe65 feat: add hosted Google Drive adapter`.
+Latest planning commit: `e7496e1 docs: plan signed application updates`.
 
 ## Latest milestone
 
@@ -356,4 +357,4 @@ manifest verifier. Keep the updater download-based and dependency-free.
 
 ## Latest commit
 
-`5f6fe65 feat: add hosted Google Drive adapter`
+`e7496e1 docs: plan signed application updates`
