@@ -810,9 +810,17 @@ Only one implementation item should normally be `[-]`.
     project-block content.
   - Verify that a previous release updates to the new shell with its complete
     project state unchanged and that its old file remains usable.
-- [ ] Document and rehearse the release procedure.
-  - Include key custody, version bump, clean tagged build, manifest publication,
-    GitHub Release creation, and live previous-version acceptance.
+- [x] Document the hybrid GitHub Pages and GitHub Release channel.
+  - GitHub Pages is the canonical HTTPS update channel for the signed manifest
+    and immutable versioned HTML artifacts.
+  - GitHub Releases mirror the exact signed artifact for human downloads,
+    changelogs, and version history.
+  - The documented procedure covers key custody, version bump, clean tagged
+    build, Pages publication, GitHub Release creation, CORS-from-`file://`,
+    and live previous-version acceptance.
+  - Main files: `docs/plan/07-SINGLE-FILE-PROJECT.md`,
+    `docs/plan/09-TEST-PLAN.md`, `docs/plan/10-DECISIONS.md`.
+  - Tests: documentation review; no runtime behavior changed.
 
 ## Phase 10 — Release checks
 
@@ -824,5 +832,7 @@ Only one implementation item should normally be `[-]`.
 - [ ] Test one current Firefox/Safari fallback path for download-based saving.
 - [ ] Test hosted Drive import/save on localhost and production origin.
 - [ ] Test a signed update from the previous published application version.
+- [ ] Rehearse GitHub Pages publication with a byte-identical GitHub Release
+  asset, including `file://` CORS fetch and rollback checks.
 - [ ] Record practical file-size guidance in the UI.
 - [ ] Complete `bun run check`.

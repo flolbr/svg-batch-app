@@ -118,6 +118,23 @@ artifact, wrong application ID, same or older version, malformed application
 shell, and unsafe project-block content. It uses a disposable signing key and
 publishes nothing.
 
+### Pages and GitHub Release publication
+
+1. Build and sign the exact single-file artifact locally with the offline key.
+2. Publish the signed manifest and immutable versioned artifact to GitHub Pages.
+3. Attach the byte-identical artifact to the matching GitHub Release.
+4. Fetch the Pages manifest and artifact from the `file://` application and
+   verify the signature and SHA-256 hash.
+5. Compare the served Pages hash with the GitHub Release asset hash.
+6. Open the previous published application, apply the update, and confirm the
+   project state is unchanged.
+7. Confirm the previous file remains usable and no unsigned or altered asset is
+   accepted.
+
+The rehearsal must fail closed when Pages is unavailable, rewrites signed
+bytes, or the GitHub Release asset differs. CI may deploy signed bytes but must
+not receive the private signing key.
+
 ## Performance checks
 
 Record approximate timings and memory behavior for:

@@ -20,6 +20,14 @@ data, and are blocked by offline mode.
 Keep the signing key offline. Do not add a runtime crypto dependency, background
 polling, delta updates, multiple channels, or a generic updater framework.
 
+### Release distribution
+
+Use a hybrid static distribution. GitHub Pages is the canonical HTTPS channel
+for the signed manifest and immutable versioned HTML artifacts. GitHub Releases
+mirror the exact signed artifact for human downloads, changelogs, and history.
+GitHub Actions may publish already-signed bytes, but never stores or uses the
+private signing key.
+
 ## 2026-07-31
 
 ### Batch execution

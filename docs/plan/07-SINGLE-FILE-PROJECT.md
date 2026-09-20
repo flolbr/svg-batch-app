@@ -240,7 +240,15 @@ is reported as a recoverable status rather than a startup error.
 that version in the shell and project audit. A release script builds the exact
 single HTML artifact, computes its SHA-256, signs a manifest locally with an
 offline private key, verifies the result, and prepares the artifact and manifest
-for static hosting and a GitHub Release.
+for GitHub Pages and a GitHub Release. GitHub Pages is the canonical HTTPS
+channel: it serves the signed manifest and immutable versioned HTML paths that
+the application checks. GitHub Releases mirror the exact signed HTML bytes for
+human downloads, changelogs, and archive history. GitHub Actions may deploy
+already-signed bytes, but must never hold or use the private signing key.
+
+Before enabling the channel, verify that a `file://` application can fetch the
+Pages manifest and artifact, that served bytes retain the signed hash, and that
+the previous version remains usable as rollback. There is no unsigned fallback.
 
 The private signing key never enters the repository or CI. The public key is
 embedded in shipped shells. Losing the private key or rotating the public key

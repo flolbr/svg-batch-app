@@ -4,9 +4,10 @@ Last updated: 2026-09-21
 
 ## Current task
 
-Phase 8 hosted Google Drive adapter is complete. The product plan now records
-the missing Bento-inspired signed application-update phase before release
-checks. Phase 9 signed updates are next; Phase 10 contains final acceptance.
+Phase 8 hosted Google Drive adapter and Phase 9 signed application updates are
+complete. The product plan now records a hybrid GitHub Pages plus GitHub Release
+distribution channel; live publication and previous-version acceptance remain
+Phase 10 work.
 
 Latest implementation commit: `fa11e62 test: rehearse signed release verification`.
 Latest planning commit: `e7496e1 docs: plan signed application updates`.
@@ -35,8 +36,9 @@ Latest planning commit: `e7496e1 docs: plan signed application updates`.
 - Full check: `bun run check` (53 test files, 342 tests; self-contained
   `dist/index.html` verified at 2,310,112 bytes).
 
-Next concrete step: document and rehearse the release procedure, including
-key custody, exact artifact publication, and a previous-version update.
+Next concrete step: rehearse publication of the signed manifest and immutable
+artifact to GitHub Pages, mirror the byte-identical artifact in a GitHub
+Release, and test the update from a previous published version.
 
 ## What works
 
@@ -326,14 +328,15 @@ key custody, exact artifact publication, and a previous-version update.
 
 ## What remains
 
-Phase 9 signed application updates and Phase 10 release checks remain
-unchecked. Real hosted Drive acceptance still needs deployment configuration
-and an authorized test account.
+Phase 10 release checks remain unchecked. Real hosted Drive acceptance still
+needs deployment configuration and an authorized test account. The Pages and
+Release channel is documented but has not been published or live-rehearsed.
 
 ## Next concrete step
 
-Document and rehearse the release procedure, including key custody, exact
-artifact publication, and a previous-version update.
+Rehearse the GitHub Pages plus GitHub Release procedure: preserve key custody,
+publish byte-identical signed artifacts, verify CORS from `file://`, and update
+from a previous published version while keeping its file usable as rollback.
 
 ## Files changed
 
