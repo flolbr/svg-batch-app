@@ -35,8 +35,9 @@ Latest planning commit: `e7496e1 docs: plan signed application updates`.
 - Full check: `bun run check` (53 test files, 342 tests; self-contained
   `dist/index.html` verified at 2,310,112 bytes).
 
-Next concrete step: add release-artifact download and SHA-256 verification,
-keeping the verified bytes separate from project-shell splicing.
+Next concrete step: splice the current validated project snapshot into a
+verified release shell and download the result without mutating the source
+file.
 
 ## What works
 
@@ -332,8 +333,8 @@ and an authorized test account.
 
 ## Next concrete step
 
-Add release-artifact download and SHA-256 verification, keeping the verified
-bytes separate from project-shell splicing.
+Splice the current validated project snapshot into a verified release shell and
+download the result without mutating the source file.
 
 ## Files changed
 
@@ -353,12 +354,16 @@ bytes separate from project-shell splicing.
 - `src/App.tsx`
 - `src/update/releaseManifest.ts`
 - `src/update/releaseManifest.test.ts`
+- `src/update/releaseArtifact.ts`
+- `src/update/releaseArtifact.test.ts`
 
 ## Tests run
 
 - `git diff --check`.
 - `bun run test -- src/appInfo.test.ts
   src/project/createProjectSnapshot.test.ts src/App.test.tsx` (43 tests).
+- `bunx tsc -b`.
+- `bun run test -- src/update/releaseArtifact.test.ts` (4 tests).
 - `bunx tsc -b`.
 - `bun run verify:single` (self-contained `dist/index.html` verified at
   2,310,275 bytes).

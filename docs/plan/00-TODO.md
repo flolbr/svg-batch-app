@@ -753,7 +753,14 @@ Only one implementation item should normally be `[-]`.
     `bunx tsc -b`.
   - A failed or blocked check must not affect local startup or project use.
   - Send no project ID, filename, content, or telemetry.
-- [ ] Download and verify the new single-file release.
+- [x] Download and verify the new single-file release.
+  - `fetchVerifiedRelease` downloads with `cache: no-store`, checks the signed
+    SHA-256 bytes, decodes the HTML, and accepts only one valid JSON project
+    block before any future shell splice.
+  - Main files: `src/update/releaseArtifact.ts`,
+    `src/update/releaseArtifact.test.ts`.
+  - Tests: `bun run test -- src/update/releaseArtifact.test.ts` (4 tests);
+    `bunx tsc -b`.
   - Require the SHA-256 from the signed manifest and exactly one valid,
     replaceable `#svg-batch-project` block in the candidate shell.
 - [ ] Move the current project into the verified release shell.
