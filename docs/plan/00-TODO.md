@@ -733,7 +733,12 @@ Only one implementation item should normally be `[-]`.
     `bun run verify:single`.
   - `package.json` is the source of truth. Embed the version and stable
     application ID in the built shell and new project audit snapshots.
-- [ ] Add the signed release-manifest parser and verifier.
+- [x] Add the signed release-manifest parser and verifier.
+  - Main files: `src/update/releaseManifest.ts`,
+    `src/update/releaseManifest.test.ts`.
+  - Tests: `bun run test -- src/update/releaseManifest.test.ts` (6 tests);
+    `bunx tsc -b`; `bun run lint` (one pre-existing warning in
+    `src/export/filenameRules.ts`).
   - Verify ECDSA P-256 with an embedded public key, require the expected
     application ID, validate manifest shape, and offer only a strictly newer
     semantic version.

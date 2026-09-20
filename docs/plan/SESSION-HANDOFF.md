@@ -35,8 +35,8 @@ Latest planning commit: `e7496e1 docs: plan signed application updates`.
 - Full check: `bun run check` (53 test files, 342 tests; self-contained
   `dist/index.html` verified at 2,310,112 bytes).
 
-Next concrete step: add the signed manifest verification boundary, using the
-build-time application ID and version now embedded in the shell.
+Next concrete step: add the update-check boundary that fetches and verifies a
+signed manifest without affecting local startup when the network is absent.
 
 ## What works
 
@@ -332,8 +332,8 @@ and an authorized test account.
 
 ## Next concrete step
 
-Implement the Phase 9 application identity/version boundary and signed release
-manifest verifier. Keep the updater download-based and dependency-free.
+Add the update-check boundary that fetches and verifies a signed manifest
+without affecting local startup when the network is absent.
 
 ## Files changed
 
@@ -351,6 +351,8 @@ manifest verifier. Keep the updater download-based and dependency-free.
 - `src/appInfo.ts`
 - `src/appInfo.test.ts`
 - `src/App.tsx`
+- `src/update/releaseManifest.ts`
+- `src/update/releaseManifest.test.ts`
 
 ## Tests run
 
@@ -360,6 +362,9 @@ manifest verifier. Keep the updater download-based and dependency-free.
 - `bunx tsc -b`.
 - `bun run verify:single` (self-contained `dist/index.html` verified at
   2,310,275 bytes).
+- `bun run test -- src/update/releaseManifest.test.ts` (6 tests).
+- `bunx tsc -b`.
+- `bun run lint` (one pre-existing warning in `src/export/filenameRules.ts`).
 
 ## Latest commit
 
