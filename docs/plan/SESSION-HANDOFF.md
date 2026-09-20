@@ -4,13 +4,13 @@ Last updated: 2026-09-21
 
 ## Current task
 
-Phase 8 hosted Google Drive adapter and Phase 9 signed application updates are
-complete. The product plan now records a hybrid GitHub Pages plus GitHub Release
-distribution channel; live publication and previous-version acceptance remain
-Phase 10 work.
+Phase 8 hosted Google Drive adapter, Phase 9 signed application updates, and
+the first public release are complete. Version `0.1.0` is published through
+GitHub Pages plus a matching GitHub Release; previous-version acceptance and
+the remaining Phase 10 checks are still open.
 
 Latest implementation commit: `fa11e62 test: rehearse signed release verification`.
-Latest planning commit: `9f2d633 docs: plan Pages and Release distribution`.
+Latest planning commit: `8059003 docs: record first public release`.
 
 ## Latest milestone
 
@@ -36,9 +36,8 @@ Latest planning commit: `9f2d633 docs: plan Pages and Release distribution`.
 - Full check: `bun run check` (53 test files, 342 tests; self-contained
   `dist/index.html` verified at 2,310,112 bytes).
 
-Next concrete step: rehearse publication of the signed manifest and immutable
-artifact to GitHub Pages, mirror the byte-identical artifact in a GitHub
-Release, and test the update from a previous published version.
+Next concrete step: open the published `v0.1.0` artifact as a previous version,
+test an update from a newer release, and complete the remaining Phase 10 checks.
 
 ## What works
 
@@ -330,13 +329,13 @@ Release, and test the update from a previous published version.
 
 Phase 10 release checks remain unchecked. Real hosted Drive acceptance still
 needs deployment configuration and an authorized test account. The Pages and
-Release channel is documented but has not been published or live-rehearsed.
+Release channel is live for `v0.1.0`; previous-version update acceptance is
+not yet complete.
 
 ## Next concrete step
 
-Rehearse the GitHub Pages plus GitHub Release procedure: preserve key custody,
-publish byte-identical signed artifacts, verify CORS from `file://`, and update
-from a previous published version while keeping its file usable as rollback.
+Use the published `v0.1.0` file for previous-version update acceptance, then
+complete the remaining Phase 10 fixtures, browser, Drive, and file-size checks.
 
 ## Files changed
 
@@ -362,6 +361,7 @@ from a previous published version while keeping its file usable as rollback.
 - `src/update/buildUpdatedProject.test.ts`
 - `scripts/releaseSigning.ts`
 - `scripts/releaseSigning.test.ts`
+- `scripts/publishRelease.ts`
 - `package.json`
 
 ## Tests run
@@ -393,7 +393,10 @@ from a previous published version while keeping its file usable as rollback.
 - `bun run test -- src/update/releaseManifest.test.ts` (9 tests).
 - `bunx tsc -b`.
 - `git diff --check` after the Pages and Release plan update.
+- `bunx tsc -b` and focused signing/manifest tests (12 tests).
+- Live verification: Pages manifest/artifact served; artifact SHA-256 matched
+  the signed manifest and GitHub Release asset; Pages configured and HTTPS.
 
 ## Latest commit
 
-`9f2d633 docs: plan Pages and Release distribution`
+`8059003 docs: record first public release`
