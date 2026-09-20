@@ -8,6 +8,8 @@
     "build": "tsc -b && vite build",
     "build:single": "tsc -b && vite build --mode single",
     "verify:single": "bun run build:single && bun scripts/verify-single-build.ts",
+    "release:keygen": "bun scripts/releaseSigning.ts keygen",
+    "release:manifest": "bun scripts/releaseSigning.ts manifest",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "oxlint src",

@@ -783,7 +783,15 @@ Only one implementation item should normally be `[-]`.
   - Tests: `bun run test -- src/App.test.tsx` (40 tests); `bunx tsc -b`.
   - Show current version, check status, offered version, concise release notes,
     update action, offline state, and recoverable verification failures.
-- [ ] Add local release signing and publication tooling.
+- [x] Add local release signing and publication tooling.
+  - `release:keygen` creates an offline key outside the repository and refuses
+    to overwrite it. `release:manifest` signs the exact artifact bytes and
+    writes a deterministic manifest for static hosting/GitHub Release upload.
+  - Main files: `scripts/releaseSigning.ts`,
+    `scripts/releaseSigning.test.ts`, `package.json`.
+  - Tests: `bun run test -- scripts/releaseSigning.test.ts` (2 tests);
+    `bunx tsc -b`; `bun run lint` (one pre-existing warning in
+    `src/export/filenameRules.ts`).
   - Generate and retain the private key outside the repository, build the exact
     artifact, hash it, sign and self-verify the static manifest, and prepare the
     HTML plus manifest for static hosting and a GitHub Release.

@@ -35,8 +35,8 @@ Latest planning commit: `e7496e1 docs: plan signed application updates`.
 - Full check: `bun run check` (53 test files, 342 tests; self-contained
   `dist/index.html` verified at 2,310,112 bytes).
 
-Next concrete step: add the local release signing/publication tooling and the
-remaining update-artifact acceptance tests.
+Next concrete step: add the remaining update-artifact acceptance tests, then
+rehearse a release with a disposable key before configuring a real channel.
 
 ## What works
 
@@ -332,8 +332,8 @@ and an authorized test account.
 
 ## Next concrete step
 
-Add local release signing/publication tooling and the remaining
-update-artifact acceptance tests.
+Add the remaining update-artifact acceptance tests, then rehearse a release
+with a disposable key before configuring a real channel.
 
 ## Files changed
 
@@ -357,6 +357,9 @@ update-artifact acceptance tests.
 - `src/update/releaseArtifact.test.ts`
 - `src/update/buildUpdatedProject.ts`
 - `src/update/buildUpdatedProject.test.ts`
+- `scripts/releaseSigning.ts`
+- `scripts/releaseSigning.test.ts`
+- `package.json`
 
 ## Tests run
 
@@ -370,6 +373,9 @@ update-artifact acceptance tests.
 - `bunx tsc -b`.
 - `bun run test -- src/App.test.tsx` (40 tests).
 - `bunx tsc -b`.
+- `bun run test -- scripts/releaseSigning.test.ts` (2 tests).
+- `bunx tsc -b`.
+- `bun run lint` (one pre-existing warning in `src/export/filenameRules.ts`).
 - `bun run verify:single` (self-contained `dist/index.html` verified at
   2,310,275 bytes).
 - `bun run test -- src/update/releaseManifest.test.ts` (6 tests).
