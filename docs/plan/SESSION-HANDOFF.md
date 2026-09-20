@@ -10,7 +10,7 @@ distribution channel; live publication and previous-version acceptance remain
 Phase 10 work.
 
 Latest implementation commit: `fa11e62 test: rehearse signed release verification`.
-Latest planning commit: `e7496e1 docs: plan signed application updates`.
+Latest planning commit: `9f2d633 docs: plan Pages and Release distribution`.
 
 ## Latest milestone
 
@@ -392,7 +392,8 @@ from a previous published version while keeping its file usable as rollback.
 - `bun run lint` (one pre-existing warning in `src/export/filenameRules.ts`).
 - `bun run test -- src/update/releaseManifest.test.ts` (9 tests).
 - `bunx tsc -b`.
+- `git diff --check` after the Pages and Release plan update.
 
 ## Latest commit
 
-`fa11e62 test: rehearse signed release verification`
+`9f2d633 docs: plan Pages and Release distribution`
