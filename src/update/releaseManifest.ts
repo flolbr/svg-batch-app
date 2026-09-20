@@ -5,11 +5,11 @@ export const RELEASE_PUBLIC_KEY: JsonWebKey = {
   ext: true,
   key_ops: ["verify"],
   kty: "EC",
-  x: "333k_h90DNH21ug_VbNnLeNbt1_ys90Lo4LUlCgp7eU",
-  y: "vBm2cLe7NaF4aBR3G5e23I1f3MNVbThncW6A3QP_W9I",
+  x: "t7whNUkBFey0Bgeud7CYgcf9jEMBEgeNZRbqqMerEUc",
+  y: "40VYwLe7koO2Ng6jOCBEogrSGpLgzCULENEchOqdV6A",
 };
 export const DEFAULT_RELEASE_MANIFEST_URL =
-  "https://github.com/flolbr/svg-batch-app/releases/latest/download/manifest.json";
+  "https://flolbr.github.io/svg-batch-app/manifest.json";
 
 export type ReleaseInfo = {
   app: string;

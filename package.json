@@ -1,7 +1,7 @@
 {
   "name": "svg-batch-generator",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,6 +10,7 @@
     "verify:single": "bun run build:single && bun scripts/verify-single-build.ts",
     "release:keygen": "bun scripts/releaseSigning.ts keygen",
     "release:manifest": "bun scripts/releaseSigning.ts manifest",
+    "release:publish": "bun scripts/publishRelease.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "oxlint src",

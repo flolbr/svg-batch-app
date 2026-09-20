@@ -832,6 +832,9 @@ Only one implementation item should normally be `[-]`.
 - [ ] Test one current Firefox/Safari fallback path for download-based saving.
 - [ ] Test hosted Drive import/save on localhost and production origin.
 - [ ] Test a signed update from the previous published application version.
+- [-] Implement GitHub Pages and GitHub Release publication.
+  - Keep signing local and offline; publish the signed manifest and immutable
+    artifact to Pages, then attach the same bytes to a matching Release.
 - [ ] Rehearse GitHub Pages publication with a byte-identical GitHub Release
   asset, including `file://` CORS fetch and rollback checks.
 - [ ] Record practical file-size guidance in the UI.
