@@ -763,7 +763,14 @@ Only one implementation item should normally be `[-]`.
     `bunx tsc -b`.
   - Require the SHA-256 from the signed manifest and exactly one valid,
     replaceable `#svg-batch-project` block in the candidate shell.
-- [ ] Move the current project into the verified release shell.
+- [x] Move the current project into the verified release shell.
+  - `buildUpdatedProjectHtml` validates the candidate shell, reuses the
+    existing project serializer, escapes project markup, and leaves both input
+    shell and project objects unchanged.
+  - Main files: `src/update/buildUpdatedProject.ts`,
+    `src/update/buildUpdatedProject.test.ts`.
+  - Tests: `bun run test -- src/update/buildUpdatedProject.test.ts` (2 tests);
+    `bunx tsc -b`.
   - Reuse the validated snapshot and serializer, download a new HTML file, and
     leave the existing file untouched as rollback.
   - Do not transfer runtime-only handles, OAuth tokens, recovery records,

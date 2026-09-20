@@ -35,9 +35,8 @@ Latest planning commit: `e7496e1 docs: plan signed application updates`.
 - Full check: `bun run check` (53 test files, 342 tests; self-contained
   `dist/index.html` verified at 2,310,112 bytes).
 
-Next concrete step: splice the current validated project snapshot into a
-verified release shell and download the result without mutating the source
-file.
+Next concrete step: add the focused update UI and download action around the
+verified manifest/artifact/splice pipeline.
 
 ## What works
 
@@ -333,8 +332,8 @@ and an authorized test account.
 
 ## Next concrete step
 
-Splice the current validated project snapshot into a verified release shell and
-download the result without mutating the source file.
+Add the focused update UI and download action around the verified
+manifest/artifact/splice pipeline.
 
 ## Files changed
 
@@ -356,6 +355,8 @@ download the result without mutating the source file.
 - `src/update/releaseManifest.test.ts`
 - `src/update/releaseArtifact.ts`
 - `src/update/releaseArtifact.test.ts`
+- `src/update/buildUpdatedProject.ts`
+- `src/update/buildUpdatedProject.test.ts`
 
 ## Tests run
 
@@ -364,6 +365,8 @@ download the result without mutating the source file.
   src/project/createProjectSnapshot.test.ts src/App.test.tsx` (43 tests).
 - `bunx tsc -b`.
 - `bun run test -- src/update/releaseArtifact.test.ts` (4 tests).
+- `bunx tsc -b`.
+- `bun run test -- src/update/buildUpdatedProject.test.ts` (2 tests).
 - `bunx tsc -b`.
 - `bun run verify:single` (self-contained `dist/index.html` verified at
   2,310,275 bytes).
