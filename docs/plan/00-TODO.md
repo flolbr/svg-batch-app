@@ -839,7 +839,11 @@ Only one implementation item should normally be `[-]`.
   - SVG tree keyboard component coverage passed in the focused suite.
 - [ ] Test Chrome and Edge local-file flows.
   - Chromium `file://` smoke passed with no HTTP requests; Edge remains open.
-- [ ] Test one current Firefox/Safari fallback path for download-based saving.
+- [x] Test one current Firefox/Safari fallback path for download-based saving.
+  - Firefox rendered the self-contained `file://` build with no HTTP requests.
+  - Firefox Save project produced a downloadable HTML containing the embedded
+    project block.
+  - Test: Playwright Firefox local-file and download fallback checks.
 - [ ] Test hosted Drive import/save on localhost and production origin.
 - [x] Test a signed update from the previous published application version.
   - Playwright opened the published `v0.1.0` artifact, discovered signed

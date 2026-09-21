@@ -7,8 +7,8 @@ Last updated: 2026-09-21
 Phase 8 hosted Google Drive adapter, Phase 9 signed application updates, and
 the first public releases are complete. Version `0.1.0` and the signed update
 target `0.1.1` are published through GitHub Pages plus matching GitHub Releases.
-Local Phase 10 fixture, performance, keyboard, file-size, and self-contained
-Chromium checks passed; Edge, Firefox/Safari, hosted Drive, and browser flows
+Local Phase 10 fixture, performance, keyboard, file-size, self-contained
+Chromium, and Firefox download-fallback checks passed; Edge and hosted Drive
 remain open.
 
 Latest implementation commit: `76bd362 test: complete Phase 10 local acceptance`.
@@ -38,9 +38,8 @@ Latest planning commit: `76bd362 test: complete Phase 10 local acceptance`.
 - Full check: `bun run check` (53 test files, 342 tests; self-contained
   `dist/index.html` verified at 2,310,112 bytes).
 
-Next concrete step: run Edge and Firefox/Safari local-file checks where browser
-runtimes are available, then complete hosted Drive acceptance with an
-authorized account.
+Next concrete step: run the Edge local-file check where its runtime is
+available, then complete hosted Drive acceptance with an authorized account.
 
 ## What works
 
@@ -333,12 +332,12 @@ authorized account.
 Phase 10 release checks remain unchecked. Real hosted Drive acceptance still
 needs deployment configuration and an authorized test account. The Pages and
 Release channel is live for `v0.1.0` and `v0.1.1`; previous-version update
-acceptance passed with Playwright. Full local checks are complete, but Edge,
-Firefox/Safari, and hosted Drive acceptance remain open.
+acceptance passed with Playwright. Chromium and Firefox local-file checks are
+complete; Edge and hosted Drive acceptance remain open.
 
 ## Next concrete step
 
-Run the remaining browser compatibility and hosted Drive acceptance checks.
+Run the remaining Edge compatibility and hosted Drive acceptance checks.
 
 ## Files changed
 
@@ -409,6 +408,8 @@ Run the remaining browser compatibility and hosted Drive acceptance checks.
 - `bun run test -- src/App.test.tsx` (40 tests).
 - `bun run check` (58 test files, 364 tests; self-contained 2,317,232-byte
   build; one pre-existing lint warning).
+- Playwright Firefox local-file smoke and Save project download fallback passed;
+  no HTTP requests were made by the self-contained shell.
 
 ## Latest commit
 
