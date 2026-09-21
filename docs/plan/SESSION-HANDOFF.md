@@ -16,8 +16,11 @@ The requested `/home/flo/Downloads/Sénior.svg` now imports successfully after
 allowing only its safe Inkscape `sodipodi:namedview` metadata and local filter
 resources; the live browser reports 23 mapping targets.
 
-Latest implementation commit: `76bd362 test: complete Phase 10 local acceptance`.
-Latest planning commit: `76bd362 test: complete Phase 10 local acceptance`.
+The compatibility fix is on `main` in `fd0c27b` but is not yet included in the
+published `v0.1.1` artifact; a future release is required to ship it publicly.
+
+Latest implementation commit: `fd0c27b fix: accept Inkscape SVG metadata`.
+Latest planning commit: `fd0c27b fix: accept Inkscape SVG metadata`.
 
 ## Latest milestone
 
