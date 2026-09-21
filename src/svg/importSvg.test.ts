@@ -49,6 +49,34 @@ describe("importSvgFile", () => {
     ]);
   });
 
+  it("ignores Inkscape sodipodi namedview metadata", async () => {
+    const result = await importSvgFile(
+      svgFile(`
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd">
+          <sodipodi:namedview id="namedview1" pagecolor="#ffffff" />
+          <rect id="card" width="10" height="10" />
+        </svg>
+      `),
+    );
+
+    expect(result.acceptedSvg).not.toContain("namedview");
+    expect(result.targets).toEqual([{ id: "card", tagName: "rect" }]);
+  });
+
+  it("accepts local SVG color-matrix filters as resources", async () => {
+    const result = await importSvgFile(
+      svgFile(`
+        <svg xmlns="http://www.w3.org/2000/svg">
+          <defs><filter id="tone"><feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0" /></filter></defs>
+          <rect id="card" filter="url(#tone)" width="10" height="10" />
+        </svg>
+      `),
+    );
+
+    expect(result.acceptedSvg).toContain("feColorMatrix");
+    expect(result.targets).toEqual([{ id: "card", tagName: "rect" }]);
+  });
+
   it.each([
     [
       "malformed XML",

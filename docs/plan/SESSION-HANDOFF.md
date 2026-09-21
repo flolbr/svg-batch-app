@@ -12,6 +12,10 @@ Chromium, and Firefox download-fallback checks passed. Edge is environment
 blocked by missing runtime/sudo access; hosted Drive is blocked by missing
 configuration and an authorized account.
 
+The requested `/home/flo/Downloads/Sénior.svg` now imports successfully after
+allowing only its safe Inkscape `sodipodi:namedview` metadata and local filter
+resources; the live browser reports 23 mapping targets.
+
 Latest implementation commit: `76bd362 test: complete Phase 10 local acceptance`.
 Latest planning commit: `76bd362 test: complete Phase 10 local acceptance`.
 
@@ -357,6 +361,9 @@ blocked checks.
 - `src/appInfo.ts`
 - `src/appInfo.test.ts`
 - `src/App.tsx`
+- `src/svg/importSvg.ts`
+- `src/svg/importSvg.test.ts`
+- `src/svg/validateSvgTargets.ts`
 - `src/update/releaseManifest.ts`
 - `src/update/releaseManifest.test.ts`
 - `src/update/releaseArtifact.ts`
@@ -412,6 +419,11 @@ blocked checks.
   build; one pre-existing lint warning).
 - Playwright Firefox local-file smoke and Save project download fallback passed;
   no HTTP requests were made by the self-contained shell.
+- `bun run test -- src/svg/importSvg.test.ts` (15 tests).
+- Playwright Chromium upload of `/home/flo/Downloads/Sénior.svg`: passed;
+  sanitized import with 23 mapping targets.
+- `bun run check` after SVG compatibility fix (58 test files, 366 tests;
+  self-contained 2,317,496-byte build; one pre-existing lint warning).
 
 ## Latest commit
 

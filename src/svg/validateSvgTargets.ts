@@ -19,6 +19,7 @@ const resourceContainers = new Set([
   "lineargradient",
   "radialgradient",
   "symbol",
+  "filter",
 ]);
 
 export type SvgTarget = {

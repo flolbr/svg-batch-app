@@ -28,7 +28,11 @@ const supportedElements = new Set([
   "image",
   "use",
   "symbol",
+  "filter",
+  "fecolormatrix",
 ]);
+const SODIPODI_NAMESPACE =
+  "http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd";
 
 export type SvgSourceStatus =
   "embedded" | "linked" | "drive" | "unavailable" | "modified";
@@ -104,6 +108,16 @@ function parseAndValidateSvg(source: string): Element {
   }
 
   for (const element of Array.from(document.getElementsByTagName("*"))) {
+    if (
+      element.namespaceURI === SODIPODI_NAMESPACE &&
+      element.localName.toLowerCase() === "namedview"
+    ) {
+      if (element.children.length > 0) {
+        throw importError("sodipodi:namedview metadata cannot contain elements");
+      }
+      element.remove();
+      continue;
+    }
     const name = element.localName.toLowerCase();
     if (
       element.namespaceURI !== "http://www.w3.org/2000/svg" ||

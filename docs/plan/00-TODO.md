@@ -825,8 +825,11 @@ Only one implementation item should normally be `[-]`.
 ## Phase 10 — Release checks
 
 - [x] Test representative SVG fixtures.
-  - Canonical membership SVG checksum and import/validation tests passed.
-  - Test: `src/svg/importSvg.test.ts` and fixture checksum verification.
+  - Canonical membership SVG and `/home/flo/Downloads/Sénior.svg` both loaded;
+    the latter sanitized Inkscape metadata and local color-matrix filters and
+    exposed 23 mapping targets.
+  - Test: `src/svg/importSvg.test.ts`, fixture checksums, and live Chromium
+    upload of `Sénior.svg`.
 - [x] Test spreadsheets with duplicate/blank headers, dates, numbers, formulas, and leading zeros.
   - Canonical membership CSV/XLSX checksums and import/normalization tests
     passed, including BOM, blank cells, duplicate headers, dates, and leading
