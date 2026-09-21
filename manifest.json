@@ -1,4 +1,4 @@
 {
-  "payload": "{\"app\":\"svg-batch-generator\",\"version\":\"0.1.1\",\"sha256\":\"b300d942c47ad3ab959e9e26f6e52baea53ce64235f283a40a244cdb944a60fe\",\"url\":\"https://flolbr.github.io/svg-batch-app/releases/v0.1.1/svg-batch-generator-0.1.1.html\",\"notes\":\"Signed update acceptance release.\"}",
-  "sig": "wESG9Svh7XIjBdguxd/4xpskLu4zIYHpUk4jqeQ45NovDbxg3bMRabNaZamWsAQEEYoj9fVu8mXtitM1LpjVcA=="
+  "payload": "{\"app\":\"svg-batch-generator\",\"version\":\"0.1.2\",\"sha256\":\"1d77432688e34ae183516a2a74805d06eb90842fc259f57c479f9c24f96e8164\",\"url\":\"https://flolbr.github.io/svg-batch-app/releases/v0.1.2/svg-batch-generator-0.1.2.html\",\"notes\":\"Accept Inkscape metadata and local color-matrix SVG filters.\"}",
+  "sig": "d06j2Nie32Qs+RJBmHlly3nMmw7zEhIYDp+rMPvZ7j2bF4fw7iY7+uLXPHf6dNuFcQqS4ry5aR98H/KQ/XX80A=="
 }
