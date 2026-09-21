@@ -837,14 +837,18 @@ Only one implementation item should normally be `[-]`.
     and 18.2ms respectively.
 - [x] Test keyboard-only navigation of the tree and grid controls.
   - SVG tree keyboard component coverage passed in the focused suite.
-- [ ] Test Chrome and Edge local-file flows.
-  - Chromium `file://` smoke passed with no HTTP requests; Edge remains open.
+- [!] Test Chrome and Edge local-file flows.
+  - Chromium `file://` smoke passed with no HTTP requests. Edge is blocked in
+    this environment because no Edge runtime is installed and Playwright's
+    installer requires interactive root privileges.
 - [x] Test one current Firefox/Safari fallback path for download-based saving.
   - Firefox rendered the self-contained `file://` build with no HTTP requests.
   - Firefox Save project produced a downloadable HTML containing the embedded
     project block.
   - Test: Playwright Firefox local-file and download fallback checks.
-- [ ] Test hosted Drive import/save on localhost and production origin.
+- [!] Test hosted Drive import/save on localhost and production origin.
+  - Blocked pending configured Google client values and an authorized test
+    account; local Drive-disabled behavior is covered by component tests.
 - [x] Test a signed update from the previous published application version.
   - Playwright opened the published `v0.1.0` artifact, discovered signed
     `v0.1.1`, displayed its notes, and downloaded the verified update shell.

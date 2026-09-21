@@ -8,8 +8,9 @@ Phase 8 hosted Google Drive adapter, Phase 9 signed application updates, and
 the first public releases are complete. Version `0.1.0` and the signed update
 target `0.1.1` are published through GitHub Pages plus matching GitHub Releases.
 Local Phase 10 fixture, performance, keyboard, file-size, self-contained
-Chromium, and Firefox download-fallback checks passed; Edge and hosted Drive
-remain open.
+Chromium, and Firefox download-fallback checks passed. Edge is environment
+blocked by missing runtime/sudo access; hosted Drive is blocked by missing
+configuration and an authorized account.
 
 Latest implementation commit: `76bd362 test: complete Phase 10 local acceptance`.
 Latest planning commit: `76bd362 test: complete Phase 10 local acceptance`.
@@ -38,8 +39,8 @@ Latest planning commit: `76bd362 test: complete Phase 10 local acceptance`.
 - Full check: `bun run check` (53 test files, 342 tests; self-contained
   `dist/index.html` verified at 2,310,112 bytes).
 
-Next concrete step: run the Edge local-file check where its runtime is
-available, then complete hosted Drive acceptance with an authorized account.
+Next concrete step: provide an Edge runtime and authorized hosted Drive
+configuration/account, then rerun the two environment-gated checks.
 
 ## What works
 
@@ -333,11 +334,12 @@ Phase 10 release checks remain unchecked. Real hosted Drive acceptance still
 needs deployment configuration and an authorized test account. The Pages and
 Release channel is live for `v0.1.0` and `v0.1.1`; previous-version update
 acceptance passed with Playwright. Chromium and Firefox local-file checks are
-complete; Edge and hosted Drive acceptance remain open.
+complete; Edge and hosted Drive are environment-blocked pending external setup.
 
 ## Next concrete step
 
-Run the remaining Edge compatibility and hosted Drive acceptance checks.
+Provide the missing Edge runtime and hosted Drive test account, then rerun the
+blocked checks.
 
 ## Files changed
 
