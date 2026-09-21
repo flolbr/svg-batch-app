@@ -20,7 +20,9 @@ The compatibility fix is included in public `v0.1.2`; the live artifact loads
 `Sénior.svg` and reports 23 mapping targets.
 
 Portable project saves now reject a Vite dev shell that still references
-`/src/main.tsx`; use `bun run build:single` for standalone saved HTML.
+`/src/main.tsx`; use `bun run build:single` for standalone saved HTML. The
+`repair:project` command repaired the requested `Untitled project.html` into a
+standalone copy and verified it from `file://` and localhost.
 
 Latest implementation commit: `1390db7 fix: prevent nonportable dev project saves`.
 Latest planning commit: `1390db7 fix: prevent nonportable dev project saves`.
@@ -379,6 +381,7 @@ blocked checks.
 - `scripts/releaseSigning.ts`
 - `scripts/releaseSigning.test.ts`
 - `scripts/publishRelease.ts`
+- `scripts/repairProjectHtml.ts`
 - `package.json`
 
 ## Tests run
@@ -428,6 +431,9 @@ blocked checks.
 - `bun run test -- src/svg/importSvg.test.ts` (15 tests).
 - Playwright Chromium upload of `/home/flo/Downloads/Sénior.svg`: passed;
   sanitized import with 23 mapping targets.
+- `bun run repair:project` repaired `/home/flo/Downloads/Untitled project.html`;
+  repaired copy opened with project state restored and no external runtime
+  scripts; localhost serving returned HTTP 200.
 - `bun run check` after SVG compatibility fix (58 test files, 366 tests;
   self-contained 2,317,496-byte build; one pre-existing lint warning).
 

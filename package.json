@@ -11,6 +11,7 @@
     "release:keygen": "bun scripts/releaseSigning.ts keygen",
     "release:manifest": "bun scripts/releaseSigning.ts manifest",
     "release:publish": "bun scripts/publishRelease.ts",
+    "repair:project": "bun scripts/repairProjectHtml.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "oxlint src",

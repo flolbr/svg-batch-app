@@ -143,7 +143,10 @@ browser click fails.
 The Vite development shell is not a portable project shell because it points
 at `/src/main.tsx`. Development saves fail with a clear instruction to use
 `bun run build:single`; only a production single-file shell can be saved and
-reopened standalone.
+reopened standalone. Existing dev-saved files can be repaired with
+`bun run repair:project -- --input=/path/project.html`, which replaces the
+development shell with the verified single-file shell while preserving the
+validated project block.
 
 ## Recovery
 
