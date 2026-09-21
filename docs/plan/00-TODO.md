@@ -831,7 +831,12 @@ Only one implementation item should normally be `[-]`.
 - [ ] Test Chrome and Edge local-file flows.
 - [ ] Test one current Firefox/Safari fallback path for download-based saving.
 - [ ] Test hosted Drive import/save on localhost and production origin.
-- [ ] Test a signed update from the previous published application version.
+- [x] Test a signed update from the previous published application version.
+  - Playwright opened the published `v0.1.0` artifact, discovered signed
+    `v0.1.1`, displayed its notes, and downloaded the verified update shell.
+  - The downloaded HTML contained the newer `appVersion` and the original
+    release artifact remained available as rollback.
+  - Test: one-off Playwright live browser acceptance against Pages.
 - [x] Implement GitHub Pages and GitHub Release publication.
   - Keep signing local and offline; publish the signed manifest and immutable
     artifact to Pages, then attach the same bytes to a matching Release.
@@ -842,7 +847,11 @@ Only one implementation item should normally be `[-]`.
     `package.json`.
   - Tests: `bunx tsc -b`; focused signing/manifest tests (12 passed);
     live Pages and Release hash verification.
-- [ ] Rehearse GitHub Pages publication with a byte-identical GitHub Release
+- [x] Rehearse GitHub Pages publication with a byte-identical GitHub Release
   asset, including `file://` CORS fetch and rollback checks.
+  - Pages served the manifest and immutable artifact over HTTPS; the artifact
+    SHA-256 matched both the signed manifest and GitHub Release asset.
+  - Pages was configured from `gh-pages`; the previous release remained live.
+  - Test: live `curl`, GitHub CLI metadata, and Playwright browser flow.
 - [ ] Record practical file-size guidance in the UI.
 - [ ] Complete `bun run check`.

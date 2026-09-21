@@ -5,11 +5,12 @@ Last updated: 2026-09-21
 ## Current task
 
 Phase 8 hosted Google Drive adapter, Phase 9 signed application updates, and
-the first public release are complete. Version `0.1.0` is published through
-GitHub Pages plus a matching GitHub Release; previous-version acceptance and
-the remaining Phase 10 checks are still open.
+the first public releases are complete. Version `0.1.0` and the signed update
+target `0.1.1` are published through GitHub Pages plus matching GitHub Releases.
+The previous-version browser acceptance passed; remaining Phase 10 checks are
+still open.
 
-Latest implementation commit: `fa11e62 test: rehearse signed release verification`.
+Latest implementation commit: `7931407 chore: prepare v0.1.1 update acceptance`.
 Latest planning commit: `8059003 docs: record first public release`.
 
 ## Latest milestone
@@ -36,8 +37,8 @@ Latest planning commit: `8059003 docs: record first public release`.
 - Full check: `bun run check` (53 test files, 342 tests; self-contained
   `dist/index.html` verified at 2,310,112 bytes).
 
-Next concrete step: open the published `v0.1.0` artifact as a previous version,
-test an update from a newer release, and complete the remaining Phase 10 checks.
+Next concrete step: complete the remaining Phase 10 fixture, browser, Drive,
+file-size, and full-check items.
 
 ## What works
 
@@ -329,13 +330,13 @@ test an update from a newer release, and complete the remaining Phase 10 checks.
 
 Phase 10 release checks remain unchecked. Real hosted Drive acceptance still
 needs deployment configuration and an authorized test account. The Pages and
-Release channel is live for `v0.1.0`; previous-version update acceptance is
-not yet complete.
+Release channel is live for `v0.1.0` and `v0.1.1`; previous-version update
+acceptance passed with Playwright. Remaining Phase 10 checks are not complete.
 
 ## Next concrete step
 
-Use the published `v0.1.0` file for previous-version update acceptance, then
-complete the remaining Phase 10 fixtures, browser, Drive, and file-size checks.
+Complete the remaining Phase 10 fixtures, browser, Drive, file-size, and full
+`bun run check` acceptance items.
 
 ## Files changed
 
@@ -396,6 +397,8 @@ complete the remaining Phase 10 fixtures, browser, Drive, and file-size checks.
 - `bunx tsc -b` and focused signing/manifest tests (12 tests).
 - Live verification: Pages manifest/artifact served; artifact SHA-256 matched
   the signed manifest and GitHub Release asset; Pages configured and HTTPS.
+- Playwright live acceptance: `v0.1.0` discovered and downloaded signed
+  `v0.1.1`; downloaded HTML contained `appVersion: 0.1.1`.
 
 ## Latest commit
 
