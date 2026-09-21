@@ -1989,6 +1989,14 @@ export function App({
           <Text size="xs" c="dimmed">
             v{APP_VERSION}
           </Text>
+          <Text
+            aria-label="Single-file size guidance"
+            size="xs"
+            c="dimmed"
+            title="Saved projects are single HTML files; large SVGs, spreadsheets, and embedded assets increase their size."
+          >
+            Single-file projects grow with embedded data and assets
+          </Text>
           <Checkbox
             aria-label="Disable application update checks"
             checked={updatesOffline}

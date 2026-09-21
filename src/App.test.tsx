@@ -164,6 +164,9 @@ describe("App", () => {
     expect(appHeader).toContainElement(
       screen.getByRole("heading", { name: "SVG Batch Generator" }),
     );
+    expect(screen.getByLabelText("Single-file size guidance")).toHaveTextContent(
+      "Single-file projects grow with embedded data and assets",
+    );
 
     expect(screen.getByRole("heading", { name: "Data" })).toBeInTheDocument();
     expect(

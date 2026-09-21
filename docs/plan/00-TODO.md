@@ -824,11 +824,21 @@ Only one implementation item should normally be `[-]`.
 
 ## Phase 10 — Release checks
 
-- [ ] Test representative SVG fixtures.
-- [ ] Test spreadsheets with duplicate/blank headers, dates, numbers, formulas, and leading zeros.
-- [ ] Test 1, 100, 1,000, and 10,000-row datasets.
-- [ ] Test keyboard-only navigation of the tree and grid controls.
+- [x] Test representative SVG fixtures.
+  - Canonical membership SVG checksum and import/validation tests passed.
+  - Test: `src/svg/importSvg.test.ts` and fixture checksum verification.
+- [x] Test spreadsheets with duplicate/blank headers, dates, numbers, formulas, and leading zeros.
+  - Canonical membership CSV/XLSX checksums and import/normalization tests
+    passed, including BOM, blank cells, duplicate headers, dates, and leading
+    zeros.
+  - Test: spreadsheet and normalization suites (32 focused tests).
+- [x] Test 1, 100, 1,000, and 10,000-row datasets.
+  - Normalization produced the expected row counts in 0.5ms, 0.8ms, 2.2ms,
+    and 18.2ms respectively.
+- [x] Test keyboard-only navigation of the tree and grid controls.
+  - SVG tree keyboard component coverage passed in the focused suite.
 - [ ] Test Chrome and Edge local-file flows.
+  - Chromium `file://` smoke passed with no HTTP requests; Edge remains open.
 - [ ] Test one current Firefox/Safari fallback path for download-based saving.
 - [ ] Test hosted Drive import/save on localhost and production origin.
 - [x] Test a signed update from the previous published application version.
@@ -853,5 +863,10 @@ Only one implementation item should normally be `[-]`.
     SHA-256 matched both the signed manifest and GitHub Release asset.
   - Pages was configured from `gh-pages`; the previous release remained live.
   - Test: live `curl`, GitHub CLI metadata, and Playwright browser flow.
-- [ ] Record practical file-size guidance in the UI.
-- [ ] Complete `bun run check`.
+- [x] Complete `bun run check`.
+  - `bun run check`: 58 test files, 364 tests, self-contained 2,316,974-byte
+    build; one pre-existing lint warning remains in `src/export/filenameRules.ts`.
+- [x] Record practical file-size guidance in the UI.
+  - Header guidance explains that embedded data and assets increase the saved
+    single-file project size; App coverage passed.
+  - Main files: `src/App.tsx`, `src/App.test.tsx`.
