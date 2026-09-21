@@ -11,7 +11,7 @@ The previous-version browser acceptance passed; remaining Phase 10 checks are
 still open.
 
 Latest implementation commit: `7931407 chore: prepare v0.1.1 update acceptance`.
-Latest planning commit: `8059003 docs: record first public release`.
+Latest planning commit: `c72eff8 test: record published update acceptance`.
 
 ## Latest milestone
 
@@ -402,4 +402,4 @@ Complete the remaining Phase 10 fixtures, browser, Drive, file-size, and full
 
 ## Latest commit
 
-`8059003 docs: record first public release`
+`c72eff8 test: record published update acceptance`
