@@ -204,6 +204,18 @@ describe("serializeProjectHtml", () => {
     );
   });
 
+  it("refuses to save a Vite development shell as a portable project", () => {
+    const sourceDocument = cleanShell();
+    const entry = sourceDocument.createElement("script");
+    entry.type = "module";
+    entry.src = "/src/main.tsx";
+    sourceDocument.body.append(entry);
+
+    expect(() => serializeProjectHtml(sourceDocument, completeProject())).toThrow(
+      "Portable project saving is unavailable in the Vite dev shell",
+    );
+  });
+
   it("rejects invalid runtime project objects before serializing", () => {
     const sourceDocument = cleanShell();
     const invalidProject = {

@@ -32,6 +32,18 @@ export function serializeProjectHtml(
     );
   }
 
+  const developmentEntry = Array.from(
+    projectDocument.querySelectorAll('script[type="module"][src]'),
+  ).find((script) => {
+    const source = script.getAttribute("src") ?? "";
+    return source.startsWith("/src/") || source.includes("/src/main.tsx");
+  });
+  if (developmentEntry) {
+    throw new Error(
+      "Portable project saving is unavailable in the Vite dev shell. Use the single-file build (`bun run build:single`) before saving.",
+    );
+  }
+
   projectBlock.textContent = JSON.stringify(validatedProject).replaceAll(
     "<",
     "\\u003c",

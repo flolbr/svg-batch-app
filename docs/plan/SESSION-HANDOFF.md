@@ -19,6 +19,9 @@ resources; the live browser reports 23 mapping targets.
 The compatibility fix is included in public `v0.1.2`; the live artifact loads
 `Sénior.svg` and reports 23 mapping targets.
 
+Portable project saves now reject a Vite dev shell that still references
+`/src/main.tsx`; use `bun run build:single` for standalone saved HTML.
+
 Latest implementation commit: `4914126 chore: release v0.1.2`.
 Latest planning commit: `4914126 chore: release v0.1.2`.
 

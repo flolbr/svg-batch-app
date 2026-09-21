@@ -140,6 +140,11 @@ When the picker is unavailable, the same validated HTML is downloaded with the
 sanitized project filename. The short-lived object URL is revoked even if the
 browser click fails.
 
+The Vite development shell is not a portable project shell because it points
+at `/src/main.tsx`. Development saves fail with a clear instruction to use
+`bun run build:single`; only a production single-file shell can be saved and
+reopened standalone.
+
 ## Recovery
 
 After meaningful edits, debounce a recovery snapshot into IndexedDB.
