@@ -22,8 +22,8 @@ The compatibility fix is included in public `v0.1.2`; the live artifact loads
 Portable project saves now reject a Vite dev shell that still references
 `/src/main.tsx`; use `bun run build:single` for standalone saved HTML.
 
-Latest implementation commit: `4914126 chore: release v0.1.2`.
-Latest planning commit: `4914126 chore: release v0.1.2`.
+Latest implementation commit: `1390db7 fix: prevent nonportable dev project saves`.
+Latest planning commit: `1390db7 fix: prevent nonportable dev project saves`.
 
 ## Latest milestone
 
