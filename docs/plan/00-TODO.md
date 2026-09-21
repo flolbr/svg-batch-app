@@ -863,7 +863,8 @@ Only one implementation item should normally be `[-]`.
     artifact to Pages, then attach the same bytes to a matching Release.
   - `scripts/publishRelease.ts` builds, signs, publishes the `gh-pages` branch,
     configures Pages, and creates the matching Release without CI key access.
-  - Published `v0.1.0`; Pages and Release artifact hashes match.
+  - Published `v0.1.0`, `v0.1.1`, and `v0.1.2`; Pages and Release artifact
+    hashes match. `v0.1.2` includes the Inkscape SVG compatibility fix.
   - Main files: `scripts/publishRelease.ts`, `src/update/releaseManifest.ts`,
     `package.json`.
   - Tests: `bunx tsc -b`; focused signing/manifest tests (12 passed);

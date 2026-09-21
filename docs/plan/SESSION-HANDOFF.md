@@ -5,8 +5,8 @@ Last updated: 2026-09-21
 ## Current task
 
 Phase 8 hosted Google Drive adapter, Phase 9 signed application updates, and
-the first public releases are complete. Version `0.1.0` and the signed update
-target `0.1.1` are published through GitHub Pages plus matching GitHub Releases.
+the first public releases are complete. Versions `0.1.0`, `0.1.1`, and `0.1.2`
+are published through GitHub Pages plus matching GitHub Releases.
 Local Phase 10 fixture, performance, keyboard, file-size, self-contained
 Chromium, and Firefox download-fallback checks passed. Edge is environment
 blocked by missing runtime/sudo access; hosted Drive is blocked by missing
@@ -16,11 +16,11 @@ The requested `/home/flo/Downloads/Sénior.svg` now imports successfully after
 allowing only its safe Inkscape `sodipodi:namedview` metadata and local filter
 resources; the live browser reports 23 mapping targets.
 
-The compatibility fix is on `main` in `fd0c27b` but is not yet included in the
-published `v0.1.1` artifact; a future release is required to ship it publicly.
+The compatibility fix is included in public `v0.1.2`; the live artifact loads
+`Sénior.svg` and reports 23 mapping targets.
 
-Latest implementation commit: `fd0c27b fix: accept Inkscape SVG metadata`.
-Latest planning commit: `fd0c27b fix: accept Inkscape SVG metadata`.
+Latest implementation commit: `4914126 chore: release v0.1.2`.
+Latest planning commit: `4914126 chore: release v0.1.2`.
 
 ## Latest milestone
 
@@ -339,7 +339,7 @@ configuration/account, then rerun the two environment-gated checks.
 
 Phase 10 release checks remain unchecked. Real hosted Drive acceptance still
 needs deployment configuration and an authorized test account. The Pages and
-Release channel is live for `v0.1.0` and `v0.1.1`; previous-version update
+Release channel is live for `v0.1.0`, `v0.1.1`, and `v0.1.2`; previous-version update
 acceptance passed with Playwright. Chromium and Firefox local-file checks are
 complete; Edge and hosted Drive are environment-blocked pending external setup.
 
