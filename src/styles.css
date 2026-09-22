@@ -36,6 +36,7 @@ select {
 .app-frame {
   display: grid;
   grid-template-rows: 64px minmax(0, 1fr) auto;
+  height: 100vh;
   min-height: 100vh;
 }
 
@@ -82,6 +83,7 @@ select {
     minmax(300px, var(--objects-panel-width, 27fr)) 14px
     minmax(360px, var(--preview-panel-width, 35fr));
   min-height: 0;
+  overflow: hidden;
   padding: 14px;
 }
 
@@ -122,13 +124,26 @@ select {
 }
 
 .workspace-panel {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
   min-width: 0;
-  min-height: 620px;
+  min-height: 0;
   padding: 14px;
   overflow: hidden;
   border-color: var(--app-color-border);
   border-radius: 12px;
   box-shadow: var(--app-shadow-panel);
+}
+
+.workspace-panel > .mantine-Stack-root {
+  min-height: 0;
+  flex: 1;
+}
+
+.svg-object-list {
+  min-height: 0;
+  overflow: auto;
 }
 
 .workspace-panel h2 {
@@ -332,7 +347,12 @@ select {
   }
 
   .workspace-panel {
+    height: auto;
     min-height: 520px;
+  }
+
+  .workspace-panel > .mantine-Stack-root {
+    flex: initial;
   }
 
   .action-bar {

@@ -2557,7 +2557,7 @@ export function App({
             )}
 
             {svg && (
-              <Stack gap="xs">
+              <Stack className="svg-object-list" gap="xs">
                 <Text size="sm" c="dimmed">
                   {svg.targets.length} mapping{" "}
                   {svg.targets.length === 1 ? "target" : "targets"} found
