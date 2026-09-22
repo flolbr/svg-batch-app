@@ -39,8 +39,8 @@ Portable project saves now reject a Vite dev shell that still references
 `repair:project` command repaired the requested `Untitled project.html` into a
 standalone copy and verified it from `file://` and localhost.
 
-Latest implementation commit: `5cf4133 fix: wait for local preview font resolution`.
-Latest planning commit: `11016d6 docs: record preview fix handoff`.
+Latest implementation commit: `ff1359d fix: preserve Inkscape text styles during mapping`.
+Latest planning commit: `ff1359d fix: preserve Inkscape text styles during mapping`.
 
 ## Latest milestone
 
