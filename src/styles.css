@@ -182,6 +182,14 @@ select {
   overflow: auto;
 }
 
+.data-table tbody tr {
+  cursor: pointer;
+}
+
+.data-table tbody tr[data-active-preview="true"] {
+  background: var(--mantine-color-blue-light);
+}
+
 .data-table table {
   min-width: 570px;
   font-size: 13px;

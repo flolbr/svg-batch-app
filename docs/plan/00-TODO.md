@@ -60,6 +60,11 @@ Only one implementation item should normally be `[-]`.
     upload actions and worksheet selection remain directly below it.
   - Main files: `src/App.tsx`.
   - Tests: `bun run test -- src/App.test.tsx`; `bun run check`.
+- [x] Activate a preview row by clicking its data-table row.
+  - Clicking a row selects it when needed and makes it the active preview row;
+    controls inside the row keep their existing behavior.
+  - Main files: `src/App.tsx`, `src/App.test.tsx`, `src/styles.css`.
+  - Tests: `bun run test -- src/App.test.tsx`; `bun run check`.
 - [x] Preserve parent positioning when mapping Inkscape text with zero-offset tspans.
   - Mapped parent `<text>` targets retain nested tspan styles while allowing
     `x="0" y="0"` placeholder coordinates to inherit the parent position.

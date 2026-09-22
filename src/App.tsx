@@ -350,6 +350,7 @@ function DataRow({
   columns,
   editingManualRowId,
   isEditingSourceRow,
+  isActivePreviewRow,
   isModifiedSourceRow,
   isSelected,
   manualRow,
@@ -364,12 +365,14 @@ function DataRow({
   onStartSourceEdit,
   onStopSourceEdit,
   onToggleSelection,
+  onActivateRow,
   row,
   virtualIndex,
 }: {
   columns: DataColumn[];
   editingManualRowId: string | null;
   isEditingSourceRow: boolean;
+  isActivePreviewRow: boolean;
   isModifiedSourceRow: boolean;
   isSelected: boolean;
   manualRow?: ManualRow;
@@ -392,14 +395,22 @@ function DataRow({
   onStartSourceEdit: (rowId: string) => void;
   onStopSourceEdit: () => void;
   onToggleSelection: (rowId: string) => void;
+  onActivateRow: (rowId: string) => void;
   row: Row<SourceRow>;
   virtualIndex?: number;
 }) {
   return (
     <Table.Tr
-      aria-rowindex={virtualIndex === undefined ? undefined : virtualIndex + 2}
-      data-index={virtualIndex}
-    >
+    aria-rowindex={virtualIndex === undefined ? undefined : virtualIndex + 2}
+    data-index={virtualIndex}
+    data-active-preview={isActivePreviewRow || undefined}
+    onClick={(event) => {
+      if ((event.target as HTMLElement).closest("button,input,select,textarea")) {
+        return;
+      }
+      onActivateRow(row.original.id);
+    }}
+  >
       <Table.Td className="data-table-selection">
         <Checkbox
           aria-label={`Select row ${row.index + 1}`}
@@ -1045,6 +1056,11 @@ export function App({
   function resetSourceRow(rowId: string) {
     setRowOverrides(resetRowOverride(rowOverrides, rowId));
     if (editingSourceRowId === rowId) setEditingSourceRowId(null);
+  }
+
+  function activatePreviewRow(rowId: string) {
+    if (!selectedRowIdSet.has(rowId)) selectRows([rowId]);
+    setActiveRow(rowId);
   }
 
   function runValidation(
@@ -2305,6 +2321,7 @@ export function App({
                           <DataRow
                             columns={visibleColumns}
                             editingManualRowId={editingManualRowId}
+                            isActivePreviewRow={activeRowId === dataRows[virtualRow.index].original.id}
                             isEditingSourceRow={
                               editingSourceRowId ===
                               dataRows[virtualRow.index].original.id
@@ -2334,6 +2351,7 @@ export function App({
                             onStartSourceEdit={startSourceEdit}
                             onStopSourceEdit={() => setEditingSourceRowId(null)}
                             onToggleSelection={toggleRowSelection}
+                            onActivateRow={activatePreviewRow}
                             row={dataRows[virtualRow.index]}
                             virtualIndex={virtualRow.index}
                           />
@@ -2355,6 +2373,7 @@ export function App({
                         <DataRow
                           columns={visibleColumns}
                           editingManualRowId={editingManualRowId}
+                          isActivePreviewRow={activeRowId === row.original.id}
                           isEditingSourceRow={
                             editingSourceRowId === row.original.id
                           }
@@ -2377,6 +2396,7 @@ export function App({
                           onStartSourceEdit={startSourceEdit}
                           onStopSourceEdit={() => setEditingSourceRowId(null)}
                           onToggleSelection={toggleRowSelection}
+                          onActivateRow={activatePreviewRow}
                           row={row}
                         />
                       ))

@@ -13,7 +13,9 @@ template is loaded, while reload, undo, filename, and status remain visible in
 one compact header row. The SVG object tree now uses 24px rows and compact
 text so more elements fit in the bounded panel. The Data panel now uses the
 same compact header treatment, keeping its title and spreadsheet source summary
-on one row above the upload and worksheet controls. The team preview issue is
+on one row above the upload and worksheet controls. Data-table rows now activate
+the corresponding preview on click, selecting the row when needed while
+leaving embedded row controls independent. The team preview issue is
 fixed: mapped Inkscape parent text now removes zero-offset child tspan
 coordinates so the child inherits the parent position while retaining its font.
 

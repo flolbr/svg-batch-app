@@ -1474,6 +1474,12 @@ describe("App", () => {
     expect(preview.getAttribute("srcdoc")).not.toContain(
       '<text id="member-name">Chloé Petit</text>',
     );
+
+    await user.click(screen.getByText("Chloé Petit"));
+    expect(useAppStore.getState().selection.activeRowId).toBe(rows[0].id);
+    expect(preview.getAttribute("srcdoc")).toContain(
+      '<text id="member-name">Chloé Petit</text>',
+    );
   });
 
   it("shows every SVG source status without enabling future adapters", () => {
