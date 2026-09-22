@@ -7,7 +7,9 @@ Last updated: 2026-09-22
 The desktop workspace layout now stays bounded to the viewport and the SVG
 object browser scrolls independently. The action footer also stays on one
 compact desktop line, while narrow responsive layouts may wrap normally. The
-layout work is committed as `8bd71d2 fix: keep action footer on one line`.
+latest SVG-panel refinement is committed as `8cf6c20 fix: collapse loaded SVG
+source controls`: source-selection actions collapse behind a chevron after a
+template is loaded, while reload, undo, filename, and status remain visible.
 
 Phase 8 hosted Google Drive adapter, Phase 9 signed application updates, and
 the first public releases are complete. Versions `0.1.0`, `0.1.1`, and `0.1.2`
@@ -460,4 +462,4 @@ blocked checks.
 
 ## Latest commit
 
-`c72eff8 test: record published update acceptance`
+`8cf6c20 fix: collapse loaded SVG source controls`
