@@ -45,6 +45,11 @@ Only one implementation item should normally be `[-]`.
     page scrolling below 1100 px.
   - Main files: `src/styles.css`, `src/App.tsx`.
   - Tests: `bun run check` (58 files, 368 tests); `bun run verify:single`.
+- [x] Keep the desktop action footer on one compact line.
+  - Desktop controls stay in a single non-wrapping row with compact spacing;
+    narrow responsive layouts may still wrap normally.
+  - Main files: `src/styles.css`, `src/App.tsx`.
+  - Tests: `bun run check` (58 files, 368 tests); `bun run verify:single`.
 - [x] Add Mantine theme and a small set of shared CSS variables matching the UI reference.
   - Main files: `src/theme.ts`, `src/main.tsx`, `src/styles.css`, `src/theme.test.ts`.
   - Tests: `bun run test -- src/theme.test.ts src/App.test.tsx`; `bun run check`; Browser Harness at 1920 px and 1000 px.

@@ -2713,7 +2713,7 @@ export function App({
       />
 
       <footer className="action-bar" aria-label="Project actions" role="region">
-        <Group gap="sm">
+        <Group className="action-bar-controls" gap="xs" wrap="nowrap">
           <Button
             disabled={!svg || selectedRows.length === 0}
             leftSection={<IconEye />}

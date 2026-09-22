@@ -314,13 +314,24 @@ select {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  min-width: 0;
+  gap: 12px;
   margin: 0 14px 14px;
-  padding: 12px 20px;
+  overflow-x: auto;
+  padding: 8px 12px;
   background: var(--app-color-surface);
   border: 1px solid var(--app-color-border);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgb(20 35 55 / 5%);
+}
+
+.action-bar-controls {
+  flex: 0 0 auto;
+}
+
+.action-bar > .mantine-Text-root {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 @media (max-width: 1099px) {
@@ -359,6 +370,10 @@ select {
     position: sticky;
     z-index: 10;
     bottom: 0;
+    flex-wrap: wrap;
+  }
+
+  .action-bar-controls {
     flex-wrap: wrap;
   }
 }
