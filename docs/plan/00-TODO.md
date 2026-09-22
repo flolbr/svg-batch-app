@@ -55,6 +55,11 @@ Only one implementation item should normally be `[-]`.
     remain visible without changing the tree interactions or status pills.
   - Main files: `src/SvgObjectTree.module.css`.
   - Tests: `bun run test -- src/App.test.tsx`; `bun run check`.
+- [x] Compact the Data panel header row.
+  - The Data title and spreadsheet source summary share one header row while
+    upload actions and worksheet selection remain directly below it.
+  - Main files: `src/App.tsx`.
+  - Tests: `bun run test -- src/App.test.tsx`; `bun run check`.
 - [x] Add Mantine theme and a small set of shared CSS variables matching the UI reference.
   - Main files: `src/theme.ts`, `src/main.tsx`, `src/styles.css`, `src/theme.test.ts`.
   - Tests: `bun run test -- src/theme.test.ts src/App.test.tsx`; `bun run check`; Browser Harness at 1920 px and 1000 px.

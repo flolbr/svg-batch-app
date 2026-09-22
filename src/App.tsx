@@ -2078,7 +2078,30 @@ export function App({
         >
           <Stack gap="md" h="100%">
             <div id="data-panel-title">
-              <PanelTitle icon={<IconDatabase size={20} />}>Data</PanelTitle>
+              <Group justify="space-between" gap="xs" wrap="nowrap">
+                <PanelTitle icon={<IconDatabase size={20} />}>Data</PanelTitle>
+                <Group
+                  gap="xs"
+                  justify="flex-end"
+                  wrap="nowrap"
+                  style={{ minWidth: 0, flex: 1 }}
+                >
+                  <Text size="sm" c="dimmed">
+                    Source:
+                  </Text>
+                  <Text
+                    size="sm"
+                    c={spreadsheet ? "blue" : "dimmed"}
+                    fw={spreadsheet ? 600 : 400}
+                    truncate
+                    style={{ minWidth: 0 }}
+                  >
+                    {spreadsheet
+                      ? `${spreadsheet.fileName} · ${spreadsheet.sheetNames.length} worksheet${spreadsheet.sheetNames.length === 1 ? "" : "s"}`
+                      : "No spreadsheet loaded"}
+                  </Text>
+                </Group>
+              </Group>
             </div>
 
             <Group gap="sm">
@@ -2113,15 +2136,6 @@ export function App({
               >
                 Open from Google Drive
               </Button>
-            </Group>
-
-            <Group gap="xs">
-              <Text size="sm">Source:</Text>
-              <Text size="sm" c="blue" fw={600}>
-                {spreadsheet
-                  ? `${spreadsheet.fileName} · ${spreadsheet.sheetNames.length} worksheet${spreadsheet.sheetNames.length === 1 ? "" : "s"}`
-                  : "No spreadsheet loaded"}
-              </Text>
             </Group>
 
             {spreadsheet && (
