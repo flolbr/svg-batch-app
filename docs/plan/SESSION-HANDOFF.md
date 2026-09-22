@@ -4,6 +4,11 @@ Last updated: 2026-09-22
 
 ## Current task
 
+The desktop workspace layout now stays bounded to the viewport and the SVG
+object browser scrolls independently. The responsive stacked layout retains
+normal page scrolling below 1100 px. This is committed as
+`4d98d4e fix: scroll SVG objects within viewport`.
+
 Phase 8 hosted Google Drive adapter, Phase 9 signed application updates, and
 the first public releases are complete. Versions `0.1.0`, `0.1.1`, and `0.1.2`
 are published through GitHub Pages plus matching GitHub Releases.
@@ -66,9 +71,9 @@ Latest planning commit: `ff1359d fix: preserve Inkscape text styles during mappi
 - Full check: `bun run check` (53 test files, 342 tests; self-contained
   `dist/index.html` verified at 2,310,112 bytes).
 
-Next concrete step: verify the first-row SVG preview in Firefox or the existing
-Browser Harness session after its browser permission prompt is cleared. Edge
-and hosted Drive checks remain environment-gated.
+Next concrete step: verify the bounded desktop layout in the existing Browser
+Harness session when its browser permission prompt is cleared. Edge and hosted
+Drive checks remain environment-gated.
 
 ## What works
 
