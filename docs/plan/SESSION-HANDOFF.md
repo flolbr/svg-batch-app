@@ -7,7 +7,7 @@ Last updated: 2026-09-22
 The desktop workspace layout now stays bounded to the viewport and the SVG
 object browser scrolls independently. The action footer also stays on one
 compact desktop line, while narrow responsive layouts may wrap normally. The
-latest SVG-panel refinement is committed as `8cf6c20 fix: collapse loaded SVG
+latest SVG-panel refinement is committed as `052e399 fix: compact SVG object
 source controls`: source-selection actions collapse behind a chevron after a
 template is loaded, while reload, undo, filename, and status remain visible in
 one compact header row.
@@ -47,7 +47,7 @@ Portable project saves now reject a Vite dev shell that still references
 `repair:project` command repaired the requested `Untitled project.html` into a
 standalone copy and verified it from `file://` and localhost.
 
-Latest implementation commit: `8cf6c20 fix: collapse loaded SVG source controls`.
+Latest implementation commit: `052e399 fix: compact SVG object header`.
 Latest planning commit: `ff1359d fix: preserve Inkscape text styles during mapping`.
 
 ## Latest milestone
