@@ -39,8 +39,8 @@ Portable project saves now reject a Vite dev shell that still references
 `repair:project` command repaired the requested `Untitled project.html` into a
 standalone copy and verified it from `file://` and localhost.
 
-Latest implementation commit: `9a6de92 fix: preserve local fonts in SVG preview`.
-Latest planning commit: `9a6de92 fix: preserve local fonts in SVG preview`.
+Latest implementation commit: `5cf4133 fix: wait for local preview font resolution`.
+Latest planning commit: `11016d6 docs: record preview fix handoff`.
 
 ## Latest milestone
 
