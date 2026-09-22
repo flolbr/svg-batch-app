@@ -10,7 +10,8 @@ compact desktop line, while narrow responsive layouts may wrap normally. The
 latest SVG-panel refinement is committed as `052e399 fix: compact SVG object
 source controls`: source-selection actions collapse behind a chevron after a
 template is loaded, while reload, undo, filename, and status remain visible in
-one compact header row.
+one compact header row. The SVG object tree now uses 24px rows and compact
+text so more elements fit in the bounded panel.
 
 Phase 8 hosted Google Drive adapter, Phase 9 signed application updates, and
 the first public releases are complete. Versions `0.1.0`, `0.1.1`, and `0.1.2`

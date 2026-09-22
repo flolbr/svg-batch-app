@@ -10,8 +10,9 @@
   display: grid;
   gap: 6px;
   grid-template-columns: 18px minmax(0, 1fr) auto auto;
-  min-height: 28px;
+  min-height: 24px;
   padding: 2px 6px;
+  font-size: var(--mantine-font-size-sm);
 }
 
 .group {
