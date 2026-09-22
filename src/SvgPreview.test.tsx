@@ -17,7 +17,7 @@ describe("SvgPreview", () => {
       expect.stringContaining(acceptedSvg),
     );
     expect(frame.getAttribute("srcdoc")).toContain(
-      '@font-face{font-family:Ethnocentric;src:local("Ethnocentric"),local("Ethnocentric Regular")',
+      '@font-face{font-family:Ethnocentric;src:local("Ethnocentric"),local("Ethnocentric Regular"),local("Ethnocentric-Regular");font-style:normal;font-weight:400;font-display:block}',
     );
     expect(container.querySelector("svg")).toBeNull();
     expect(screen.queryByText("Inside preview")).not.toBeInTheDocument();
