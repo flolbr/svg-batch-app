@@ -39,8 +39,8 @@ Portable project saves now reject a Vite dev shell that still references
 `repair:project` command repaired the requested `Untitled project.html` into a
 standalone copy and verified it from `file://` and localhost.
 
-Latest implementation commit: `1390db7 fix: prevent nonportable dev project saves`.
-Latest planning commit: `1390db7 fix: prevent nonportable dev project saves`.
+Latest implementation commit: `9a6de92 fix: preserve local fonts in SVG preview`.
+Latest planning commit: `9a6de92 fix: preserve local fonts in SVG preview`.
 
 ## Latest milestone
 
