@@ -59,6 +59,21 @@ describe("applyTextMapping", () => {
     );
   });
 
+  it("lets a zero-positioned Inkscape tspan inherit its parent text position", () => {
+    const svg = parseSvg(
+      '<svg><text id="target" x="504.00397" y="154.11342"><tspan x="0" y="0" style="font-family:Ethnocentric">Équipe</tspan></text></svg>',
+    );
+
+    expect(applyTextMapping(svg, row({ name: "µ Mini" }), mapping())).toEqual(
+      [],
+    );
+    const tspan = svg.querySelector("tspan");
+    expect(tspan?.textContent).toBe("µ Mini");
+    expect(tspan?.getAttribute("x")).toBeNull();
+    expect(tspan?.getAttribute("y")).toBeNull();
+    expect(tspan?.getAttribute("style")).toBe("font-family:Ethnocentric");
+  });
+
   it("replaces text content on tspan targets with special-character IDs", () => {
     const svg = parseSvg(
       '<svg><text><tspan id="name.with[1]">Template</tspan></text></svg>',

@@ -13,7 +13,9 @@ template is loaded, while reload, undo, filename, and status remain visible in
 one compact header row. The SVG object tree now uses 24px rows and compact
 text so more elements fit in the bounded panel. The Data panel now uses the
 same compact header treatment, keeping its title and spreadsheet source summary
-on one row above the upload and worksheet controls.
+on one row above the upload and worksheet controls. The team preview issue is
+fixed: mapped Inkscape parent text now removes zero-offset child tspan
+coordinates so the child inherits the parent position while retaining its font.
 
 Phase 8 hosted Google Drive adapter, Phase 9 signed application updates, and
 the first public releases are complete. Versions `0.1.0`, `0.1.1`, and `0.1.2`

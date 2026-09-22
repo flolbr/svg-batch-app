@@ -8,10 +8,24 @@ import {
 } from "./textFitting";
 import type { ValidationIssue } from "./validation";
 
+function isZeroCoordinate(value: string | null): boolean {
+  return value !== null && Number.isFinite(Number(value)) && Number(value) === 0;
+}
+
 function setMappedText(target: Element, value: string): void {
   if (target.localName === "text") {
     const tspans = Array.from(target.getElementsByTagName("tspan"));
     if (tspans.length > 0) {
+      const firstTspan = tspans[0];
+      if (
+        (target.hasAttribute("x") || target.hasAttribute("y")) &&
+        isZeroCoordinate(firstTspan.getAttribute("x")) &&
+        isZeroCoordinate(firstTspan.getAttribute("y"))
+      ) {
+        firstTspan.removeAttribute("x");
+        firstTspan.removeAttribute("y");
+      }
+
       tspans.forEach((tspan, index) => {
         tspan.textContent = index === 0 ? value : "";
       });
