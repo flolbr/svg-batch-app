@@ -692,6 +692,12 @@ Only one implementation item should normally be `[-]`.
 - [x] Add “Undo template update”.
   - Undo restores the retained state and clears the comparison summary. A
     successful project save or later source replacement clears the undo state.
+- [x] Collapse loaded SVG source-selection controls behind a compact toggle.
+  - Import local, link local, link Drive, and HTTPS source controls remain
+    available through the chevron after a template is loaded; reload, undo,
+    filename, and source-status controls stay directly visible.
+  - Main files: `src/App.tsx`.
+  - Tests: `bun run test -- src/App.test.tsx`; `bun run check`.
 - [x] Fall back to the embedded SVG when the link is unavailable.
   - Source failures report why reload failed and continue using the current
     accepted project snapshot without changing mappings or selection.

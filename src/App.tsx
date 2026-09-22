@@ -28,6 +28,7 @@ import {
   IconCheck,
   IconChevronLeft,
   IconChevronRight,
+  IconChevronDown,
   IconCopy,
   IconDatabase,
   IconDownload,
@@ -592,6 +593,7 @@ export function App({
   const [searchColumn, setSearchColumn] = useState<ColumnId | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [svgSearchQuery, setSvgSearchQuery] = useState("");
+  const [svgSourceControlsOpen, setSvgSourceControlsOpen] = useState(false);
   const [previewZoomPercent, setPreviewZoomPercent] = useState(100);
   const [validationReportOpened, setValidationReportOpened] = useState(false);
   const [validationResult, setValidationResult] =
@@ -702,6 +704,7 @@ export function App({
   }, [mappings, sourceColumns, svg?.targets]);
   const svgSourceStatus =
     svgSourceStatusPresentation[svg?.sourceStatus ?? "unavailable"];
+  const showSvgSourceControls = !svg || svgSourceControlsOpen;
   const visibleColumns = useMemo(
     () =>
       sourceColumns.filter((column) =>
@@ -2408,50 +2411,54 @@ export function App({
             <div id="objects-panel-title">
               <PanelTitle icon={<IconBox size={20} />}>SVG Objects</PanelTitle>
             </div>
-            <Group gap="sm">
-              <Button
-                component="label"
-                leftSection={<IconFileTypeSvg />}
-                loading={isImportingSvg}
-                variant="outline"
-              >
-                Import local SVG
-                <input
-                  accept=".svg,image/svg+xml"
-                  aria-label="Choose an SVG file"
-                  hidden
-                  onChange={handleSvgFile}
-                  type="file"
-                />
-              </Button>
-              <Button
-                disabled={!project || isReloadingSvg}
-                leftSection={<IconFolderOpen size={16} />}
-                onClick={() => void linkLocalSvg()}
-                variant="subtle"
-              >
-                Link local SVG
-              </Button>
-              <Button
-                disabled={
-                  !project ||
-                  !capabilities.googleDriveConfigured ||
-                  isReloadingSvg ||
-                  isUsingDrive
-                }
-                leftSection={<IconFolderOpen size={16} />}
-                onClick={() => void linkDriveSvg()}
-                title={
-                  capabilities.hostedOrigin
-                    ? capabilities.googleDriveConfigured
-                      ? "Link an SVG selected through Google Drive"
-                      : "Google Drive is not configured for this hosted origin"
-                    : "Open this project through the hosted app to use Google Drive"
-                }
-                variant="subtle"
-              >
-                Link Drive SVG
-              </Button>
+            <Group gap="sm" wrap="nowrap">
+              {showSvgSourceControls && (
+                <>
+                  <Button
+                    component="label"
+                    leftSection={<IconFileTypeSvg />}
+                    loading={isImportingSvg}
+                    variant="outline"
+                  >
+                    Import local SVG
+                    <input
+                      accept=".svg,image/svg+xml"
+                      aria-label="Choose an SVG file"
+                      hidden
+                      onChange={handleSvgFile}
+                      type="file"
+                    />
+                  </Button>
+                  <Button
+                    disabled={!project || isReloadingSvg}
+                    leftSection={<IconFolderOpen size={16} />}
+                    onClick={() => void linkLocalSvg()}
+                    variant="subtle"
+                  >
+                    Link local SVG
+                  </Button>
+                  <Button
+                    disabled={
+                      !project ||
+                      !capabilities.googleDriveConfigured ||
+                      isReloadingSvg ||
+                      isUsingDrive
+                    }
+                    leftSection={<IconFolderOpen size={16} />}
+                    onClick={() => void linkDriveSvg()}
+                    title={
+                      capabilities.hostedOrigin
+                        ? capabilities.googleDriveConfigured
+                          ? "Link an SVG selected through Google Drive"
+                          : "Google Drive is not configured for this hosted origin"
+                        : "Open this project through the hosted app to use Google Drive"
+                    }
+                    variant="subtle"
+                  >
+                    Link Drive SVG
+                  </Button>
+                </>
+              )}
               {svg &&
                 project?.sources.some(
                   (source) =>
@@ -2480,37 +2487,61 @@ export function App({
                 </Button>
               )}
               {svg && (
-                <Badge color="green" variant="light">
-                  Sanitized
-                </Badge>
+                <ActionIcon
+                  aria-label={
+                    svgSourceControlsOpen
+                      ? "Hide SVG source controls"
+                      : "Show SVG source controls"
+                  }
+                  onClick={() => setSvgSourceControlsOpen((open) => !open)}
+                  title={
+                    svgSourceControlsOpen
+                      ? "Hide SVG source controls"
+                      : "Change SVG source"
+                  }
+                  variant="subtle"
+                >
+                  <IconChevronDown size={18} />
+                </ActionIcon>
               )}
-              <Badge
-                aria-label={`SVG source status: ${svgSourceStatus.label}`}
-                color={svgSourceStatus.color}
-                variant="light"
-              >
-                {svgSourceStatus.label}
-              </Badge>
             </Group>
-            <Text size="sm" c={svg ? "blue" : "dimmed"} fw={svg ? 600 : 400}>
-              {svg ? svg.fileName : "No SVG loaded"}
-            </Text>
-            <Group align="end" gap="xs" wrap="nowrap">
-              <TextInput
-                aria-label="HTTPS SVG URL"
-                disabled={!project || isReloadingSvg}
-                onChange={(event) => setLinkedSvgUrl(event.currentTarget.value)}
-                placeholder="https://example.com/template.svg"
-                value={linkedSvgUrl}
-              />
-              <Button
-                disabled={!project || !linkedSvgUrl.trim() || isReloadingSvg}
-                onClick={() => void linkHttpsSvg()}
-                variant="default"
-              >
-                Link HTTPS
-              </Button>
+            <Group justify="space-between" gap="xs" wrap="nowrap">
+              <Text size="sm" c={svg ? "blue" : "dimmed"} fw={svg ? 600 : 400}>
+                {svg ? svg.fileName : "No SVG loaded"}
+              </Text>
+              <Group gap="xs" wrap="nowrap">
+                {svg && (
+                  <Badge color="green" variant="light">
+                    Sanitized
+                  </Badge>
+                )}
+                <Badge
+                  aria-label={`SVG source status: ${svgSourceStatus.label}`}
+                  color={svgSourceStatus.color}
+                  variant="light"
+                >
+                  {svgSourceStatus.label}
+                </Badge>
+              </Group>
             </Group>
+            {showSvgSourceControls && (
+              <Group align="end" gap="xs" wrap="nowrap">
+                <TextInput
+                  aria-label="HTTPS SVG URL"
+                  disabled={!project || isReloadingSvg}
+                  onChange={(event) => setLinkedSvgUrl(event.currentTarget.value)}
+                  placeholder="https://example.com/template.svg"
+                  value={linkedSvgUrl}
+                />
+                <Button
+                  disabled={!project || !linkedSvgUrl.trim() || isReloadingSvg}
+                  onClick={() => void linkHttpsSvg()}
+                  variant="default"
+                >
+                  Link HTTPS
+                </Button>
+              </Group>
+            )}
             {templateUpdateSummary && (
               <Paper aria-label="Template update summary" p="xs" withBorder>
                 <Stack gap={2}>
