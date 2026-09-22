@@ -136,7 +136,7 @@ function acceptSvgSource(source: string): Pick<
   "acceptedSvg" | "targets" | "tree"
 > {
   const root = parseAndValidateSvg(source);
-  const acceptedSvg = DOMPurify.sanitize(root.outerHTML, {
+  const sanitized = DOMPurify.sanitize(root, {
     USE_PROFILES: { svg: true, svgFilters: true },
     ADD_TAGS: Array.from(supportedElements),
     ADD_ATTR: ["inkscape:label", "xlink:href", "xmlns:inkscape"],
@@ -144,7 +144,13 @@ function acceptSvgSource(source: string): Pick<
     // as "name". The accepted document remains SVG-only and is not injected
     // into the application DOM unsafely.
     SANITIZE_DOM: false,
+    RETURN_DOM_FRAGMENT: true,
   });
+  const acceptedRoot = sanitized.firstElementChild;
+  if (!acceptedRoot) {
+    throw importError("sanitization removed the SVG root");
+  }
+  const acceptedSvg = acceptedRoot.outerHTML;
 
   // Sanitize after parsing, then validate once more so accepted input stays in
   // the same narrow subset even if DOMPurify configuration changes.

@@ -5,16 +5,19 @@ import { SvgPreview } from "./SvgPreview";
 describe("SvgPreview", () => {
   afterEach(cleanup);
 
-  it("renders accepted SVG only in a capability-free sandbox document", () => {
+  it("renders accepted SVG in a script-free same-origin sandbox document", () => {
     const acceptedSvg =
       '<svg id="accepted-svg"><text>Inside preview</text></svg>';
     const { container } = render(<SvgPreview acceptedSvg={acceptedSvg} />);
 
     const frame = screen.getByTitle("SVG preview");
-    expect(frame).toHaveAttribute("sandbox", "");
+    expect(frame).toHaveAttribute("sandbox", "allow-same-origin");
     expect(frame).toHaveAttribute(
       "srcdoc",
       expect.stringContaining(acceptedSvg),
+    );
+    expect(frame.getAttribute("srcdoc")).toContain(
+      '@font-face{font-family:Ethnocentric;src:local("Ethnocentric"),local("Ethnocentric Regular")',
     );
     expect(container.querySelector("svg")).toBeNull();
     expect(screen.queryByText("Inside preview")).not.toBeInTheDocument();

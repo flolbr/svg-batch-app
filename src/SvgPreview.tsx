@@ -28,7 +28,7 @@ function previewDocument(
   selectedTargetId?: string | null,
   zoomPercent = 100,
 ): string {
-  return `<!doctype html><html><head><style>html,body{width:100%;height:100%;margin:0}body{display:grid;place-items:center;background:transparent}svg{display:block;max-width:100%;max-height:100%;width:auto;height:auto;transform:scale(${zoomPercent / 100});transform-origin:center center}[data-svg-batch-highlight]{filter:drop-shadow(0 0 5px #228be6);outline:3px solid #228be6;outline-offset:3px}</style></head><body>${previewSvg(acceptedSvg, selectedTargetId)}</body></html>`;
+  return `<!doctype html><html><head><style>@font-face{font-family:Ethnocentric;src:local("Ethnocentric"),local("Ethnocentric Regular");font-style:normal;font-weight:400}html,body{width:100%;height:100%;margin:0}body{display:grid;place-items:center;background:transparent}svg{display:block;max-width:100%;max-height:100%;width:auto;height:auto;transform:scale(${zoomPercent / 100});transform-origin:center center}[data-svg-batch-highlight]{filter:drop-shadow(0 0 5px #228be6);outline:3px solid #228be6;outline-offset:3px}</style></head><body>${previewSvg(acceptedSvg, selectedTargetId)}</body></html>`;
 }
 
 export function SvgPreview({
@@ -40,7 +40,7 @@ export function SvgPreview({
     <div className={classes.wrapper}>
       <iframe
         className={classes.frame}
-        sandbox=""
+        sandbox="allow-same-origin"
         srcDoc={previewDocument(acceptedSvg, selectedTargetId, zoomPercent)}
         title="SVG preview"
       />

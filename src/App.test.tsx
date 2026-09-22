@@ -1306,7 +1306,7 @@ describe("App", () => {
     expect(zoomIn).toBeEnabled();
     expect(fit).toBeDisabled();
     const preview = screen.getByTitle("SVG preview");
-    expect(preview).toHaveAttribute("sandbox", "");
+    expect(preview).toHaveAttribute("sandbox", "allow-same-origin");
     expect(preview.getAttribute("srcdoc")).toContain('id="badge"');
     expect(document.querySelector("#badge")).not.toBeInTheDocument();
     expect(

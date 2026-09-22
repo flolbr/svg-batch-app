@@ -150,6 +150,23 @@ Only one implementation item should normally be `[-]`.
 
 ## Phase 3 — SVG import, tree, and preview
 
+- [x] Accept Inkscape SVGs without reserializing the parsed root through an
+  XML-prefixed string before sanitization.
+  - Sanitize the parsed SVG node directly so browser-specific XML prefixes do
+    not make DOMPurify discard the root; preserve the existing supported-
+    element and namespace checks for all other markup.
+  - Main files: `src/svg/importSvg.ts`, `src/svg/importSvg.test.ts`.
+  - Tests: `bun run test -- src/svg/importSvg.test.ts`; `bun run check`.
+
+- [-] Restore local-font rendering in the isolated SVG preview on Firefox.
+  - Keep scripts disabled while allowing same-origin font resolution in the
+    preview iframe. The preview also declares local Ethnocentric faces
+    explicitly so browser font matching does not fall back to a serif face.
+  - Main files: `src/SvgPreview.tsx`, `src/SvgPreview.test.tsx`.
+  - Tests: `bun run test -- src/SvgPreview.test.tsx src/App.test.tsx`; `bun run lint`;
+    `bun run build:single`. Firefox manual verification remains to be done on a
+    machine with Firefox available.
+
 - [x] Import and sanitize a local SVG.
   - Local SVG files are parsed as XML, rejected when malformed or outside the
     supported element/resource subset, and sanitized with DOMPurify before

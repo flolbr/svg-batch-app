@@ -33,8 +33,10 @@ unfinished source behavior.
 The local importer parses SVG as XML, requires an SVG namespace root, rejects
 unsupported elements and event attributes, permits only local fragment
 references or embedded image data URLs, and rejects external `url(...)`
-resources. DOMPurify sanitizes the accepted subset, which is parsed and
-validated again before its string enters source state.
+resources. DOMPurify receives the parsed SVG node directly rather than a
+browser-re-serialized XML string, avoiding browser-specific namespace prefixes;
+the accepted subset is then parsed and validated again before its string enters
+source state.
 
 ## Supported SVG subset
 

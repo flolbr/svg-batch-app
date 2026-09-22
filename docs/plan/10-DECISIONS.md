@@ -4,6 +4,14 @@ Keep this file concise. Record decisions, not discussion.
 
 ## 2026-09-20
 
+### Firefox local fonts in SVG preview
+
+Keep the preview iframe script-free but add `allow-same-origin` to its sandbox.
+Firefox can otherwise hide locally installed fonts from the `srcDoc` preview,
+even when the top-level document can resolve the font. Imported SVG remains
+sanitized before insertion, and the iframe still does not allow scripts,
+forms, popups, downloads, or top-level navigation.
+
 ### Bento-inspired signed application updates
 
 Use [Bento](https://github.com/nyblnet/bento) as architectural inspiration for
