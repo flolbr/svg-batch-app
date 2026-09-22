@@ -5,9 +5,9 @@ Last updated: 2026-09-22
 ## Current task
 
 The desktop workspace layout now stays bounded to the viewport and the SVG
-object browser scrolls independently. The responsive stacked layout retains
-normal page scrolling below 1100 px. This is committed as
-`4d98d4e fix: scroll SVG objects within viewport`.
+object browser scrolls independently. The action footer also stays on one
+compact desktop line, while narrow responsive layouts may wrap normally. The
+layout work is committed as `8bd71d2 fix: keep action footer on one line`.
 
 Phase 8 hosted Google Drive adapter, Phase 9 signed application updates, and
 the first public releases are complete. Versions `0.1.0`, `0.1.1`, and `0.1.2`
@@ -44,7 +44,7 @@ Portable project saves now reject a Vite dev shell that still references
 `repair:project` command repaired the requested `Untitled project.html` into a
 standalone copy and verified it from `file://` and localhost.
 
-Latest implementation commit: `ff1359d fix: preserve Inkscape text styles during mapping`.
+Latest implementation commit: `8bd71d2 fix: keep action footer on one line`.
 Latest planning commit: `ff1359d fix: preserve Inkscape text styles during mapping`.
 
 ## Latest milestone
