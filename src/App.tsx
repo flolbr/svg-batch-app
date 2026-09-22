@@ -43,7 +43,6 @@ import {
   IconSearch,
   IconSettings,
   IconRestore,
-  IconRefresh,
   IconTrash,
   IconUpload,
 } from "@tabler/icons-react";
@@ -2409,11 +2408,88 @@ export function App({
         >
           <Stack gap="md" h="100%">
             <div id="objects-panel-title">
-              <PanelTitle icon={<IconBox size={20} />}>SVG Objects</PanelTitle>
+              <Group justify="space-between" gap="xs" wrap="nowrap">
+                <PanelTitle icon={<IconBox size={20} />}>SVG Objects</PanelTitle>
+                <Group
+                  gap="xs"
+                  justify="flex-end"
+                  wrap="nowrap"
+                  style={{ minWidth: 0, flex: 1 }}
+                >
+                  <Text
+                    size="sm"
+                    c={svg ? "blue" : "dimmed"}
+                    fw={svg ? 600 : 400}
+                    truncate
+                    style={{ minWidth: 0 }}
+                  >
+                    {svg ? svg.fileName : "No SVG loaded"}
+                  </Text>
+                  <Group gap="xs" wrap="nowrap">
+                    {svg && (
+                      <Badge color="green" variant="light">
+                        Sanitized
+                      </Badge>
+                    )}
+                    <Badge
+                      aria-label={`SVG source status: ${svgSourceStatus.label}`}
+                      color={svgSourceStatus.color}
+                      variant="light"
+                    >
+                      {svgSourceStatus.label}
+                    </Badge>
+                    {svg && (
+                      <ActionIcon
+                        aria-label={
+                          svgSourceControlsOpen
+                            ? "Hide SVG source controls"
+                            : "Show SVG source controls"
+                        }
+                        onClick={() => setSvgSourceControlsOpen((open) => !open)}
+                        title={
+                          svgSourceControlsOpen
+                            ? "Hide SVG source controls"
+                            : "Change SVG source"
+                        }
+                        variant="subtle"
+                      >
+                        <IconChevronDown size={18} />
+                      </ActionIcon>
+                    )}
+                    {svg &&
+                      project?.sources.some(
+                        (source) =>
+                          source.kind === "svg" && source.location !== "embedded",
+                      ) && (
+                        <Button
+                          disabled={isReloadingSvg}
+                          loading={isReloadingSvg}
+                          onClick={() => void reloadLinkedSvg()}
+                          size="compact-sm"
+                          variant="subtle"
+                        >
+                          Reload linked SVG
+                        </Button>
+                      )}
+                    {previousTemplate && (
+                      <Button
+                        onClick={() => {
+                          undoTemplateUpdate();
+                          setTemplateUpdateSummary(null);
+                        }}
+                        size="compact-sm"
+                        variant="subtle"
+                      >
+                        Undo template update
+                      </Button>
+                    )}
+                  </Group>
+                </Group>
+              </Group>
             </div>
-            <Group gap="sm" wrap="nowrap">
-              {showSvgSourceControls && (
-                <>
+            {showSvgSourceControls && (
+              <>
+                <Group gap="sm" wrap="nowrap">
                   <Button
                     component="label"
                     leftSection={<IconFileTypeSvg />}
@@ -2457,90 +2533,24 @@ export function App({
                   >
                     Link Drive SVG
                   </Button>
-                </>
-              )}
-              {svg &&
-                project?.sources.some(
-                  (source) =>
-                    source.kind === "svg" && source.location !== "embedded",
-                ) && (
+                </Group>
+                <Group align="end" gap="xs" wrap="nowrap">
+                  <TextInput
+                    aria-label="HTTPS SVG URL"
+                    disabled={!project || isReloadingSvg}
+                    onChange={(event) => setLinkedSvgUrl(event.currentTarget.value)}
+                    placeholder="https://example.com/template.svg"
+                    value={linkedSvgUrl}
+                  />
                   <Button
-                    disabled={isReloadingSvg}
-                    leftSection={<IconRefresh size={16} />}
-                    loading={isReloadingSvg}
-                    onClick={() => void reloadLinkedSvg()}
-                    variant="subtle"
+                    disabled={!project || !linkedSvgUrl.trim() || isReloadingSvg}
+                    onClick={() => void linkHttpsSvg()}
+                    variant="default"
                   >
-                    Reload linked SVG
+                    Link HTTPS
                   </Button>
-                )}
-              {previousTemplate && (
-                <Button
-                  leftSection={<IconRestore size={16} />}
-                  onClick={() => {
-                    undoTemplateUpdate();
-                    setTemplateUpdateSummary(null);
-                  }}
-                  variant="subtle"
-                >
-                  Undo template update
-                </Button>
-              )}
-              {svg && (
-                <ActionIcon
-                  aria-label={
-                    svgSourceControlsOpen
-                      ? "Hide SVG source controls"
-                      : "Show SVG source controls"
-                  }
-                  onClick={() => setSvgSourceControlsOpen((open) => !open)}
-                  title={
-                    svgSourceControlsOpen
-                      ? "Hide SVG source controls"
-                      : "Change SVG source"
-                  }
-                  variant="subtle"
-                >
-                  <IconChevronDown size={18} />
-                </ActionIcon>
-              )}
-            </Group>
-            <Group justify="space-between" gap="xs" wrap="nowrap">
-              <Text size="sm" c={svg ? "blue" : "dimmed"} fw={svg ? 600 : 400}>
-                {svg ? svg.fileName : "No SVG loaded"}
-              </Text>
-              <Group gap="xs" wrap="nowrap">
-                {svg && (
-                  <Badge color="green" variant="light">
-                    Sanitized
-                  </Badge>
-                )}
-                <Badge
-                  aria-label={`SVG source status: ${svgSourceStatus.label}`}
-                  color={svgSourceStatus.color}
-                  variant="light"
-                >
-                  {svgSourceStatus.label}
-                </Badge>
-              </Group>
-            </Group>
-            {showSvgSourceControls && (
-              <Group align="end" gap="xs" wrap="nowrap">
-                <TextInput
-                  aria-label="HTTPS SVG URL"
-                  disabled={!project || isReloadingSvg}
-                  onChange={(event) => setLinkedSvgUrl(event.currentTarget.value)}
-                  placeholder="https://example.com/template.svg"
-                  value={linkedSvgUrl}
-                />
-                <Button
-                  disabled={!project || !linkedSvgUrl.trim() || isReloadingSvg}
-                  onClick={() => void linkHttpsSvg()}
-                  variant="default"
-                >
-                  Link HTTPS
-                </Button>
-              </Group>
+                </Group>
+              </>
             )}
             {templateUpdateSummary && (
               <Paper aria-label="Template update summary" p="xs" withBorder>

@@ -695,7 +695,8 @@ Only one implementation item should normally be `[-]`.
 - [x] Collapse loaded SVG source-selection controls behind a compact toggle.
   - Import local, link local, link Drive, and HTTPS source controls remain
     available through the chevron after a template is loaded; reload, undo,
-    filename, and source-status controls stay directly visible.
+    filename, and source-status controls stay directly visible in the compact
+    SVG Objects header row.
   - Main files: `src/App.tsx`.
   - Tests: `bun run test -- src/App.test.tsx`; `bun run check`.
 - [x] Fall back to the embedded SVG when the link is unavailable.
