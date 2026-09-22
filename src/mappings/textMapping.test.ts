@@ -31,7 +31,7 @@ describe("applyTextMapping", () => {
     measure: (text, fontSize) => Array.from(text).length * fontSize,
   });
 
-  it("replaces text content on text targets and caller-owned clones", () => {
+  it("replaces text content while preserving styled tspan targets", () => {
     const source = parseSvg(
       '<svg><text id="target"><tspan>Template</tspan></text></svg>',
     );
@@ -41,8 +41,22 @@ describe("applyTextMapping", () => {
       [],
     );
     expect(clone.querySelector("text")?.textContent).toBe("Ada");
-    expect(clone.querySelector("tspan")).toBeNull();
+    expect(clone.querySelector("tspan")?.textContent).toBe("Ada");
     expect(source.querySelector("text")?.textContent).toBe("Template");
+  });
+
+  it("keeps the tspan style when mapping an Inkscape text target", () => {
+    const svg = parseSvg(
+      '<svg><text id="target"><tspan style="font-family:Ethnocentric">Template</tspan></text></svg>',
+    );
+
+    expect(applyTextMapping(svg, row({ name: "Memristor" }), mapping())).toEqual(
+      [],
+    );
+    expect(svg.querySelector("tspan")?.textContent).toBe("Memristor");
+    expect(svg.querySelector("tspan")?.getAttribute("style")).toBe(
+      "font-family:Ethnocentric",
+    );
   });
 
   it("replaces text content on tspan targets with special-character IDs", () => {

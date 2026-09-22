@@ -19,20 +19,20 @@ resources; the live browser reports 23 mapping targets.
 The compatibility fix is included in public `v0.1.2`; the live artifact loads
 `Sénior.svg` and reports 23 mapping targets.
 
-The local-font preview issue was reproduced by comparing the working standalone
-SVG with the isolated preview path: the first mapped row fell back to a serif
-font. The preview iframe keeps scripts disabled while using
-`sandbox="allow-same-origin"` and now declares local Ethnocentric faces
-explicitly in the preview document. Focused tests and the self-contained build
-pass. The live Browser Harness server stopped during verification, so Firefox
-manual verification and a release commit remain pending.
+The first mapped row's serif fallback was traced to text mapping: Inkscape
+stores `font-family` on child `<tspan>` elements, while the mapper replaced the
+parent `<text>` `textContent` and deleted those styled children. Text mapping
+now updates existing tspans in place, preserving their styles. The preview
+iframe also keeps scripts disabled, allows same-origin font resolution, and
+declares local Ethnocentric faces explicitly. Focused tests and the full check
+pass; live Firefox verification remains pending.
 
 The Firefox upload error for `Sénior.svg` was traced to browser XML
 serialization interacting badly with string-based SVG sanitization. The
 importer now sanitizes the parsed SVG node directly, avoiding that
 re-serialization path. Browser Harness verified the exact file imports in
-Chromium with 24 mapping targets. Full check passes with 58 test files and 367
-tests; the fix is local and not yet committed or published.
+Chromium with 24 mapping targets. Full check passes with 58 test files and 368
+tests.
 
 Portable project saves now reject a Vite dev shell that still references
 `/src/main.tsx`; use `bun run build:single` for standalone saved HTML. The
@@ -66,10 +66,9 @@ Latest planning commit: `11016d6 docs: record preview fix handoff`.
 - Full check: `bun run check` (53 test files, 342 tests; self-contained
   `dist/index.html` verified at 2,310,112 bytes).
 
-Next concrete step: reopen the local dev build in Firefox and verify Ethnocentric
-in the first-row SVG preview; if it works, mark the TODO item complete and
-commit the preview compatibility fix before publishing a new release. Edge and
-hosted Drive checks remain environment-gated.
+Next concrete step: verify the first-row SVG preview in Firefox or the existing
+Browser Harness session after its browser permission prompt is cleared. Edge
+and hosted Drive checks remain environment-gated.
 
 ## What works
 

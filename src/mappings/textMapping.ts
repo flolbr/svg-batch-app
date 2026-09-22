@@ -8,6 +8,20 @@ import {
 } from "./textFitting";
 import type { ValidationIssue } from "./validation";
 
+function setMappedText(target: Element, value: string): void {
+  if (target.localName === "text") {
+    const tspans = Array.from(target.getElementsByTagName("tspan"));
+    if (tspans.length > 0) {
+      tspans.forEach((tspan, index) => {
+        tspan.textContent = index === 0 ? value : "";
+      });
+      return;
+    }
+  }
+
+  target.textContent = value;
+}
+
 export function applyTextMapping(
   svg: SVGSVGElement,
   row: SourceRow,
@@ -61,7 +75,7 @@ export function applyTextMapping(
   }
 
   if (mapping.fit === "keep") {
-    target.textContent = value;
+    setMappedText(target, value);
     return [];
   }
 
@@ -70,7 +84,7 @@ export function applyTextMapping(
     if (!isTextFitMetrics(metrics)) throw new Error("Text metrics are unavailable.");
 
     const result = fitText(value, mapping.fit, mapping.minFontSize, metrics);
-    target.textContent = result.text;
+    setMappedText(target, result.text);
     if (result.fontSize !== undefined) {
       target.setAttribute("font-size", String(result.fontSize));
     }

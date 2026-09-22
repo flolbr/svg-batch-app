@@ -272,13 +272,14 @@ Only one implementation item should normally be `[-]`.
     `bun run check`.
 - [x] Implement direct text content mapping.
   - Direct mapping writes the row's displayed value to a caller-owned cloned
-    `text` or `tspan` target. It reports structured issues for missing columns,
+    `text` or `tspan` target while preserving child `tspan` styles from
+    Inkscape SVGs. It reports structured issues for missing columns,
     missing/incompatible targets, and blank required values without throwing
     or changing the accepted template.
   - Main files: `src/mappings/textMapping.ts`,
     `src/mappings/textMapping.test.ts`, `src/mappings/validation.ts`.
-  - Tests: `bun run test -- src/mappings/textMapping.test.ts`; `bunx tsc -b`;
-    `bun run check`.
+  - Tests: `bun run test -- src/mappings/textMapping.test.ts src/mappings/applyMappings.test.ts`;
+    `bun run check` (58 files, 368 tests); `bun run verify:single`.
 - [x] Implement yes/no visibility mapping.
   - Visibility values and configured true/false lists are normalized by case
     and whitespace. True/show removes the direct `display` attribute;
