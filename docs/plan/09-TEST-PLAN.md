@@ -84,6 +84,23 @@ At minimum:
 9. reopen saved HTML;
 10. confirm data and mappings restore.
 
+### Firefox font preview and saved-project reopen
+
+Run `bun run test:browser:fonts` against the self-contained build. Requires
+Playwright Firefox and an installed Ethnocentric font; `SVG_BATCH_FIREFOX`
+can select a runtime and `SVG_BATCH_LOCAL_FONT` can select another installed
+family. No runtime installation or font download is performed by the test.
+
+The regression uploads an SVG with local-font text and an initially unavailable
+font family. It checks local preview metrics against the top-level browser,
+uploads a generated font, and verifies its expected glyph width differs from
+fallback. The iframe retains `sandbox="allow-same-origin"` without scripts.
+Save project must download a complete HTML with exact font bytes and face
+metadata; reopen in a fresh browser context must reproduce both faces.
+The whole flow must make no HTTP requests. Set
+`SVG_BATCH_KEEP_FONT_ARTIFACTS=1` to retain screenshots and the saved HTML for
+visual inspection; otherwise temporary files are cleaned up.
+
 ### Linked local SVG
 
 1. link SVG;

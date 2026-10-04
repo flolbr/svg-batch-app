@@ -214,17 +214,17 @@ Only one implementation item should normally be `[-]`.
   - Main files: `src/svg/importSvg.ts`, `src/svg/importSvg.test.ts`.
   - Tests: `bun run test -- src/svg/importSvg.test.ts`; `bun run check`.
 
-- [!] Restore local-font rendering in the isolated SVG preview on Firefox.
-  - Keep scripts disabled while allowing same-origin font resolution in the
-    preview iframe. The preview also declares local Ethnocentric faces
-    explicitly so browser font matching does not fall back to a serif face.
-    Branch experiment additionally supports multiple user-selected project
-    font assets, embedded in the saved project and previewed through data URLs.
-  - Main files: `src/SvgPreview.tsx`, `src/SvgPreview.test.tsx`.
-  - Tests: `bun run test -- src/SvgPreview.test.tsx src/App.test.tsx`; `bun run lint`;
-    `bun run build:single`. Firefox manual verification remains to be done on a
-    machine with Firefox available. Blocked here because Firefox is not
-    installed in the available test environment.
+- [x] Restore local-font rendering in the isolated SVG preview on Firefox.
+  - Firefox 155 verifies local Ethnocentric metrics match the top-level page
+    inside the script-free same-origin preview. A generated, uninstalled font
+    renders at its expected glyph width and differs from fallback. Upload,
+    Save project, and reopening the downloaded HTML in a fresh browser context
+    preserve font bytes/metadata and both rendered faces without HTTP requests.
+  - Main files: `scripts/testFirefoxFontPreview.ts`, `package.json`,
+    `docs/plan/09-TEST-PLAN.md`. No production change was required.
+  - Tests: `SVG_BATCH_KEEP_FONT_ARTIFACTS=1 bun run test:browser:fonts`;
+    screenshots inspected at `/tmp/svg-firefox-fonts-8VFDJl/`;
+    `bun run check` passed (60 files, 379 tests; self-contained build).
 
 - [x] Import and sanitize a local SVG.
   - Local SVG files are parsed as XML, rejected when malformed or outside the

@@ -13,6 +13,7 @@
     "release:publish": "bun scripts/publishRelease.ts",
     "repair:project": "bun scripts/repairProjectHtml.ts",
     "test": "vitest run",
+    "test:browser:fonts": "bun run build:single && bun scripts/testFirefoxFontPreview.ts",
     "test:browser:pdf": "bun scripts/testProjectFontPdfBrowser.ts",
     "test:watch": "vitest",
     "lint": "oxlint src",
