@@ -47,8 +47,7 @@ describe("SvgPreview", () => {
   });
 
   it("highlights only the derived preview document", () => {
-    const acceptedSvg =
-      '<svg><g id="group"><rect id="target"/></g></svg>';
+    const acceptedSvg = '<svg><g id="group"><rect id="target"/></g></svg>';
     const { rerender } = render(
       <SvgPreview acceptedSvg={acceptedSvg} selectedTargetId="target" />,
     );
@@ -59,9 +58,7 @@ describe("SvgPreview", () => {
     );
     expect(acceptedSvg).not.toContain("data-svg-batch-highlight");
 
-    rerender(
-      <SvgPreview acceptedSvg={acceptedSvg} selectedTargetId="group" />,
-    );
+    rerender(<SvgPreview acceptedSvg={acceptedSvg} selectedTargetId="group" />);
     expect(frame.getAttribute("srcdoc")).toContain(
       'id="group" data-svg-batch-highlight="true"',
     );
@@ -90,5 +87,29 @@ describe("SvgPreview", () => {
 
     rerender(<SvgPreview acceptedSvg={acceptedSvg} />);
     expect(frame.getAttribute("srcdoc")).toContain("transform:scale(1)");
+  });
+
+  it("embeds a project font in the isolated preview", () => {
+    const { container } = render(
+      <SvgPreview
+        acceptedSvg={'<svg><text font-family="Ethnocentric">Text</text></svg>'}
+        fontAssets={[
+          { dataUrl: "data:font/otf;base64,Zm9udA==", mimeType: "font/otf" },
+          {
+            dataUrl: "data:font/woff2;base64,Zm9udA==",
+            mimeType: "font/woff2",
+          },
+        ]}
+      />,
+    );
+    expect(container.querySelector("iframe")).toHaveAttribute(
+      "srcdoc",
+      expect.stringContaining(
+        '@font-face{font-family:"Ethnocentric";src:url(data:font/otf;base64,Zm9udA==) format("opentype")',
+      ),
+    );
+    expect(container.querySelector("iframe")?.getAttribute("srcdoc")).toContain(
+      'src:url(data:font/woff2;base64,Zm9udA==) format("woff2")',
+    );
   });
 });

@@ -1,6 +1,6 @@
 # 00 — TODO
 
-Last updated: 2026-09-21
+Last updated: 2026-10-05
 
 ## Status legend
 
@@ -182,6 +182,16 @@ Only one implementation item should normally be `[-]`.
 
 ## Phase 3 — SVG import, tree, and preview
 
+- [x] Embed user-selected project fonts with face metadata.
+  - Keep existing version-1 projects valid; preview each uploaded family/face.
+    Append current assets without restoring stale sources/mappings/selection.
+  - Main files: App, SvgPreview, project font metadata/schema and their tests;
+    package.json and bun.lock.
+  - Tests: `bun run check` (59 files, 376 tests; self-contained build).
+- [-] Consolidate the font branch into two commits and merge into main.
+  - Original history preserved on `codex/backup-project-embedded-font-before-squash`.
+    User explicitly authorized squashing and merging.
+
 - [x] Accept Inkscape SVGs without reserializing the parsed root through an
   XML-prefixed string before sanitization.
   - Sanitize the parsed SVG node directly so browser-specific XML prefixes do
@@ -190,14 +200,14 @@ Only one implementation item should normally be `[-]`.
   - Main files: `src/svg/importSvg.ts`, `src/svg/importSvg.test.ts`.
   - Tests: `bun run test -- src/svg/importSvg.test.ts`; `bun run check`.
 
-- [-] Restore local-font rendering in the isolated SVG preview on Firefox.
+- [!] Restore local-font rendering in the isolated SVG preview on Firefox.
   - Keep scripts disabled while allowing same-origin font resolution in the
     preview iframe. The preview also declares local Ethnocentric faces
     explicitly so browser font matching does not fall back to a serif face.
   - Main files: `src/SvgPreview.tsx`, `src/SvgPreview.test.tsx`.
   - Tests: `bun run test -- src/SvgPreview.test.tsx src/App.test.tsx`; `bun run lint`;
     `bun run build:single`. Firefox manual verification remains to be done on a
-    machine with Firefox available.
+    machine with Firefox available; no Firefox runtime is installed here.
 
 - [x] Import and sanitize a local SVG.
   - Local SVG files are parsed as XML, rejected when malformed or outside the

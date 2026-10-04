@@ -100,6 +100,7 @@ import {
 } from "./export/filenameRules";
 import { createExportManifest } from "./export/manifestExport";
 import { createPdfExportFiles } from "./export/pdfExport";
+import { readProjectFontMetadata } from "./project/fontMetadata";
 import {
   runExportBatch,
   type ExportBatchProgress,
@@ -272,6 +273,20 @@ function recoveryFingerprint(project: Project): string {
       updatedAt: "",
     },
   });
+}
+
+function bufferToDataUrl(buffer: ArrayBuffer, mimeType: string): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
+  }
+  return `data:${mimeType};base64,${btoa(binary)}`;
+}
+
+function isFontAsset(asset: Project["assets"][number]): boolean {
+  return asset.mimeType.startsWith("font/");
 }
 const emptyColumnPreferences: ColumnPreferences = {
   visible: [],
@@ -697,6 +712,7 @@ export function App({
     () => findSvgNode(svg?.tree ?? [], selectedSvgObjectId),
     [selectedSvgObjectId, svg?.tree],
   );
+  const embeddedFonts = project?.assets.filter(isFontAsset) ?? [];
   const selectedMapping = mappings.find(
     (mapping) => mapping.targetId === selectedSvgObjectId,
   );
@@ -1716,6 +1732,66 @@ export function App({
     }
   }
 
+  async function handleFontFile(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file || !project) return;
+
+    if (!file.type.startsWith("font/") && !/\.(otf|ttf|woff2?)$/i.test(file.name)) {
+      notifications.show({
+        color: "red",
+        title: "Font import failed",
+        message: "Choose an OTF, TTF, WOFF, or WOFF2 font file.",
+      });
+      return;
+    }
+
+    try {
+      const lowerName = file.name.toLowerCase();
+      const mimeType = lowerName.endsWith(".otf")
+        ? "font/otf"
+        : lowerName.endsWith(".ttf")
+          ? "font/ttf"
+          : lowerName.endsWith(".woff2")
+            ? "font/woff2"
+            : "font/woff";
+      const fontBuffer = await file.arrayBuffer();
+      const dataUrl = bufferToDataUrl(fontBuffer, mimeType);
+      const fontMetadata = readProjectFontMetadata(
+        fontBuffer,
+        mimeType === "font/woff2" ? file.name : undefined,
+      );
+      const fontAsset = {
+        id: `project-font-${crypto.randomUUID()}`,
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: mimeType as "font/otf" | "font/ttf" | "font/woff" | "font/woff2",
+        dataUrl,
+        ...fontMetadata,
+      };
+      const currentProject = useAppStore.getState().project;
+      if (!currentProject || currentProject.projectId !== project.projectId) return;
+      useAppStore.setState({
+        project: {
+          ...currentProject,
+          assets: [...currentProject.assets, fontAsset],
+        },
+      });
+      notifications.show({
+        color: "green",
+        title: `${file.name} embedded`,
+        message: "This font will travel with the saved project.",
+      });
+    } catch (error) {
+      notifications.show({
+        color: "red",
+        title: "Font import failed",
+        message: error instanceof Error ? error.message : "The font could not be read.",
+      });
+    }
+  }
+
   async function applyLinkedTemplate(
     nextSvg: NonNullable<typeof svg>,
     source: NonNullable<Project["sources"][number]>,
@@ -2067,6 +2143,18 @@ export function App({
           </Button>
           <Button variant="subtle" color="dark" leftSection={<IconSettings />}>
             Settings
+          </Button>
+          <Button component="label" variant="subtle" color="dark">
+            {embeddedFonts.length > 0
+              ? `Add font (${embeddedFonts.length})`
+              : "Add font"}
+            <input
+              hidden
+              aria-label="Choose a font file"
+              accept=".otf,.ttf,.woff,.woff2,font/otf,font/ttf,font/woff,font/woff2"
+              onChange={(event) => void handleFontFile(event)}
+              type="file"
+            />
           </Button>
           <div className="user-avatar" aria-label="Current user">
             SB
@@ -2763,6 +2851,7 @@ export function App({
               {svg ? (
                 <SvgPreview
                   acceptedSvg={previewSvg ?? svg.acceptedSvg}
+                  fontAssets={embeddedFonts}
                   selectedTargetId={selectedSvgObjectId}
                   zoomPercent={previewZoomPercent}
                 />

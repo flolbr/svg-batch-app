@@ -10,6 +10,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import JSZip from "jszip";
+import * as fontMetadata from "./project/fontMetadata";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   App,
@@ -151,6 +152,73 @@ describe("App", () => {
       sources: { spreadsheet: null, svg: null },
       ui: { ...state.ui, panelWeights: initialPanelWeights },
     }));
+  });
+
+  it("adds a font without restoring stale sources, mappings, selection, or project fields", async () => {
+    vi.spyOn(fontMetadata, "readProjectFontMetadata").mockReturnValue({
+      fontFamily: "Demo",
+      fontStyle: "normal",
+      fontWeight: "400",
+    });
+    useAppStore.getState().setProject(project());
+    setMemberSpreadsheet();
+    useAppStore
+      .getState()
+      .setSvgSource({
+        fileName: "badge.svg",
+        fileSize: 1,
+        acceptedSvg:
+          '<svg xmlns="http://www.w3.org/2000/svg"><text id="badge">A</text></svg>',
+        sourceStatus: "embedded",
+        targets: [],
+        tree: [],
+      });
+    const row = useAppStore.getState().sources.spreadsheet!.data.rows[0];
+    useAppStore.getState().selectRows([row.id]);
+    useAppStore
+      .getState()
+      .setMapping({
+        id: "badge",
+        targetId: "badge",
+        type: "text",
+        columnId:
+          useAppStore.getState().sources.spreadsheet!.data.columns[0].id,
+        required: false,
+        fit: "keep",
+      });
+    const before = useAppStore.getState();
+    let finishRead!: (buffer: ArrayBuffer) => void;
+    const read = new Promise<ArrayBuffer>((resolve) => {
+      finishRead = resolve;
+    });
+    const file = new File(["font"], "Demo.ttf", { type: "font/ttf" });
+    Object.defineProperty(file, "arrayBuffer", { value: vi.fn(() => read) });
+    render(
+      <MantineProvider>
+        <App />
+      </MantineProvider>,
+    );
+    await userEvent
+      .setup()
+      .upload(screen.getByLabelText("Choose a font file"), file);
+    act(() =>
+      useAppStore.setState((state) => ({
+        project: { ...state.project!, name: "Renamed during upload" },
+      })),
+    );
+    await act(async () => {
+      finishRead(new Uint8Array([1, 2, 3]).buffer);
+      await read;
+    });
+    await waitFor(() =>
+      expect(useAppStore.getState().project!.assets).toHaveLength(1),
+    );
+    const after = useAppStore.getState();
+    expect(after.sources).toBe(before.sources);
+    expect(after.mappings).toBe(before.mappings);
+    expect(after.selection).toEqual(before.selection);
+    expect(after.project!.name).toBe("Renamed during upload");
+    expect(after.project!.assets[0].dataUrl).toBe("data:font/ttf;base64,AQID");
   });
 
   it("renders the three-panel application shell and project actions", () => {

@@ -123,6 +123,52 @@ describe("projectSchema", () => {
     expect(projectSchema.parse(validProject)).toEqual(validProject);
   });
 
+  it("accepts an embedded project font asset", () => {
+    const project = structuredClone(validProject);
+    const parsed = projectSchema.parse({
+      ...project,
+      assets: [
+        ...project.assets,
+        {
+          id: "project-font",
+          fileName: "Ethnocentric-Regular.otf",
+          fileSize: 3,
+          mimeType: "font/otf",
+          dataUrl: "data:font/otf;base64,abc",
+          fontFamily: "Ethnocentric",
+          fontStyle: "normal",
+          fontWeight: "400",
+        },
+      ],
+    });
+
+    expect(parsed.assets.at(-1)).toMatchObject({
+      id: "project-font",
+      mimeType: "font/otf",
+      fontFamily: "Ethnocentric",
+      fontWeight: "400",
+    });
+  });
+
+  it("keeps legacy version-1 project fonts valid without face metadata", () => {
+    const project = structuredClone(validProject);
+    const parsed = projectSchema.parse({
+      ...project,
+      assets: [
+        ...project.assets,
+        {
+          id: "legacy-project-font",
+          fileName: "Ethnocentric-Regular.otf",
+          fileSize: 3,
+          mimeType: "font/otf",
+          dataUrl: "data:font/otf;base64,abc",
+        },
+      ],
+    });
+
+    expect(parsed.assets.at(-1)).not.toHaveProperty("fontFamily");
+  });
+
   it("rejects unknown fields at nested persisted boundaries", () => {
     const project = structuredClone(validProject);
     Object.assign(project.assets[0], { unexpected: true });

@@ -24,11 +24,15 @@ const templateProjectStateSchema = z
   })
   .strict();
 
-const rasterMimeTypeSchema = z.enum([
+const projectAssetMimeTypeSchema = z.enum([
   "image/png",
   "image/jpeg",
   "image/gif",
   "image/webp",
+  "font/otf",
+  "font/ttf",
+  "font/woff",
+  "font/woff2",
 ]);
 
 const projectAssetSchema = z
@@ -36,8 +40,14 @@ const projectAssetSchema = z
     id: nonBlankString,
     fileName: nonBlankString,
     fileSize: nonNegativeInteger,
-    mimeType: rasterMimeTypeSchema,
+    mimeType: projectAssetMimeTypeSchema,
     dataUrl: z.string().min(1),
+    fontFamily: nonBlankString.optional(),
+    fontStyle: z.enum(["normal", "italic"]).optional(),
+    fontWeight: z
+      .string()
+      .regex(/^[1-9]\d{0,2}$|^1000$/)
+      .optional(),
   })
   .strict()
   .superRefine((asset, context) => {
@@ -45,7 +55,7 @@ const projectAssetSchema = z
       context.addIssue({
         code: "custom",
         path: ["dataUrl"],
-        message: "Asset data URL must match its raster MIME type.",
+        message: "Asset data URL must match its MIME type.",
       });
     }
   });

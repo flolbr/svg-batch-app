@@ -2,6 +2,14 @@
 
 Keep this file concise. Record decisions, not discussion.
 
+## 2026-10-05
+
+### Embedded project font faces
+
+Embed only user-selected font files. Store optional family/style/weight metadata
+in the existing version-1 schema and share font CSS with preview. Adding fonts
+updates live project assets without rehydrating workspace sources or mappings.
+
 ## 2026-09-20
 
 ### Firefox local fonts in SVG preview
