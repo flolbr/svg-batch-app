@@ -1404,6 +1404,7 @@ export function App({
       const requests = result.rows.map((row, index) => ({
         rowId: row.rowId,
         filename: filenamePlan.entries[index].actualFilename,
+        fontAssets: embeddedFonts,
         svg: row.svg,
       }));
       const batch = await runExportBatch(

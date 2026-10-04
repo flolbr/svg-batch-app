@@ -2,17 +2,46 @@
 
 Last updated: 2026-10-05
 
-Current task: consolidate font changes into two commits, then merge into main.
-Original history remains on `codex/backup-project-embedded-font-before-squash`
-at `9a46856`; no push requested.
+## Current task
 
-First commit: embedded user-selected fonts with family/style/weight metadata,
-shared preview CSS, backward-compatible schema, and live-state-safe upload.
-Metadata, preview, schema, and App upload regressions included.
-`bun run check` passed (59 files, 376 tests; self-contained build).
-One existing filename-regex lint warning remains.
+Apply the font branch review: preserve live state on font upload, correct
+outlined direct-text offsets/opacity/IDs, simplify shared font handling, and
+consolidate the branch into two coherent commits.
 
-Next: restore vector font outlining and masked-image PDF export from the
-reviewed snapshot, verify full check and rendered Chromium PDF regression,
-commit the second step, then merge main. Existing outputs/ stays untouched.
-Firefox local-font preview remains an independent pending environment check.
+## Working behavior
+
+User-selected fonts are embedded with optional family/style/weight metadata.
+Preview font CSS shares the project metadata module. Upload uses the existing
+font buffer and updates current project assets without rehydrating workspace
+sources, mappings, or selection; a project switch during reading cancels upload.
+
+PDF export outlines matching font text on export clones. Direct text offsets
+apply once, opacity stays on its group, and IDs remain unique. Only masked
+image/group subtrees are composited at 300 DPI; other graphics remain vector.
+Ordinary PNG alpha passes through. Unsupported text layouts, vector/text masks,
+and malformed image data fail visibly. Outlined text is not searchable. WOFF2
+can preview but matching PDF text requires a parseable OTF, TTF, or WOFF face.
+SVG exports do not embed project font bytes.
+
+## Verification and files
+
+Changed: App upload and regression, shared font metadata/CSS and tests, preview,
+PDF outlining and tests, export converter/browser regression, related plan docs.
+Focused App/preview/outline tests passed (52 tests). `bun run check` passed
+(60 files, 379 tests, 2,567,534-byte self-contained build); Chromium PDF
+regression with Poppler checks passed. One existing filename-regex lint warning.
+
+Earlier real-fixture artifacts: `/tmp/senior-vector.pdf`,
+`/tmp/senior-vector.png`, `/tmp/senior-font-400dpi.png`; one 1123 × 794 pt page,
+about 2.95 MB, sharp headline at 400 DPI. Existing `outputs/` remains untouched.
+
+## History and next step
+
+First consolidated commit: `7530b62` — embed project fonts with face metadata.
+Original branch history is preserved on
+`codex/backup-project-embedded-font-before-squash` at `9a46856`.
+The user explicitly authorized squashing and merging into main.
+
+Next: commit the verified vector PDF export step, then merge into local main.
+No push requested. Firefox local-font preview remains an independent pending
+check requiring a Firefox runtime.

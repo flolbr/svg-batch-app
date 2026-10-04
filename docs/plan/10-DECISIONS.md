@@ -2,14 +2,6 @@
 
 Keep this file concise. Record decisions, not discussion.
 
-## 2026-10-05
-
-### Embedded project font faces
-
-Embed only user-selected font files. Store optional family/style/weight metadata
-in the existing version-1 schema and share font CSS with preview. Adding fonts
-updates live project assets without rehydrating workspace sources or mappings.
-
 ## 2026-09-20
 
 ### Firefox local fonts in SVG preview
@@ -35,6 +27,24 @@ data, and are blocked by offline mode.
 
 Keep the signing key offline. Do not add a runtime crypto dependency, background
 polling, delta updates, multiple channels, or a generic updater framework.
+
+### Project fonts in saved projects and PDFs
+
+Embed only font files explicitly selected by the user in the project. Record
+each face's family, style, and weight so previews match SVG `font-family`.
+Automated PDF output converts matching text to vector glyph outlines on row
+clones, avoiding a runtime-font dependency while keeping the text sharp. Such
+PDF text is not selectable/searchable. Unsupported text layout fails visibly;
+do not silently substitute or reposition it.
+
+### PDF transparency for embedded SVG images
+
+Sénior's opaque PNGs use SVG grayscale masks and color-matrix filters for
+transparency; the PDF converter does not reproduce them. Composite only
+masked image/group subtrees to transparent PNGs at 300 DPI. Retain vector
+font outlines and SVG geometry elsewhere. Standard PNG alpha needs no
+normalization. Masked image subtrees containing vector artwork/text fail visibly; invalid
+image data also blocks export. Whole-page rasterization is removed.
 
 ### Release distribution
 

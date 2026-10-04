@@ -188,9 +188,20 @@ Only one implementation item should normally be `[-]`.
   - Main files: App, SvgPreview, project font metadata/schema and their tests;
     package.json and bun.lock.
   - Tests: `bun run check` (59 files, 376 tests; self-contained build).
+
+- [x] Apply font branch review fixes and simplify shared font handling.
+  - Preserve live workspace on upload; correct direct-text offsets, opacity,
+    and IDs. Move shared font CSS/types alongside metadata and remove unused
+    fields and obsolete raster documentation.
+  - Main files: `src/App.tsx`, `src/App.test.tsx`, `src/project/fontMetadata.ts`,
+    `src/project/fontMetadata.test.ts`, `src/SvgPreview.tsx`,
+    `src/export/projectFontOutlines.ts`, its tests, `src/export/pdfExport.ts`.
+  - Tests: focused App/preview/outline tests (52); `bun run check` (60 files,
+    379 tests); Chromium PDF regression with Poppler rendered-pixel checks.
 - [-] Consolidate the font branch into two commits and merge into main.
-  - Original history preserved on `codex/backup-project-embedded-font-before-squash`.
-    User explicitly authorized squashing and merging.
+  - Proposed split: embedded project fonts; vector PDF export and masked artwork.
+    User authorized squashing and merging. Original history backed up on
+    `codex/backup-project-embedded-font-before-squash` at `9a46856`.
 
 - [x] Accept Inkscape SVGs without reserializing the parsed root through an
   XML-prefixed string before sanitization.
@@ -204,10 +215,13 @@ Only one implementation item should normally be `[-]`.
   - Keep scripts disabled while allowing same-origin font resolution in the
     preview iframe. The preview also declares local Ethnocentric faces
     explicitly so browser font matching does not fall back to a serif face.
+    Branch experiment additionally supports multiple user-selected project
+    font assets, embedded in the saved project and previewed through data URLs.
   - Main files: `src/SvgPreview.tsx`, `src/SvgPreview.test.tsx`.
   - Tests: `bun run test -- src/SvgPreview.test.tsx src/App.test.tsx`; `bun run lint`;
     `bun run build:single`. Firefox manual verification remains to be done on a
-    machine with Firefox available; no Firefox runtime is installed here.
+    machine with Firefox available. Blocked here because Firefox is not
+    installed in the available test environment.
 
 - [x] Import and sanitize a local SVG.
   - Local SVG files are parsed as XML, rejected when malformed or outside the
@@ -490,8 +504,9 @@ Only one implementation item should normally be `[-]`.
 - [x] Export one PDF per selected row with `svg2pdf.js` and jsPDF.
   - The action-bar format selector switches between SVG and PDF while keeping
     the same validation gate and worksheet-order export flow.
-  - PDF generation is sequential. Each mapped SVG is converted with
-    `svg2pdf.js` into a jsPDF document whose point dimensions match the SVG
+  - In a real browser, a hidden same-origin iframe loads project fonts.
+    Matching text becomes vector outlines; masked image subtrees are
+    composited at 300 DPI before `svg2pdf.js` conversion. Point dimensions match the SVG
     `width`/`height`, falling back to its `viewBox`. Interim filenames use
     `row-{worksheet position}.pdf` until filename rules are implemented.
   - Main files: `src/export/pdfExport.ts`,
@@ -500,6 +515,33 @@ Only one implementation item should normally be `[-]`.
     src/export/svgExport.test.ts src/App.test.tsx`; `bunx tsc -b`;
     `bun run check`; Browser Harness canonical fixture check for a valid
     `row-1.pdf`, one 1200 × 800 pt page, and the validated footer state.
+- [x] Replace the project-font raster PDF experiment with a verified sharp-text
+  batch export path.
+  - Uploaded fonts retain family/style/weight metadata. Matching text is
+    outlined with OpenType glyph paths only on each export clone; compressed
+    SVG-to-PDF output preserves crisp text while leaving project/template data
+    unchanged. Unsupported complex runs fail visibly. Existing version-1 font
+    assets without metadata remain valid.
+  - Main files: `src/project/fontMetadata.ts`, `src/project/projectSchema.ts`,
+    `src/App.tsx`, `src/SvgPreview.tsx`,
+    `src/export/projectFontOutlines.ts`, `src/export/pdfExport.ts`,
+    `tests/browser/project-font-pdf.html`,
+    `tests/browser/project-font-pdf.ts`,
+    `scripts/testProjectFontPdfBrowser.ts`.
+  - Tests: 63 focused unit/component tests; `bun run test:browser:pdf`; full
+    `bun run check` (recorded after final verification). Browser Harness
+    acceptance exported three mapped rows using `Sénior.svg` and Ethnocentric:
+    three distinct one-page PDFs, ~2.63 MB each, sharp at 400 DPI.
+- [x] Preserve vector font outlines alongside transparent PDF images.
+  - Actual Sénior PNGs are opaque; grayscale SVG masks supply their alpha.
+    Composite only masked image/group subtrees at 300 DPI, retaining vector
+    glyphs and ordinary PNG alpha. Reject vector/text masks and invalid images.
+  - Main files: `src/export/pdfExport.ts`, `tests/browser/project-font-pdf.ts`,
+    `scripts/testProjectFontPdfBrowser.ts`, export plan, decisions, handoff.
+  - Tests: 11 focused PDF/font tests; Chromium browser regression with Poppler
+    pixel checks; `bun run check` (59 files, 377 tests; self-contained build).
+    Actual sanitized/mapped Sénior + Ethnocentric PDF checked at 400 DPI;
+    masked images have alpha masks and 300 DPI, text remains vector.
 - [x] Bundle multiple outputs with JSZip.
   - Generated files are added to `svg-batch-export.zip` in worksheet order with
     their existing filenames and exact text or binary contents. The required

@@ -247,6 +247,62 @@ Do not add parallel workers until sequential export is shown to be too slow.
 
 Browser SVG preview and PDF output may differ.
 
+### Project-font PDF implementation (branch `experiment/project-embedded-font`)
+
+Project font files remain user-selected project assets; each newly uploaded
+face stores its actual family, style, and numeric weight from OpenType metadata.
+Those fields are optional in the version-1 schema so existing saved projects
+still load. Preview `@font-face` rules are family-specific instead of naming
+every file Ethnocentric.
+
+For an automated PDF, `src/export/pdfExport.ts` creates a same-origin rendering
+iframe, verifies the supplied font faces loaded, and asks `opentype.js` for
+glyph paths for SVG text using those faces. The paths are generated only on the
+row's export clone; the accepted template and saved project are unchanged.
+`svg2pdf.js` renders those outlines with the remaining SVG graphics. jsPDF
+stream compression is enabled, which matters for this template's large
+embedded PNGs. SVG text without a supplied project face keeps the existing
+converter behavior. If a supplied-font text run has unsupported geometry or
+cannot be matched to a parseable face, export fails visibly rather than
+silently substituting or misplacing the text.
+
+The PDF text is vector-sharp and independent of installed fonts, but it is
+outlined: it is not selectable or searchable as text. The current outline path
+supports a single non-empty horizontal run per `<text>`, inherited or numeric
+`x`/`y`, `dx`/`dy`, `text-anchor`, parent transforms, font size, kerning, and
+accented glyphs. Multiple non-empty runs in one text element, vertical writing,
+`textLength`/`lengthAdjust`, and per-glyph rotation are not supported yet and
+produce a clear export error. WOFF2 can preview in browsers, but this parser
+cannot outline a matching WOFF2 face; use OTF, TTF, or WOFF for sharp PDF text.
+SVG export still does not package project font bytes and is not independently
+portable when it depends on that font.
+
+Sénior's image transparency is supplied by SVG grayscale masks and color-matrix
+filters, not by PNG alpha. The converter does not reproduce those masks.
+PDF export now composites only masked subtrees containing groups and images
+into transparent PNGs at 300 DPI, accounting for their SVG transforms. Each
+replacement stays in the same drawing position/order; text outlines and the
+remaining SVG retain vector conversion. Standard PNG alpha passes through
+unchanged. Input SVGs and saved project assets are never modified.
+
+Masked subtrees containing vector artwork or text fail visibly instead of
+rasterizing that content. Invalid embedded image data also fails visibly.
+The browser regression covers ordinary alpha, opaque artwork with a grayscale
+mask/color-matrix filter, group opacity, vector glyphs, source immutability,
+and invalid/unsupported cases. For repeatable rendered-pixel checks with
+Poppler available, run `SVG_BATCH_PDF_RENDER_CHECK=1 bun run test:browser:pdf`.
+
+Verified acceptance fixture: sanitized/mapped `Sénior.svg` with the supplied
+Ethnocentric OTF. The current PDF is one 1123 × 794 pt page, about 2.95 MB;
+masked artwork is 300 DPI and headline outlines remain sharp at 400 DPI.
+A repeatable Chromium regression also checks distinct mapped row values.
+
+Relevant tests: `bun run test -- src/export/projectFontOutlines.test.ts
+src/export/pdfExport.test.ts src/SvgPreview.test.tsx
+src/project/projectSchema.test.ts src/App.test.tsx`,
+`bun run test:browser:pdf`, and `bun run check`. Keep `outputs/` and existing
+downloads untouched.
+
 Maintain representative fixture SVGs for:
 
 - text;
