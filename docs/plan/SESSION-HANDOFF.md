@@ -30,10 +30,9 @@ Changed: TODO, hosted Drive test plan and this handoff. No app source changes.
 `git diff --check` passed. The temporary untracked `public/drive-test-shell.html`
 serves that build on the allow-listed origin so browser acceptance can continue;
 remove it when the localhost live tests finish. `outputs/` remains untouched.
-Latest prior commit `a4a3e4b` records the live Drive import and SVG-link result.
-Latest commit `4cab708` records the live Drive project round trip. Commit
-`0390c87` records the production configuration finding; `3bf23f7` records the
-denied-referrer check. Next, save/reopen the actual Drive-imported
+Commit `3239539` consolidates the live Drive import and SVG-link result, local
+project round trip, production configuration finding, and denied-referrer
+check. Next, save/reopen the actual Drive-imported
 workbook/SVG project, then exercise repeat-save and conflicts. Only after
 localhost acceptance passes, prepare a configured production build.
 
@@ -110,28 +109,22 @@ about 2.95 MB, sharp headline at 400 DPI. Existing `outputs/` remains untouched.
 
 ## History and next step
 
-Latest handoff commit: `1578b93` — current localhost fallback and next step recorded.
-Test evidence: `2b660ba` — local fallback after Drive host-block recorded.
-Previous test note: `506bd20` — Picker works; embedded-browser Drive API access blocked.
-Setup: `4a22c88` — Web OAuth client, scope and test user configured.
-Cloud setup: `4e4d7d4` — project/key and durable gcloud setup.
-Previous task commit: `0e449ed` — complete Drive roundtrip, 405 tests pass.
-Previous fix: `7d940a9` — bind Drive save destination to its project.
-Previous test commit: `bd06f94` — Drive renewal and conflict state preservation.
-Previous OAuth fix: `3a8ee08` — respect cancellation; 8 browser cases pass.
-Previous fix: `32f3db2` — correct Drive error reporting with 13 new cases.
-Previous plan commit: `5aeb533` — detail Google Drive acceptance tests.
-
-Previous verification commit: `13cb762` — Firefox fonts through saved-project reopen.
+Squashed history: 12 commits ahead of `origin/main` (previously 41), preserving
+the exact tree. `3239539` — live Drive acceptance evidence; `4fd8ddb` — Cloud
+test setup; `a1302e9` — Drive project roundtrip; `072c6ed` — bind save target;
+`34ca813` — renewal/conflict preservation; `2a1327c` — OAuth cancellation;
+`115c627` — Drive error reporting; `1def929` — acceptance test plan; `c16bcd6`
+— Firefox font reopen regression. The PDF/font merge remains intact.
 
 Consolidated implementation commits, merged into local main:
 - `7530b62` — embed project fonts with face metadata (376 tests and build).
 - `ec47461` — export vector font text with masked artwork (379 tests, build,
   rendered Chromium PDF regression with Poppler checks).
 
-Original branch history is preserved on
-`codex/backup-project-embedded-font-before-squash` at `9a46856`.
-The user explicitly authorized squashing and merging. No push requested.
+Original 41-commit history is preserved on
+`codex/backup-pre-squash-20261005` at `ff7d13e`. Untracked `outputs/` and
+`public/` were left untouched. The user explicitly authorized squashing; no
+push requested.
 
 Next concrete step: use the configured localhost app and execute the
 Hosted Drive checklist A–F, recording live versus injected results separately.
