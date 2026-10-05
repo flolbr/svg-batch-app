@@ -193,6 +193,10 @@ or production OAuth configuration.
    SVG, mappings, data edits, selection, filters and embedded font restore.
 5. Change a cell and save again. Expect the same Drive file ID, a newer version,
    and no duplicate. Reopen in another fresh session and verify the new value.
+   Also switch to a different project before saving: expect folder selection
+   and a new file ID, with the previously opened Drive project unchanged.
+   A component regression covers this project-ID binding with injected Drive
+   responses; it failed before the destination-binding correction.
 6. Export two selected rows to Drive. Expect a ZIP in the selected folder;
    download and inspect entries, filenames and enabled SVG/PDF/CSV content.
    Unresolved validation errors must block export unless partial export was

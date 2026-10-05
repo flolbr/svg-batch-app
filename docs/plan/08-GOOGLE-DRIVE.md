@@ -78,6 +78,10 @@ Support:
 - save ZIP/PDF/SVG/CSV outputs;
 - choose a folder.
 
+Bind the in-memory save destination to the opened/saved project ID. Repeated
+saves of that project update its file; saving a different project must select a
+folder and create a new file, never overwrite the previous project's file.
+
 Store only safe project references:
 
 ```ts

@@ -595,7 +595,9 @@ export function App({
   const cleanProjectDocumentRef = useRef<Document | null>(null);
   const projectFileHandleRef = useRef<ProjectFileHandle | null>(null);
   const driveTokenRef = useRef<string | null>(null);
-  const driveProjectReferenceRef = useRef<DriveReference | null>(null);
+  const driveProjectReferenceRef = useRef<
+    (DriveReference & { projectId: string }) | null
+  >(null);
   const recoveryProjectIdRef = useRef<string | null>(null);
   const recoveryBaselineRef = useRef<string | null>(null);
   const recoveryWasDirtyRef = useRef(false);
@@ -1279,7 +1281,10 @@ export function App({
       throw new Error("The Drive file is no longer a valid project HTML file.");
     }
     useAppStore.getState().setProject(imported.project);
-    driveProjectReferenceRef.current = reference;
+    driveProjectReferenceRef.current = {
+      ...reference,
+      projectId: imported.project.projectId,
+    };
   }
 
   async function saveProjectToDrive() {
@@ -1288,7 +1293,9 @@ export function App({
     setIsUsingDrive(true);
     try {
       const { snapshot, html, filename } = createCurrentProjectFile();
-      const known = driveProjectReferenceRef.current;
+      const savedReference = driveProjectReferenceRef.current;
+      const known =
+        savedReference?.projectId === snapshot.projectId ? savedReference : null;
       if (known) {
         const result = await withDriveToken((token) =>
           saveExistingDriveFile({
@@ -1311,11 +1318,14 @@ export function App({
           });
           return;
         }
-        driveProjectReferenceRef.current = result.reference;
+        driveProjectReferenceRef.current = {
+          ...result.reference,
+          projectId: snapshot.projectId,
+        };
       } else {
         const folder = await selectDriveItem({ mode: "folder" });
         if (!folder) return;
-        driveProjectReferenceRef.current = await withDriveToken((token) =>
+        const reference = await withDriveToken((token) =>
           createDriveFile(
             token,
             {
@@ -1327,6 +1337,10 @@ export function App({
             driveFetch,
           ),
         );
+        driveProjectReferenceRef.current = {
+          ...reference,
+          projectId: snapshot.projectId,
+        };
       }
       finishProjectSave(snapshot);
       notifications.show({
@@ -1608,7 +1622,10 @@ export function App({
       const imported = await importDriveFile(file);
       if (imported.kind === "project") {
         useAppStore.getState().setProject(imported.project);
-        driveProjectReferenceRef.current = reference;
+        driveProjectReferenceRef.current = {
+          ...reference,
+          projectId: imported.project.projectId,
+        };
       } else if (imported.kind === "spreadsheet") {
         setSpreadsheetSource(imported.spreadsheet);
         storeDriveSource("spreadsheet", reference, file);

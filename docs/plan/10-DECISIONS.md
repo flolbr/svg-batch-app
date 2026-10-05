@@ -4,6 +4,12 @@ Keep this file concise. Record decisions, not discussion.
 
 ## 2026-10-05
 
+### Drive save destination belongs to one project
+
+Bind the runtime Drive file reference to the project ID accepted on open/save.
+A different project's first Drive save chooses a folder and creates a file.
+Do not infer its destination from a previously opened project in the session.
+
 ### Respect Drive authorization cancellation
 
 Use one GIS token request per authorization attempt. Empty `prompt` permits

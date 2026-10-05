@@ -655,6 +655,84 @@ describe("App", () => {
     },
   );
 
+  it("creates a new Drive file after switching away from an opened Drive project", async () => {
+    const user = userEvent.setup();
+    useAppStore.setState({ project: project() });
+    const metadata = (id: string, mimeType = "text/html") =>
+      new Response(
+        JSON.stringify({
+          id,
+          name: "project.html",
+          mimeType,
+          version: "1",
+        }),
+      );
+    const driveFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(metadata("original-drive-file"))
+      .mockResolvedValueOnce(
+        new Response(
+          `<script id="svg-batch-project" type="application/json">${JSON.stringify(project())}</script>`,
+        ),
+      )
+      .mockResolvedValueOnce(
+        metadata("new-folder", "application/vnd.google-apps.folder"),
+      )
+      .mockResolvedValueOnce(metadata("new-drive-file"));
+    const pickDriveFile = vi
+      .fn()
+      .mockResolvedValueOnce({
+        id: "original-drive-file",
+        name: "project.html",
+        mimeType: "text/html",
+      })
+      .mockResolvedValueOnce({
+        id: "new-folder",
+        name: "New projects",
+        mimeType: "application/vnd.google-apps.folder",
+      });
+    render(
+      <MantineProvider>
+        <App
+          capabilities={hostedDriveCapabilities}
+          driveFetch={driveFetch}
+          googleDriveConfiguration={{
+            clientId: "client",
+            apiKey: "key",
+            appId: "app",
+          }}
+          pickDriveFile={pickDriveFile}
+          requestDriveAccessToken={vi.fn().mockResolvedValue("token")}
+          projectDocument={cleanProjectDocument()}
+        />
+      </MantineProvider>,
+    );
+    const open = screen.getByRole("button", { name: "Open from Google Drive" });
+    await user.click(open);
+    await waitFor(() => expect(driveFetch).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(open).toBeEnabled());
+    act(() =>
+      useAppStore
+        .getState()
+        .setProject(
+          project({ projectId: "another-project", name: "Another project" }),
+        ),
+    );
+    const save = screen.getByRole("button", { name: "Save to Drive" });
+    await user.click(save);
+    await waitFor(() => expect(save).toBeEnabled());
+    expect(pickDriveFile).toHaveBeenCalledTimes(2);
+    expect(pickDriveFile.mock.calls[1][0]).toMatchObject({ mode: "folder" });
+    expect(driveFetch.mock.calls[2][0]).toContain("/files/new-folder?");
+    expect(driveFetch.mock.calls[3][1]?.method).toBe("POST");
+    expect(
+      driveFetch.mock.calls.some(([, init]) => init?.method === "PATCH"),
+    ).toBe(false);
+    expect(await (driveFetch.mock.calls[3][1]!.body as Blob).text()).toContain(
+      "another-project",
+    );
+  });
+
   it("creates and then updates an app-created Drive project", async () => {
     const user = userEvent.setup();
     useAppStore.setState({ project: project() });

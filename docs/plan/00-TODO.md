@@ -937,6 +937,14 @@ Only one implementation item should normally be `[-]`.
 
 ## Phase 10 — Release checks
 
+- [x] Verify a project switch cannot overwrite the previous Drive project.
+  - Bind the runtime destination to project ID; a different project creates a
+    file in a newly selected folder rather than reusing the previous file.
+  - Main files: App, App test, Drive/test plans, decisions and handoff.
+  - Tests: regression failed before fix; 13 focused Drive cases passed;
+    `bun run check` passed (60 files, 404 tests, 2,567,720-byte single HTML).
+    Real-account acceptance remains pending.
+
 - [x] Verify Drive 401 renewal bounds and all four conflict choices in the UI.
   - Main files: `src/App.test.tsx`, test plan and session handoff.
   - Eight injected component cases verify renewal succeeds or stops after a
