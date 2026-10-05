@@ -936,6 +936,14 @@ Only one implementation item should normally be `[-]`.
 
 ## Phase 10 — Release checks
 
+- [x] Exercise Drive failure responses and correct misleading error messages.
+  - Preserve structured reasons and server details; distinguish export-size
+    failures from quotas/permissions and generic oversized uploads.
+  - Main files: `src/drive/driveFiles.ts`, its tests, Drive/test plans and handoff.
+  - Tests: 4 new assertions reproduced the defect; focused suite passed
+    (71 tests); `bun run check` passed (60 files, 392 tests, single-file build).
+    Injected API coverage only; live-account acceptance remains blocked.
+
 - [x] Detail the hosted Drive acceptance procedure and expected results.
   - Main files: `docs/plan/08-GOOGLE-DRIVE.md`,
     `docs/plan/09-TEST-PLAN.md`, TODO and session handoff.

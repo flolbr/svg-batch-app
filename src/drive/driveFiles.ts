@@ -18,6 +18,7 @@ export class DriveRequestError extends Error {
   constructor(
     message: string,
     readonly status: number,
+    readonly reasons: string[] = [],
   ) {
     super(message);
     this.name = "DriveRequestError";
@@ -46,15 +47,19 @@ async function requireOk(
 
   const fallback = `${action} failed with HTTP ${response.status}.`;
   let detail = "";
+  let reasons: string[] = [];
   try {
     const body = (await response.json()) as {
-      error?: { message?: string };
+      error?: { message?: string; errors?: { reason?: string }[] };
     };
     detail = body.error?.message?.trim() ?? "";
+    reasons = (body.error?.errors ?? [])
+      .map((entry) => entry.reason)
+      .filter((reason): reason is string => typeof reason === "string");
   } catch {
     // Drive does not always return JSON, so retain the status fallback.
   }
-  throw new DriveRequestError(detail || fallback, response.status);
+  throw new DriveRequestError(detail || fallback, response.status, reasons);
 }
 
 function toReference(metadata: {
@@ -285,17 +290,14 @@ export function driveErrorMessage(error: unknown): string {
   if (error.status === 401) {
     return "Google Drive authorization expired. Sign in again and retry.";
   }
-  if (error.status === 403) {
-    if (/export|size|limit/iu.test(error.message)) {
-      return "The Google Sheet is too large to export as XLSX.";
-    }
-    return "Google Drive access was denied or revoked.";
+  if (error.reasons.includes("exportSizeLimitExceeded")) {
+    return "The Google Sheet is too large to export as XLSX.";
   }
   if (error.status === 404) {
     return "The Google Drive file is missing or no longer shared with this app.";
   }
   if (error.status === 413) {
-    return "The Google Sheet is too large to export as XLSX.";
+    return "The file is too large for this Google Drive request.";
   }
   return error.message;
 }

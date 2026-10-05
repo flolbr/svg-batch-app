@@ -94,7 +94,11 @@ describe("Drive metadata and downloads", () => {
       "missing",
     );
     expect(
-      driveErrorMessage(new DriveRequestError("exportSizeLimitExceeded", 403)),
+      driveErrorMessage(
+        new DriveRequestError("Export rejected", 403, [
+          "exportSizeLimitExceeded",
+        ]),
+      ),
     ).toContain("too large");
     expect(driveErrorMessage(new DriveRequestError("large", 413))).toContain(
       "too large",
@@ -103,6 +107,78 @@ describe("Drive metadata and downloads", () => {
 });
 
 describe("Drive saves and conflicts", () => {
+  it.each([
+    [403, "rateLimitExceeded", "Rate limit exceeded"],
+    [403, "storageQuotaExceeded", "Storage quota exceeded"],
+    [403, "insufficientFilePermissions", "Cannot export this file"],
+    [429, "rateLimitExceeded", "Too many requests"],
+    [503, "backendError", "Service unavailable"],
+  ])(
+    "preserves the actual upload failure for HTTP %s / %s",
+    async (status, reason, message) => {
+      const fetchImpl = vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(
+          jsonResponse({ error: { message, errors: [{ reason }] } }, status),
+        );
+      const error = await createDriveFile(
+        "token",
+        {
+          name: "output.zip",
+          mimeType: "application/zip",
+          content: "zip",
+        },
+        fetchImpl,
+      ).catch((failure: unknown) => failure);
+      expect(driveErrorMessage(error)).toBe(message);
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("recognizes an export-size reason independently of the server message", async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse(
+        {
+          error: {
+            message: "Rejected",
+            errors: [{ reason: "exportSizeLimitExceeded" }],
+          },
+        },
+        403,
+      ),
+    );
+    const error = await downloadDriveFile(
+      "token",
+      {
+        fileId: "sheet",
+        name: "Members",
+        mimeType: GOOGLE_SHEET_MIME_TYPE,
+      },
+      fetchImpl,
+    ).catch((failure: unknown) => failure);
+    expect(driveErrorMessage(error)).toBe(
+      "The Google Sheet is too large to export as XLSX.",
+    );
+  });
+
+  it("does not label an oversized ZIP upload as a Sheet export", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response("", { status: 413 }));
+    const error = await createDriveFile(
+      "token",
+      {
+        name: "output.zip",
+        mimeType: "application/zip",
+        content: "zip",
+      },
+      fetchImpl,
+    ).catch((failure: unknown) => failure);
+    expect(driveErrorMessage(error)).toBe(
+      "The file is too large for this Google Drive request.",
+    );
+  });
+
   it("creates multipart files in the selected folder", async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
       jsonResponse({
@@ -236,6 +312,46 @@ describe("Drive saves and conflicts", () => {
         fetchImpl: responses(),
       }),
     ).resolves.toMatchObject({ status: "copied" });
+  });
+
+  it.each([401, 403, 404, 429, 503])(
+    "never writes after a failed metadata check (HTTP %s)",
+    async (status) => {
+      const fetchImpl = vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(new Response("", { status }));
+      const chooseConflict = vi.fn();
+      await expect(
+        saveExistingDriveFile({
+          token: "token",
+          known: reference,
+          content: "unsaved edits",
+          mimeType: "text/html",
+          chooseConflict,
+          fetchImpl,
+        }),
+      ).rejects.toMatchObject({ status });
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+      expect(chooseConflict).not.toHaveBeenCalled();
+      expect(reference.version).toBe("3");
+    },
+  );
+
+  it("does not replay an upload with an ambiguous network failure", async () => {
+    const failure = new TypeError("Failed to fetch");
+    const fetchImpl = vi.fn<typeof fetch>().mockRejectedValue(failure);
+    await expect(
+      createDriveFile(
+        "token",
+        {
+          name: "project.html",
+          mimeType: "text/html",
+          content: "unsaved edits",
+        },
+        fetchImpl,
+      ),
+    ).rejects.toBe(failure);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
   it("can overwrite directly", async () => {

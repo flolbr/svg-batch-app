@@ -4,21 +4,28 @@ Last updated: 2026-10-05
 
 ## Current task
 
-Drive acceptance documentation is complete. The test plan now specifies setup,
-localhost/production and browser coverage, consent/cancellation, imports,
-save/reopen, four conflict choices, auth/network failures, linked SVG reloads,
-and size checks with expected outcomes and evidence. Live tests remain blocked
-pending Google configuration and an authorized test account; no Drive runtime
-behavior or architecture decision changed.
+Continue Drive acceptance testing. Existing Drive/capability suites passed
+(23 tests). Added failure cases reproduced four misleading error messages;
+fixed structured reason handling so quotas/permissions are not labeled as
+oversized Sheets and 413 uploads use a generic file-size message.
+13 new cases cover error reporting, failed metadata reads without writes and
+ambiguous upload network failures without replay. These are injected function
+tests, not live API/browser acceptance.
 
-Changed: `docs/plan/08-GOOGLE-DRIVE.md`, `09-TEST-PLAN.md`, TODO and this handoff.
-Checks: documentation review against current Drive flows and `git diff --check`.
-No live Drive tests or runtime suite run for this documentation-only change.
+Changed: `src/drive/driveFiles.ts`, its tests, TODO, Drive/test plans and handoff.
+Checks: focused suite 71 tests; full `bun run check` passed (60 files, 392 tests;
+self-contained HTML 2,567,598 bytes). Existing filename-regex lint warning.
+No architecture decision changed; `outputs/` remains untouched.
+
+All four VITE_GOOGLE variables are absent from the process and only
+`.env.example` exists. Asked the user asynchronously whether Google Cloud
+configuration, production URL and an authorized account are available or need
+setup. Live matrix remains blocked; other injected/browser cases remain to run,
+particularly OAuth cancellation/renewal, conflicts and browser script isolation.
 
 Previous Firefox acceptance passed with Firefox 155: local Ethnocentric and
 an uploaded generated font survive saved-HTML reopen without HTTP requests.
-`bun run test:browser:fonts` and `bun run check` passed (60 files, 379 tests).
-Screenshots: `/tmp/svg-firefox-fonts-8VFDJl/`. No remaining Firefox verification.
+Screenshots: `/tmp/svg-firefox-fonts-8VFDJl/`. No remaining Firefox font work.
 
 ## Working behavior
 
@@ -49,7 +56,8 @@ about 2.95 MB, sharp headline at 400 DPI. Existing `outputs/` remains untouched.
 
 ## History and next step
 
-Latest task commit: `5aeb533` — detail Google Drive acceptance tests.
+Latest task commit: `32f3db2` — correct Drive error reporting with 13 new cases.
+Previous plan commit: `5aeb533` — detail Google Drive acceptance tests.
 
 Previous verification commit: `13cb762` — Firefox fonts through saved-project reopen.
 

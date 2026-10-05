@@ -116,6 +116,12 @@ Status: procedure defined; live acceptance is still blocked pending Google
 configuration and an authorized test account. Phase 8 implementation/unit tests
 do not establish that browser OAuth and real Drive operations pass.
 
+Automated evidence, 2026-10-05: `src/drive/driveFiles.test.ts` injects structured
+403 quota/permission/export-size failures, 413 ZIP uploads, 429/503 responses,
+failed metadata reads (no write) and ambiguous upload failures (no replay).
+Four new assertions failed before the error-message correction. These are
+function tests with simulated responses, not live Google/browser acceptance.
+
 #### Preparation and execution matrix
 
 1. Use a dedicated test account and disposable folder in My Drive. Enable Drive

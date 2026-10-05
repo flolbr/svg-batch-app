@@ -101,6 +101,14 @@ Before updating an existing file:
 
 Default to save a copy.
 
+## Error reporting
+
+Preserve Drive's structured error reasons. Only `exportSizeLimitExceeded`
+produces the oversized-Sheet message; other server messages retain their
+permission/quota/service details. HTTP 413 describes a file/request size error
+without assuming the operation was a Sheet export. Failed metadata reads must
+not write, and ambiguous upload network failures must not replay automatically.
+
 ## Linked Drive SVG
 
 Manual reload:
