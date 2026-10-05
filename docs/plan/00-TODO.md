@@ -801,7 +801,8 @@ Only one implementation item should normally be `[-]`.
     retryable without affecting the local core.
 - [x] Authenticate with `drive.file`.
   - OAuth requests exactly `drive.file`, keeps the token in memory only, and
-    retries an unavailable silent grant through interactive consent.
+    allows first-time consent without automatically retrying denial or popup
+    cancellation (corrected during acceptance testing).
   - Main files: `src/drive/googleClient.ts`,
     `src/drive/googleClient.test.ts`.
   - Tests: `bun run test -- src/drive/googleClient.test.ts` (7 tests);
@@ -935,6 +936,16 @@ Only one implementation item should normally be `[-]`.
   - Tests: documentation review; no runtime behavior changed.
 
 ## Phase 10 — Release checks
+
+- [x] Test OAuth cancellation and blocked scripts with retry recovery.
+  - Remove forced consent retry after denial or popup failure/closure.
+  - Main files: Google client/tests, `scripts/testDriveAuthBrowser.ts`,
+    package.json, Drive/test plans, decisions and handoff.
+  - Tests: 3 new unit cases failed before correction; 10 client tests pass.
+    `bun run test:browser:drive-auth`: 8 Chromium/Firefox cases passed with
+    injected Google scripts, local SVG import and explicit retry recovery.
+    `bun run check`: 60 files, 395 tests, single-file build passed.
+    Real Google OAuth and hosted Drive acceptance remain pending.
 
 - [x] Exercise Drive failure responses and correct misleading error messages.
   - Preserve structured reasons and server details; distinguish export-size

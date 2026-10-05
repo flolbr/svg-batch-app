@@ -171,7 +171,6 @@ export async function loadGooglePicker(
 
 function requestToken(
   clientId: string,
-  prompt: string,
   environment: GoogleClientEnvironment,
 ): Promise<string> {
   const oauth2 = environment.window.google?.accounts?.oauth2;
@@ -202,7 +201,7 @@ function requestToken(
         ),
     });
     try {
-      client.requestAccessToken({ prompt });
+      client.requestAccessToken({ prompt: "" });
     } catch (error) {
       reject(
         error instanceof Error
@@ -214,8 +213,8 @@ function requestToken(
 }
 
 /**
- * Requests an in-memory Drive token. It first attempts a silent reuse and then
- * opens the normal Google consent prompt when reuse is unavailable.
+ * Requests an in-memory Drive token, allowing first-time consent.
+ * Cancellation or failure returns to the caller; only a new action retries.
  */
 export async function requestGoogleAccessToken(
   configuration: GoogleDriveConfiguration,
@@ -223,11 +222,7 @@ export async function requestGoogleAccessToken(
 ): Promise<string> {
   const clientId = requireValue(configuration.clientId, "client ID");
   await loadGoogleClients(environment);
-  try {
-    return await requestToken(clientId, "", environment);
-  } catch {
-    return requestToken(clientId, "consent", environment);
-  }
+  return requestToken(clientId, environment);
 }
 
 export type GooglePickerOptions = {

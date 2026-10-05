@@ -122,6 +122,16 @@ failed metadata reads (no write) and ambiguous upload failures (no replay).
 Four new assertions failed before the error-message correction. These are
 function tests with simulated responses, not live Google/browser acceptance.
 
+Run `bun run test:browser:drive-auth` for repeatable Chromium/Firefox checks of
+consent denial, popup closure/failure, Google script blocking, local SVG import
+after failure and successful authorization followed by Picker cancellation on
+an explicit retry. Requires installed Playwright Firefox and Chromium at
+`/usr/bin/chromium` (override with `SVG_BATCH_CHROMIUM`). The real app runs on
+an ephemeral local HTTP origin with an isolated single-file build, test
+identifiers and intercepted Google scripts;
+no Google account/API is contacted. This does not verify actual popup policy
+or production OAuth configuration.
+
 #### Preparation and execution matrix
 
 1. Use a dedicated test account and disposable folder in My Drive. Enable Drive

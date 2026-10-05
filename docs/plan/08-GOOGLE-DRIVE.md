@@ -21,6 +21,10 @@ Do not include an OAuth client secret.
 Do not implement refresh-token storage.
 
 Access tokens remain in memory and are discarded when the session ends.
+Request a token once per authorization attempt with `prompt: ""`, which allows
+first-time consent. Denial, popup closure or popup failure must return control
+to the user without automatically opening another consent prompt. Retry only
+on a later user action. This is not a silent authentication flow.
 
 ## Scope
 

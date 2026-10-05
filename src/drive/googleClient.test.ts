@@ -80,7 +80,7 @@ describe("Google script loading", () => {
 });
 
 describe("Google OAuth", () => {
-  it("uses exactly drive.file, retries interactive consent, and keeps the token local", async () => {
+  it("uses exactly drive.file, allows first consent, and keeps the token local", async () => {
     const { environment, scripts } = createEnvironment();
     const requests: string[] = [];
     const initTokenClient = vi.fn(
@@ -90,8 +90,7 @@ describe("Google OAuth", () => {
       }) => ({
         requestAccessToken: ({ prompt }: { prompt?: string } = {}) => {
           requests.push(prompt ?? "");
-          if (prompt === "") options.callback({ error: "consent_required" });
-          else options.callback({ access_token: "memory-only-token" });
+          options.callback({ access_token: "memory-only-token" });
         },
       }),
     );
@@ -99,12 +98,44 @@ describe("Google OAuth", () => {
     const token = requestGoogleAccessToken(configuration, environment);
     finishScripts(scripts);
     await expect(token).resolves.toBe("memory-only-token");
-    expect(initTokenClient).toHaveBeenCalledTimes(2);
+    expect(initTokenClient).toHaveBeenCalledTimes(1);
     expect(
       initTokenClient.mock.calls.map(([options]) => options.scope),
-    ).toEqual([DRIVE_FILE_SCOPE, DRIVE_FILE_SCOPE]);
-    expect(requests).toEqual(["", "consent"]);
+    ).toEqual([DRIVE_FILE_SCOPE]);
+    expect(requests).toEqual([""]);
   });
+
+  it.each(["access_denied", "popup_closed", "popup_failed_to_open"])(
+    "does not reopen authorization after %s and permits a later attempt",
+    async (failure) => {
+      const { environment, scripts } = createEnvironment();
+      let attempts = 0;
+      environment.window.google = {
+        accounts: {
+          oauth2: {
+            initTokenClient: (options) => ({
+              requestAccessToken: () => {
+                attempts += 1;
+                if (attempts > 1)
+                  options.callback({ access_token: "retry-token" });
+                else if (failure === "access_denied")
+                  options.callback({ error: failure });
+                else options.error_callback?.({ type: failure });
+              },
+            }),
+          },
+        },
+      };
+      const first = requestGoogleAccessToken(configuration, environment);
+      finishScripts(scripts);
+      await expect(first).rejects.toThrow(failure);
+      expect(attempts).toBe(1);
+      await expect(
+        requestGoogleAccessToken(configuration, environment),
+      ).resolves.toBe("retry-token");
+      expect(attempts).toBe(2);
+    },
+  );
 
   it("rejects a failed interactive authorization clearly", async () => {
     const { environment, scripts } = createEnvironment();

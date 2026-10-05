@@ -2,6 +2,14 @@
 
 Keep this file concise. Record decisions, not discussion.
 
+## 2026-10-05
+
+### Respect Drive authorization cancellation
+
+Use one GIS token request per authorization attempt. Empty `prompt` permits
+first-time consent; it is not `prompt: "none"`. Do not force a second consent
+request after denial or popup failure/closure. Let the next user action retry.
+
 ## 2026-09-20
 
 ### Firefox local fonts in SVG preview
