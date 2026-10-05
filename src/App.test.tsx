@@ -733,6 +733,181 @@ describe("App", () => {
     );
   });
 
+  it("roundtrips complete project state through a Drive upload and fresh reopen", async () => {
+    const user = userEvent.setup();
+    useAppStore.getState().setProject(
+      project({
+        assets: [
+          {
+            id: "font",
+            fileName: "face.ttf",
+            fileSize: 3,
+            mimeType: "font/ttf",
+            dataUrl: "data:font/ttf;base64,AQID",
+            fontFamily: "Test Face",
+            fontWeight: "400",
+          },
+          {
+            id: "image",
+            fileName: "pixel.png",
+            fileSize: 3,
+            mimeType: "image/png",
+            dataUrl: "data:image/png;base64,AQID",
+          },
+        ],
+      }),
+    );
+    setMemberSpreadsheet();
+    const data = useAppStore.getState().sources.spreadsheet!.data;
+    const columnId = data.columns[0].id;
+    useAppStore
+      .getState()
+      .setRowOverrides([
+        { rowId: data.rows[0].id, values: { [columnId]: "Modified Chloé" } },
+      ]);
+    useAppStore
+      .getState()
+      .setManualRows([
+        { id: "manual-1", values: { [columnId]: "Manual member" } },
+      ]);
+    useAppStore
+      .getState()
+      .setColumnFilters([
+        { type: "text", columnId, operator: "contains", value: "Modified" },
+      ]);
+    useAppStore.getState().selectRows([data.rows[0].id, "manual-1"]);
+    useAppStore.getState().setSvgSource({
+      acceptedSvg:
+        '<svg xmlns="http://www.w3.org/2000/svg"><text id="name">Original</text></svg>',
+      fileName: "template.svg",
+      fileSize: 1,
+      sourceStatus: "embedded",
+      targets: [{ id: "name", tagName: "text" }],
+      tree: [{ id: "name", label: "Name", tagName: "text", children: [] }],
+    });
+    useAppStore
+      .getState()
+      .setMapping({
+        id: "name",
+        targetId: "name",
+        type: "text",
+        columnId,
+        required: false,
+        fit: "keep",
+      });
+    useAppStore.getState().setSvgObjectSelection("name");
+    const expectedData = structuredClone(useAppStore.getState().project!.data);
+    const expectedAssets = structuredClone(
+      useAppStore.getState().project!.assets,
+    );
+    const expectedMappings = structuredClone(useAppStore.getState().mappings);
+    const expectedSelection = [
+      ...useAppStore.getState().selection.selectedRowIds,
+    ];
+    const metadata = (id: string, mimeType = "text/html") =>
+      new Response(
+        JSON.stringify({ id, name: "Member cards.html", mimeType, version: "1" }),
+      );
+    let savedHtml = "";
+    const saveFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        metadata("folder", "application/vnd.google-apps.folder"),
+      )
+      .mockImplementationOnce(async (_url, init) => {
+        const multipart = await (init!.body as Blob).text();
+        savedHtml = multipart.split("Content-Type: text/html\r\n\r\n")[1];
+        savedHtml = savedHtml.slice(0, savedHtml.lastIndexOf("\r\n--"));
+        return metadata("saved-project");
+      });
+    const token = "must-remain-in-memory";
+    render(
+      <MantineProvider>
+        <App
+          capabilities={hostedDriveCapabilities}
+          googleDriveConfiguration={{
+            clientId: "client",
+            apiKey: "key",
+            appId: "app",
+          }}
+          driveFetch={saveFetch}
+          pickDriveFile={vi
+            .fn()
+            .mockResolvedValue({
+              id: "folder",
+              name: "Tests",
+              mimeType: "application/vnd.google-apps.folder",
+            })}
+          requestDriveAccessToken={vi.fn().mockResolvedValue(token)}
+          projectDocument={cleanProjectDocument()}
+        />
+      </MantineProvider>,
+    );
+    const save = screen.getByRole("button", { name: "Save to Drive" });
+    await user.click(save);
+    await waitFor(() => expect(save).toBeEnabled());
+    expect(saveFetch).toHaveBeenCalledTimes(2);
+    expect(savedHtml).not.toContain(token);
+    const loaded = loadEmbeddedProject(
+      new DOMParser().parseFromString(savedHtml, "text/html"),
+    );
+    expect(loaded).toMatchObject({
+      success: true,
+      project: {
+        data: expectedData,
+        assets: expectedAssets,
+        mappings: expectedMappings,
+      },
+    });
+    cleanup();
+    act(() =>
+      useAppStore
+        .getState()
+        .setProject(project({ projectId: "empty-project", name: "Empty" })),
+    );
+    const reopenFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(metadata("saved-project"))
+      .mockResolvedValueOnce(new Response(savedHtml));
+    render(
+      <MantineProvider>
+        <App
+          capabilities={hostedDriveCapabilities}
+          googleDriveConfiguration={{
+            clientId: "client",
+            apiKey: "key",
+            appId: "app",
+          }}
+          driveFetch={reopenFetch}
+          pickDriveFile={vi
+            .fn()
+            .mockResolvedValue({
+              id: "saved-project",
+              name: "Member cards.html",
+              mimeType: "text/html",
+            })}
+          requestDriveAccessToken={vi.fn().mockResolvedValue("fresh-token")}
+        />
+      </MantineProvider>,
+    );
+    const open = screen.getByRole("button", { name: "Open from Google Drive" });
+    await user.click(open);
+    await waitFor(() => expect(open).toBeEnabled());
+    expect(reopenFetch).toHaveBeenCalledTimes(2);
+    const restored = useAppStore.getState();
+    expect(restored.project!.data).toEqual(expectedData);
+    expect(restored.project!.assets).toEqual(expectedAssets);
+    expect(restored.mappings).toEqual(expectedMappings);
+    expect(restored.selection.selectedRowIds).toEqual(expectedSelection);
+    expect(restored.selection.svgObjectId).toBe("name");
+    expect(restored.sources.svg!.acceptedSvg).toContain(">Original</text>");
+    expect(
+      restored.sources.spreadsheet!.rowOverridesBySheet.Members[0].values[
+        columnId
+      ],
+    ).toBe("Modified Chloé");
+  });
+
   it("creates and then updates an app-created Drive project", async () => {
     const user = userEvent.setup();
     useAppStore.setState({ project: project() });

@@ -130,6 +130,14 @@ overwrite/cancel conflicts, checking resulting state, write count, method and
 uploaded local content. These use injected callbacks/responses in jsdom;
 real popup behavior, Drive versions and the concurrency race remain unverified.
 
+The complete-state App roundtrip case captures the multipart HTML sent on
+Drive creation, validates its embedded project, then reopens those bytes in a
+fresh App instance through the Drive path. It compares imported/manual data,
+row overrides, filters, selected IDs, SVG/object selection, mappings and font/
+image asset bytes/metadata, and checks that the OAuth token is absent from HTML.
+Asset payloads are small synthetic persistence fixtures; this case does not
+verify font/image rendering or the actual Google upload service.
+
 Run `bun run test:browser:drive-auth` for repeatable Chromium/Firefox checks of
 consent denial, popup closure/failure, Google script blocking, local SVG import
 after failure and successful authorization followed by Picker cancellation on

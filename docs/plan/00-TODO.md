@@ -937,6 +937,14 @@ Only one implementation item should normally be `[-]`.
 
 ## Phase 10 — Release checks
 
+- [x] Verify complete project state through Drive upload and reopen.
+  - Main files: App test, test plan and handoff.
+  - Captured multipart HTML reopens in a fresh App with data/edits/manual rows,
+    filters/selection, original SVG, mappings and asset bytes/metadata intact;
+    OAuth token absent. Synthetic assets test persistence, not rendering.
+  - Tests: focused roundtrip passed; `bun run check` passed (60 files,
+    405 tests, 2,567,720-byte self-contained HTML). Injected Drive responses.
+
 - [x] Verify a project switch cannot overwrite the previous Drive project.
   - Bind the runtime destination to project ID; a different project creates a
     file in a newly selected folder rather than reusing the previous file.

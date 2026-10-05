@@ -4,28 +4,32 @@ Last updated: 2026-10-05
 
 ## Current task
 
-Continue Drive acceptance testing. Found and fixed a stale save destination:
-after opening Drive project A and switching to a different project B, save
-could update A's file. Runtime Drive references now carry the accepted project
-ID; B must choose a folder/create a file. Same-project repeated saves still
-update their existing file. The component regression failed before the fix.
+Continue Drive acceptance testing. Added a complete-state Drive roundtrip
+component case: capture the actual multipart HTML upload, validate its embedded
+project and reopen those bytes in a fresh App instance. Imported/manual rows,
+overrides, filters, selection, accepted SVG/object selection, mappings and
+font/image asset bytes/metadata survive. The OAuth token is absent from HTML.
+Synthetic asset bytes test persistence only; rendering has separate coverage.
 
-Changed: App, App test, TODO, Drive/test plans and decisions.
-Tests: 13 focused Drive cases passed; `bun run check` passed (60 files,
-404 tests; 2,567,720-byte self-contained HTML). Existing filename-regex lint
-warning only. `outputs/` remains untouched.
+Changed: `src/App.test.tsx`, TODO and test plan. Focused roundtrip passed.
+No production change. `bun run check` passed (60 files, 405 tests;
+2,567,720-byte single HTML). Existing filename-regex lint warning.
+`outputs/` remains untouched.
 
-Earlier coverage: eight component cases for 401 renewal and conflict choices;
-three OAuth cancellation unit cases and eight Chromium/Firefox injected-script
-browser cases; 13 error-reporting cases. No live Google API/account tested.
-User is preparing a dedicated account and asked about Cloud ownership: advised
-Cloud project on their owner account/organization, test user separate. No
-configuration supplied yet; live localhost/production acceptance remains blocked.
+Earlier fixes remain: project-bound Drive save reference (regression), OAuth
+cancellation (3 unit/8 browser cases), error reporting (13 injected cases).
+Renewal and all conflict choices have eight injected component cases.
+No live Google API/account tested. User is preparing a dedicated test account;
+Cloud project should belong to their owner account/organization, with the test
+account separate. User now authorized use of the adjacent Google Cloud Shell. Console is signed
+in, with no project selected. Embedded terminal input automation failed; trying
+a dedicated Cloud Shell tab in the same in-app browser. No Cloud project or
+credentials changed yet. Configuration has not been supplied yet.
 
-Next independent check: complete project Drive save/reopen roundtrip with
-SVG, mappings, data edits/selection and embedded assets. Actual OAuth, Drive
-writes/versions, production matrix, size boundaries and concurrency still need
-live evidence after configuration/account become available.
+Next independent check: linked Drive SVG failure preservation. Real OAuth,
+actual writes/versions, localhost/production matrix, file-size limits and
+simultaneous-write behavior still need live evidence once configuration and
+account become available.
 
 Previous Firefox acceptance passed with Firefox 155: local Ethnocentric and
 an uploaded generated font survive saved-HTML reopen without HTTP requests.
@@ -60,7 +64,8 @@ about 2.95 MB, sharp headline at 400 DPI. Existing `outputs/` remains untouched.
 
 ## History and next step
 
-Latest task commit: `7d940a9` — bind Drive save destination to its project.
+Latest task commit: `0e449ed` — complete Drive project roundtrip, 405 tests pass.
+Previous fix: `7d940a9` — bind Drive save destination to its project.
 Previous test commit: `bd06f94` — Drive renewal and conflict state preservation.
 Previous OAuth fix: `3a8ee08` — respect cancellation; 8 browser cases pass.
 Previous fix: `32f3db2` — correct Drive error reporting with 13 new cases.
