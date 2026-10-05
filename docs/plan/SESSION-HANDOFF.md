@@ -19,12 +19,24 @@ No production change. `bun run check` passed (60 files, 405 tests;
 Earlier fixes remain: project-bound Drive save reference (regression), OAuth
 cancellation (3 unit/8 browser cases), error reporting (13 injected cases).
 Renewal and all conflict choices have eight injected component cases.
-No live Google API/account tested. User is preparing a dedicated test account;
-Cloud project should belong to their owner account/organization, with the test
-account separate. User now authorized use of the adjacent Google Cloud Shell. Console is signed
-in, with no project selected. Embedded terminal input automation failed; trying
-a dedicated Cloud Shell tab in the same in-app browser. No Cloud project or
-credentials changed yet. Configuration has not been supplied yet.
+No live Drive import/save tested. User authorized project/credentials setup and
+installation of the official downloaded CLI archive. Created owner project
+`svg-batch-drive-tests-20261005` (number `21912030633`) through Cloud Shell;
+Drive and Picker APIs enabled. Created browser key `svg-batch-drive-web`,
+restricted to Drive/Picker and localhost:5173, 127.0.0.1:5173,
+flolbr.github.io and docs.google.com referrers. Key and app number are in ignored
+`.env.local` with the Web OAuth client ID. No OAuth secret stored or needed.
+CLI 587.0.0 installed durably in `/home/flo/.local/share/google-cloud-sdk`,
+with gcloud/gsutil/bq links in `/home/flo/.local/bin` already on zsh PATH.
+Owner authentication retained in `/home/flo/.config/gcloud` (0700), selected
+project verified through the local CLI. After explicit user approval, accepted
+Google's API user-data policy and created Web client "SVG Batch Drive Tests".
+Origins: http://localhost:5173, http://127.0.0.1:5173, https://flolbr.github.io.
+App is external/testing; user requested owner email as test user and it was
+added. Declared only drive.file. Console shows creation and test user success.
+`bun run build` passed with real config; no live Drive import/save performed.
+
+Do not publish the app or mark acceptance complete before real Drive evidence.
 
 Next independent check: linked Drive SVG failure preservation. Real OAuth,
 actual writes/versions, localhost/production matrix, file-size limits and
@@ -64,7 +76,9 @@ about 2.95 MB, sharp headline at 400 DPI. Existing `outputs/` remains untouched.
 
 ## History and next step
 
-Latest task commit: `0e449ed` — complete Drive project roundtrip, 405 tests pass.
+Latest setup commit: `4a22c88` — Web OAuth client, scope and test user configured.
+Previous milestone: `4e4d7d4` — Cloud project/key and durable gcloud setup.
+Previous task commit: `0e449ed` — complete Drive roundtrip, 405 tests pass.
 Previous fix: `7d940a9` — bind Drive save destination to its project.
 Previous test commit: `bd06f94` — Drive renewal and conflict state preservation.
 Previous OAuth fix: `3a8ee08` — respect cancellation; 8 browser cases pass.
@@ -82,9 +96,9 @@ Original branch history is preserved on
 `codex/backup-project-embedded-font-before-squash` at `9a46856`.
 The user explicitly authorized squashing and merging. No push requested.
 
-Next concrete step: configure the Google test account/client and execute the
+Next concrete step: use the configured localhost app and execute the
 Hosted Drive checklist A–F, recording live versus injected results separately.
 
 Remaining plan gates: Edge local-file flows (runtime unavailable previously),
-and hosted Drive import/save (requires configured client and authorized account).
+and hosted Drive import/save (configuration ready; live acceptance pending).
 No remaining Firefox verification work. Existing outputs/ remains untouched.

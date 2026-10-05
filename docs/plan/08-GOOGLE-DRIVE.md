@@ -158,8 +158,9 @@ configuration and browser matrix; consent/cancellation; import/save/reopen;
 conflict choices; auth/network recovery; linked SVG updates; file sizes.
 Each case specifies its expected result and the evidence to record.
 
-Real-account localhost and production acceptance remains blocked pending
-configuration and an authorized test account. Existing implementation tests
+The test Cloud project, restricted key, Web client and requested test user
+are configured; local values are in ignored `.env.local`. Real-account localhost
+and production acceptance still require execution. Existing implementation tests
 are not a substitute. The checklist also records the non-atomic conflict check
 and current simple/multipart upload limits for release assessment.
 

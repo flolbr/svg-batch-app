@@ -937,6 +937,18 @@ Only one implementation item should normally be `[-]`.
 
 ## Phase 10 — Release checks
 
+- [x] Configure the Google Cloud test project and hosted Drive credentials.
+  - Owner project created; Drive/Picker enabled; restricted browser API key
+    stored in ignored `.env.local` with the Web OAuth client ID and app number.
+  - External/testing app declares only `drive.file`; owner email added as
+    requested test user. Origins: localhost:5173, 127.0.0.1:5173, flolbr.github.io.
+  - Official archive installed in `~/.local/share/google-cloud-sdk`, commands
+    linked in `~/.local/bin`; authenticated configuration in `~/.config/gcloud`.
+  - Main files: ignored `.env.local`, TODO and handoff.
+  - Checks: CLI version/project/API metadata, API-key restrictions, console
+    creation confirmation/test-user list and `bun run build` passed.
+    Real Drive OAuth/import/save acceptance remains pending.
+
 - [x] Verify complete project state through Drive upload and reopen.
   - Main files: App test, test plan and handoff.
   - Captured multipart HTML reopens in a fresh App with data/edits/manual rows,
@@ -1011,8 +1023,8 @@ Only one implementation item should normally be `[-]`.
     project block.
   - Test: Playwright Firefox local-file and download fallback checks.
 - [!] Test hosted Drive import/save on localhost and production origin.
-  - Blocked pending configured Google client values and an authorized test
-    account; local Drive-disabled behavior is covered by component tests.
+  - Cloud client/key and requested test user now configured. Pending actual
+    OAuth consent and live import/save; local disabled behavior is covered.
     Execute cases A–F and record the browser/origin matrix in
     `docs/plan/09-TEST-PLAN.md#hosted-drive` before closing this gate.
 - [x] Test a signed update from the previous published application version.
