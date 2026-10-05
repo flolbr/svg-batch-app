@@ -122,6 +122,14 @@ failed metadata reads (no write) and ambiguous upload failures (no replay).
 Four new assertions failed before the error-message correction. These are
 function tests with simulated responses, not live Google/browser acceptance.
 
+Component evidence, 2026-10-05: eight parameterized cases in `src/App.test.tsx`
+cover successful 401 renewal, a second 401, cancelled renewal and a 403 without
+renewal; failures preserve the imported data, row override and selection.
+They also open project HTML through the Drive path and exercise copy/reload/
+overwrite/cancel conflicts, checking resulting state, write count, method and
+uploaded local content. These use injected callbacks/responses in jsdom;
+real popup behavior, Drive versions and the concurrency race remain unverified.
+
 Run `bun run test:browser:drive-auth` for repeatable Chromium/Firefox checks of
 consent denial, popup closure/failure, Google script blocking, local SVG import
 after failure and successful authorization followed by Picker cancellation on

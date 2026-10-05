@@ -4,26 +4,26 @@ Last updated: 2026-10-05
 
 ## Current task
 
-Continue Drive acceptance testing. OAuth denial and popup closure/failure
-previously triggered an unsolicited second consent request. Three new unit
-cases reproduced it; the client now requests once and lets a later action retry.
-Empty prompt permits first consent; it is not silent auth.
+Continue Drive acceptance testing. Added eight injected component cases for
+401 renewal success, second-401 stop, cancelled renewal and 403 without renewal.
+Failure preserves the imported spreadsheet, row override and selection. Four
+conflict choices after opening Drive project HTML verify state, no-write paths,
+POST versus PATCH and uploaded local content. No new defect or production edit.
 
-Changed: Google client/tests, `scripts/testDriveAuthBrowser.ts`, package.json,
-TODO, Drive/test plans and decisions. `bun run test:browser:drive-auth` passes
-8 cases (4 each Chromium/Firefox): denial, closed/blocked popup callbacks and
-blocked Google scripts; local SVG import survives and explicit retry reaches
-Picker cancellation. Scripts are injected: no live Google account/API tested.
-The runner builds an isolated single HTML in a temporary directory, serves it
-on an ephemeral HTTP port and launches a fresh browser for each case. This
-avoids observed Vite dev-server/context startup stalls; temporary files are
-removed. Full `bun run check` passed (60 files, 395 tests; 2,567,552-byte build).
-Existing filename-regex lint warning. `outputs/` remains untouched.
+Changed: `src/App.test.tsx`, TODO and test plan. Focused cases passed (8).
+`bun run check` passed (60 files, 403 tests; 2,567,552-byte self-contained HTML).
+Only the existing filename-regex lint warning remains. Unrelated formatting
+changes removed; `outputs/` remains untouched.
 
-Earlier failure-message correction remains verified with 13 injected cases.
-No Google configuration/account response received yet; real hosted matrix is
-still blocked. Next independent tests: 401 renewal bounds, project reopen and
-conflict UI/state preservation. Do not mark live OAuth or Drive writes passed.
+Earlier OAuth fix is covered by 3 cancellation unit cases and 8 Chromium/
+Firefox cases via `bun run test:browser:drive-auth` with injected Google scripts.
+Failure-message correction has 13 injected cases. All these are simulated
+responses, not live Google acceptance. No configuration/account response yet.
+
+Next: exercise Drive HTML roundtrip with complete data/SVG/mappings/assets and
+linked SVG failure preservation where existing component coverage is weak.
+Real Google OAuth, actual Drive writes/versions, production-origin matrix,
+size boundaries and simultaneous-write behavior still need live evidence.
 
 Previous Firefox acceptance passed with Firefox 155: local Ethnocentric and
 an uploaded generated font survive saved-HTML reopen without HTTP requests.
@@ -58,7 +58,8 @@ about 2.95 MB, sharp headline at 400 DPI. Existing `outputs/` remains untouched.
 
 ## History and next step
 
-Latest task commit: `3a8ee08` — respect OAuth cancellation; 8 browser cases pass.
+Latest task commit: `bd06f94` — verify Drive renewal and conflict state preservation.
+Previous OAuth fix: `3a8ee08` — respect cancellation; 8 browser cases pass.
 Previous fix: `32f3db2` — correct Drive error reporting with 13 new cases.
 Previous plan commit: `5aeb533` — detail Google Drive acceptance tests.
 

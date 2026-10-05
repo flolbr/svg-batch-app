@@ -937,6 +937,15 @@ Only one implementation item should normally be `[-]`.
 
 ## Phase 10 — Release checks
 
+- [x] Verify Drive 401 renewal bounds and all four conflict choices in the UI.
+  - Main files: `src/App.test.tsx`, test plan and session handoff.
+  - Eight injected component cases verify renewal succeeds or stops after a
+    second 401/cancellation, 403 does not renew, failures retain row edits and
+    selection, and each conflict choice preserves the expected state/writes.
+  - Tests: focused cases passed (8); `bun run check` passed (60 files,
+    403 tests, 2,567,552-byte self-contained HTML). No production change.
+    Real-account acceptance and simultaneous-write protection remain pending.
+
 - [x] Test OAuth cancellation and blocked scripts with retry recovery.
   - Remove forced consent retry after denial or popup failure/closure.
   - Main files: Google client/tests, `scripts/testDriveAuthBrowser.ts`,

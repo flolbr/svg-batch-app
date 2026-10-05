@@ -471,6 +471,190 @@ describe("App", () => {
     expect(driveFetch).toHaveBeenCalledTimes(2);
   });
 
+  it.each(["renewed", "rejected-token", "cancelled-renewal", "forbidden"])(
+    "handles Drive authorization recovery: %s",
+    async (scenario) => {
+      const user = userEvent.setup();
+      useAppStore.setState({ project: project() });
+      setMemberSpreadsheet();
+      const data = useAppStore.getState().sources.spreadsheet!.data;
+      useAppStore
+        .getState()
+        .setRowOverrides([
+          {
+            rowId: data.rows[0].id,
+            values: { [data.columns[0].id]: "Unsaved edit" },
+          },
+        ]);
+      useAppStore.getState().selectRows([data.rows[0].id]);
+      const before = useAppStore.getState();
+      const requestDriveAccessToken = vi
+        .fn()
+        .mockResolvedValueOnce("old-token");
+      if (scenario === "cancelled-renewal") {
+        requestDriveAccessToken.mockRejectedValueOnce(
+          new Error("popup_closed"),
+        );
+      } else {
+        requestDriveAccessToken.mockResolvedValueOnce("new-token");
+      }
+      const pickDriveFile = vi.fn().mockResolvedValue({
+        id: "sheet-1",
+        name: "remote.csv",
+        mimeType: "text/csv",
+      });
+      const driveFetch = vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(
+          new Response("", { status: scenario === "forbidden" ? 403 : 401 }),
+        );
+      if (scenario === "renewed") {
+        driveFetch
+          .mockResolvedValueOnce(
+            new Response(
+              JSON.stringify({
+                id: "sheet-1",
+                name: "remote.csv",
+                mimeType: "text/csv",
+              }),
+            ),
+          )
+          .mockResolvedValueOnce(new Response("Name,City\nAda,Paris"));
+      } else if (scenario === "rejected-token") {
+        driveFetch.mockResolvedValueOnce(new Response("", { status: 401 }));
+      }
+      render(
+        <MantineProvider>
+          <App
+            capabilities={hostedDriveCapabilities}
+            driveFetch={driveFetch}
+            googleDriveConfiguration={{
+              clientId: "client",
+              apiKey: "key",
+              appId: "app",
+            }}
+            pickDriveFile={pickDriveFile}
+            requestDriveAccessToken={requestDriveAccessToken}
+          />
+        </MantineProvider>,
+      );
+      const open = screen.getByRole("button", {
+        name: "Open from Google Drive",
+      });
+      await user.click(open);
+      await waitFor(() => expect(open).toBeEnabled());
+      expect(requestDriveAccessToken).toHaveBeenCalledTimes(
+        scenario === "forbidden" ? 1 : 2,
+      );
+      expect(pickDriveFile).toHaveBeenCalledTimes(1);
+      const expectedCalls =
+        scenario === "renewed" ? 3 : scenario === "rejected-token" ? 2 : 1;
+      expect(driveFetch).toHaveBeenCalledTimes(expectedCalls);
+      expect(
+        new Headers(driveFetch.mock.calls[0][1]?.headers).get("Authorization"),
+      ).toBe("Bearer old-token");
+      if (scenario === "renewed") {
+        expect(useAppStore.getState().sources.spreadsheet?.fileName).toBe(
+          "remote.csv",
+        );
+        for (const [, init] of driveFetch.mock.calls.slice(1)) {
+          expect(new Headers(init?.headers).get("Authorization")).toBe(
+            "Bearer new-token",
+          );
+        }
+      } else {
+        expect(useAppStore.getState().project).toBe(before.project);
+        expect(useAppStore.getState().sources).toBe(before.sources);
+        expect(useAppStore.getState().selection).toBe(before.selection);
+      }
+    },
+  );
+
+  it.each(["save-copy", "reload", "overwrite", "cancel"])(
+    "preserves the expected project state after a Drive conflict: %s",
+    async (choice) => {
+      const user = userEvent.setup();
+      useAppStore.setState({ project: project() });
+      const remote = project({ name: "Remote version" });
+      const html = (value: Project) =>
+        `<script id="svg-batch-project" type="application/json">${JSON.stringify(value)}</script>`;
+      const metadata = (version: string, id = "drive-project") =>
+        new Response(
+          JSON.stringify({
+            id,
+            name: "project.html",
+            mimeType: "text/html",
+            version,
+          }),
+        );
+      const driveFetch = vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(metadata("1"))
+        .mockResolvedValueOnce(new Response(html(project())))
+        .mockResolvedValueOnce(metadata("2"));
+      if (choice === "reload")
+        driveFetch.mockResolvedValueOnce(new Response(html(remote)));
+      if (choice === "overwrite" || choice === "save-copy")
+        driveFetch.mockResolvedValueOnce(
+          metadata("3", choice === "save-copy" ? "copy-id" : "drive-project"),
+        );
+      const prompt = vi.spyOn(window, "prompt").mockReturnValue(choice);
+      render(
+        <MantineProvider>
+          <App
+            capabilities={hostedDriveCapabilities}
+            driveFetch={driveFetch}
+            googleDriveConfiguration={{
+              clientId: "client",
+              apiKey: "key",
+              appId: "app",
+            }}
+            pickDriveFile={vi.fn().mockResolvedValue({
+              id: "drive-project",
+              name: "project.html",
+              mimeType: "text/html",
+            })}
+            requestDriveAccessToken={vi.fn().mockResolvedValue("token")}
+            projectDocument={cleanProjectDocument()}
+          />
+        </MantineProvider>,
+      );
+      const open = screen.getByRole("button", {
+        name: "Open from Google Drive",
+      });
+      await user.click(open);
+      await waitFor(() => expect(driveFetch).toHaveBeenCalledTimes(2));
+      await waitFor(() => expect(open).toBeEnabled());
+      act(() =>
+        useAppStore.getState().setProject(project({ name: "Local edits" })),
+      );
+      const save = screen.getByRole("button", { name: "Save to Drive" });
+      await user.click(save);
+      await waitFor(() => expect(save).toBeEnabled());
+      expect(prompt).toHaveBeenCalledWith(
+        expect.stringContaining("changed"),
+        "save-copy",
+      );
+      expect(useAppStore.getState().project?.name).toBe(
+        choice === "reload" ? "Remote version" : "Local edits",
+      );
+      expect(driveFetch).toHaveBeenCalledTimes(choice === "cancel" ? 3 : 4);
+      const mutations = driveFetch.mock.calls.filter(([, init]) =>
+        ["POST", "PATCH"].includes(init?.method ?? ""),
+      );
+      if (choice === "cancel" || choice === "reload")
+        expect(mutations).toHaveLength(0);
+      else {
+        expect(mutations).toHaveLength(1);
+        const [url, init] = mutations[0];
+        expect(init?.method).toBe(choice === "save-copy" ? "POST" : "PATCH");
+        if (choice === "overwrite")
+          expect(String(url)).toContain("/files/drive-project?");
+        expect(await (init!.body as Blob).text()).toContain("Local edits");
+      }
+    },
+  );
+
   it("creates and then updates an app-created Drive project", async () => {
     const user = userEvent.setup();
     useAppStore.setState({ project: project() });
