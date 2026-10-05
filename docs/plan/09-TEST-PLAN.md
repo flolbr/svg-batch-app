@@ -112,9 +112,95 @@ visual inspection; otherwise temporary files are cleaned up.
 
 ### Hosted Drive
 
-Status: procedure defined; live acceptance is still blocked pending Google
-configuration and an authorized test account. Phase 8 implementation/unit tests
-do not establish that browser OAuth and real Drive operations pass.
+Status: configuration is complete; localhost live acceptance is in progress.
+The earlier embedded-browser attempt opened Picker but blocked
+`www.googleapis.com` (`ERR_BLOCKED_BY_CLIENT`). The later signed-in Firefox
+session verified file import and SVG linking; save/reopen and other acceptance
+cases remain unverified. Phase 8 implementation/unit tests are separate.
+
+Live import evidence, 2026-10-05: the user-selected test workbook
+`membership-data.xlsx` loaded from Drive on `http://127.0.0.1:5173/` with two
+worksheets; the Customers sheet displayed 9 rows. The linked SVG
+`membership-template.svg` also appeared in the SVG panel with sanitized/Drive
+status and a Reload link. Its preview rendered, and the comparison reported
+zero missing and zero incompatible targets (19 new targets because this fresh
+project had no mappings). This verifies live spreadsheet import and Drive SVG
+linking in the signed-in Firefox session. Mapping, save-to-Drive, and reopen
+from Drive remain unverified in that session.
+
+Live save/reopen evidence, 2026-10-05: the Vite dev shell correctly rejected
+Save to Drive because its `/src/main.tsx` entry is not a portable project.
+After `bun run verify:single` passed, the standalone `dist/index.html` was
+served temporarily at the same allow-listed origin as
+`/drive-test-shell.html`. In the signed-in browser, a recovered test project
+with the nine-row membership CSV, embedded membership SVG, and a valid QR
+mapping was saved into the Drive `membership-demo` folder as
+`Untitled project.html`. Picker then reopened that file; the app confirmed
+“The self-contained project passed validation.” The reopened UI showed the
+nine rows, SVG preview, and valid QR mapping. This verifies a live localhost
+Drive HTML round trip for the recovered fixture state. It does not verify
+saving the separate Drive-imported XLSX/linked-SVG session, later updates,
+conflict handling, or production/other-browser behavior.
+
+Live browser evidence, 2026-10-05: localhost `http://127.0.0.1:5173/`,
+app v0.1.2, configured Cloud test project. Google Identity/Picker loaded and
+Picker presented Drive; filtering to the user-provided `membership-template.svg`
+found one result. Selecting it reached `Drive SVG link failed / Failed to fetch`;
+no SVG was applied. A separate top-level browser navigation to
+`https://www.googleapis.com/drive/v3/files/example?fields=id` was blocked by the
+embedded browser (`net::ERR_BLOCKED_BY_CLIENT`). From Chromium 153.0.8010.52
+using Playwright at the same origin, a cross-origin Drive GET with an
+intentionally invalid bearer returned Google's readable JSON 401 (`type: cors`);
+the unauthenticated GET returned the expected Google JSON 403. The shell CORS
+preflight also returned 200 with `authorization` allowed. This establishes that
+standard Chromium can reach the API and pass CORS, but not authenticated access
+or real app import/save. The embedded browser remains blocked.
+The configured API key also returned the same CORS-readable Google 401 when
+used from its allowed `127.0.0.1:5173` origin with the fake bearer, confirming
+that Google accepted the key/referrer and reached OAuth authentication. No
+Drive file was read or changed by these probe requests.
+Referrer restriction check, 2026-10-05: without an OAuth header, the same key
+from allowed port 5173 reached Drive and returned 404 for the deliberately
+nonexistent file ID `example`. From unregistered port 5174, Google returned
+CORS-readable 403 `Requests from referer ... are blocked.` This confirms the
+key is restricted to configured referrers; no real Drive file was read.
+
+Production configuration check, 2026-10-05: the URL
+`https://flolbr.github.io/svg-batch-app/` returns HTTP 200 and app v0.1.2, but
+its Drive controls are disabled with
+`Google Drive is not configured for this hosted origin.` Inspection of the
+inline bundles found no OAuth client ID, browser API key or configured Picker
+app ID, although the production origin is listed. A probe with the configured
+key from that allowed origin still reached Drive (404 for dummy ID `example`),
+but this does not enable the deployed app. Production Drive acceptance requires
+a configured hosted build and remains untested.
+A previous Picker CSV selection cannot be counted as a live import because the
+localhost tab had restored the same CSV from local recovery before the selection.
+No test files were written to Drive. The localhost tab was closed after the
+attempt. Repeat in a supported local browser where `www.googleapis.com` is not
+blocked, without lowering browser security settings. Production and save/reopen
+remain untested.
+
+Local-core fallback evidence, 2026-10-05: after closing the failed Drive session,
+a fresh localhost tab restored only the synthetic local CSV fixture. Before any
+Drive action its document contained only the Vite and app scripts. Importing the
+local `membership-template.svg` sanitized it, found 19 mapping targets, and
+rendered the preview; selecting DOC-001 worked. This verifies that the failed
+remote request did not prevent core local use, but it does not resolve the
+embedded browser's API host block or count as a Drive import.
+
+Further local UI evidence, 2026-10-05: reimported the membership CSV and SVG in
+a fresh localhost session. The `Show Badge` visibility mapping hid the badge
+for DOC-002 (`no`) and showed it for DOC-001 (`yes`). The QR target accepted
+`QR Content` and was marked valid; validation reported no issues for the
+selected row. The embedded browser did not complete its local download event.
+To verify the app path independently of that browser limitation, Chromium
+153.0.8010.52 with Playwright imported the same fixtures, mapped customer name,
+membership tier, badge visibility and QR content, validated DOC-001/002, then
+downloaded the ZIP. Archive assertions confirmed `row-1.svg`, `row-2.svg` and
+`manifest.json`, successful manifest entries without warnings, correct names
+and exclusive tiers per row, the DOC-002 badge hidden, and QR vector paths in
+both outputs. These local checks do not count as Drive acceptance.
 
 Automated evidence, 2026-10-05: `src/drive/driveFiles.test.ts` injects structured
 403 quota/permission/export-size failures, 413 ZIP uploads, 429/503 responses,

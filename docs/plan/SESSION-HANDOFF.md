@@ -4,23 +4,45 @@ Last updated: 2026-10-05
 
 ## Current task
 
-Continue Drive acceptance testing. Added a complete-state Drive roundtrip
-component case: capture the actual multipart HTML upload, validate its embedded
-project and reopen those bytes in a fresh App instance. Imported/manual rows,
-overrides, filters, selection, accepted SVG/object selection, mappings and
-font/image asset bytes/metadata survive. The OAuth token is absent from HTML.
-Synthetic asset bytes test persistence only; rendering has separate coverage.
+Continue Drive acceptance testing. New user screenshot from signed-in Firefox
+at localhost shows `membership-data.xlsx` imported from Drive (Customers sheet,
+9 rows) and `membership-template.svg` linked from Drive. The SVG is sanitized,
+renders in preview, and its comparison reports no missing/incompatible targets
+and 19 new targets. A separate recovered local fixture was saved as
+`Untitled project.html` in Drive's `membership-demo` folder from a temporary
+single-file shell served at `http://127.0.0.1:5173/drive-test-shell.html`.
+Picker reopened it and the app confirmed the HTML passed validation; the nine
+rows, embedded SVG, and QR mapping were restored. Thus live localhost save and
+reopen work. The exact Drive-imported XLSX/linked-SVG state has not yet been
+saved, nor have repeated updates, conflicts, or the remaining matrix cases.
+Prior local fallback tests mapped visibility and QR content and passed
+validation; Chromium 153 Playwright verified the two-row ZIP. Earlier
+CORS/referrer probes are configuration checks only.
+The published `https://flolbr.github.io/svg-batch-app/` serves v0.1.2, but its
+Drive controls are disabled; its inline bundles lack the OAuth client ID, API
+key and Picker app ID. The production host origin is allow-listed and the key
+works from that referrer, so the published artifact is missing build-time Drive
+configuration. Do not claim production Drive coverage until a configured build
+is prepared after localhost live acceptance.
 
-Changed: `src/App.test.tsx`, TODO and test plan. Focused roundtrip passed.
-No production change. `bun run check` passed (60 files, 405 tests;
-2,567,720-byte single HTML). Existing filename-regex lint warning.
-`outputs/` remains untouched.
+Changed: TODO, hosted Drive test plan and this handoff. No app source changes.
+`bun run verify:single` passed (2,568,300-byte self-contained build);
+`git diff --check` passed. The temporary untracked `public/drive-test-shell.html`
+serves that build on the allow-listed origin so browser acceptance can continue;
+remove it when the localhost live tests finish. `outputs/` remains untouched.
+Latest prior commit `a4a3e4b` records the live Drive import and SVG-link result.
+Latest commit `4cab708` records the live Drive project round trip. Commit
+`0390c87` records the production configuration finding; `3bf23f7` records the
+denied-referrer check. Next, save/reopen the actual Drive-imported
+workbook/SVG project, then exercise repeat-save and conflicts. Only after
+localhost acceptance passes, prepare a configured production build.
 
 Earlier fixes remain: project-bound Drive save reference (regression), OAuth
 cancellation (3 unit/8 browser cases), error reporting (13 injected cases).
 Renewal and all conflict choices have eight injected component cases.
-No live Drive import/save tested. User authorized project/credentials setup and
-installation of the official downloaded CLI archive. Created owner project
+Live localhost API attempt reached Picker but did not complete import. User
+authorized project/credentials setup and installation of the official
+downloaded CLI archive. Created owner project
 `svg-batch-drive-tests-20261005` (number `21912030633`) through Cloud Shell;
 Drive and Picker APIs enabled. Created browser key `svg-batch-drive-web`,
 restricted to Drive/Picker and localhost:5173, 127.0.0.1:5173,
@@ -34,7 +56,19 @@ Google's API user-data policy and created Web client "SVG Batch Drive Tests".
 Origins: http://localhost:5173, http://127.0.0.1:5173, https://flolbr.github.io.
 App is external/testing; user requested owner email as test user and it was
 added. Declared only drive.file. Console shows creation and test user success.
-`bun run build` passed with real config; no live Drive import/save performed.
+`bun run build` passed with real config. On 2026-10-05, localhost v0.1.2
+opened Picker and the user-provided SVG was selectable, but linking failed with
+`Failed to fetch`. The embedded browser blocks the `www.googleapis.com` API
+host (`ERR_BLOCKED_BY_CLIENT`); shell preflight succeeded and Chromium Playwright
+received a CORS-readable API 401 with a fake bearer. A CSV
+selection is ambiguous because the tab restored that same CSV from local
+recovery first. No Drive writes occurred. After closing that tab, a fresh
+session imported the local CSV/SVG successfully (the SVG was sanitized, with 19
+targets and a rendered preview), then tested badge visibility and QR mapping;
+validation passed without issues. The local export download did not complete.
+Need a supported browser without this API host
+blocked; do not disable security protections. Production and write/reopen cases
+are still pending.
 
 Do not publish the app or mark acceptance complete before real Drive evidence.
 
@@ -76,8 +110,11 @@ about 2.95 MB, sharp headline at 400 DPI. Existing `outputs/` remains untouched.
 
 ## History and next step
 
-Latest setup commit: `4a22c88` — Web OAuth client, scope and test user configured.
-Previous milestone: `4e4d7d4` — Cloud project/key and durable gcloud setup.
+Latest handoff commit: `1578b93` — current localhost fallback and next step recorded.
+Test evidence: `2b660ba` — local fallback after Drive host-block recorded.
+Previous test note: `506bd20` — Picker works; embedded-browser Drive API access blocked.
+Setup: `4a22c88` — Web OAuth client, scope and test user configured.
+Cloud setup: `4e4d7d4` — project/key and durable gcloud setup.
 Previous task commit: `0e449ed` — complete Drive roundtrip, 405 tests pass.
 Previous fix: `7d940a9` — bind Drive save destination to its project.
 Previous test commit: `bd06f94` — Drive renewal and conflict state preservation.

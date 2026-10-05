@@ -1022,11 +1022,20 @@ Only one implementation item should normally be `[-]`.
   - Firefox Save project produced a downloadable HTML containing the embedded
     project block.
   - Test: Playwright Firefox local-file and download fallback checks.
-- [!] Test hosted Drive import/save on localhost and production origin.
-  - Cloud client/key and requested test user now configured. Pending actual
-    OAuth consent and live import/save; local disabled behavior is covered.
-    Execute cases A–F and record the browser/origin matrix in
-    `docs/plan/09-TEST-PLAN.md#hosted-drive` before closing this gate.
+- [-] Test hosted Drive import/save on localhost and production origin.
+  - Signed-in Firefox localhost now shows a successful Drive import of
+    `membership-data.xlsx` (Customers sheet, 9 rows) and linked
+    `membership-template.svg`; its comparison shows 19 new targets and no
+    missing/incompatible targets. A separate localhost round trip also saved
+    a recovered nine-row test project with an embedded SVG and valid QR mapping
+    as `Untitled project.html` in Drive's `membership-demo` folder, then opened
+    it through Picker and verified the restored project. The Vite dev shell
+    correctly refuses portable Drive saves; `bun run verify:single` passed and
+    the temporary single-file shell enabled them on the same allow-listed
+    origin. Saving the Drive-imported XLSX/linked-SVG session, later updates,
+    conflicts and the remaining browser/origin matrix are pending. Production
+    v0.1.2 lacks OAuth/API/Picker identifiers and its controls are disabled;
+    complete localhost acceptance before preparing configured production.
 - [x] Test a signed update from the previous published application version.
   - Playwright opened the published `v0.1.0` artifact, discovered signed
     `v0.1.1`, displayed its notes, and downloaded the verified update shell.
