@@ -936,6 +936,11 @@ Only one implementation item should normally be `[-]`.
 
 ## Phase 10 — Release checks
 
+- [x] Detail the hosted Drive acceptance procedure and expected results.
+  - Main files: `docs/plan/08-GOOGLE-DRIVE.md`,
+    `docs/plan/09-TEST-PLAN.md`, TODO and session handoff.
+  - Checks: documentation review against current Drive flows; `git diff --check`.
+    No runtime changes or live Drive tests; real-account execution remains blocked.
 - [x] Test representative SVG fixtures.
   - Canonical membership SVG and `/home/flo/Downloads/Sénior.svg` both loaded;
     the latter sanitized Inkscape metadata and local color-matrix filters and
@@ -964,6 +969,8 @@ Only one implementation item should normally be `[-]`.
 - [!] Test hosted Drive import/save on localhost and production origin.
   - Blocked pending configured Google client values and an authorized test
     account; local Drive-disabled behavior is covered by component tests.
+    Execute cases A–F and record the browser/origin matrix in
+    `docs/plan/09-TEST-PLAN.md#hosted-drive` before closing this gate.
 - [x] Test a signed update from the previous published application version.
   - Playwright opened the published `v0.1.0` artifact, discovered signed
     `v0.1.1`, displayed its notes, and downloaded the verified update shell.

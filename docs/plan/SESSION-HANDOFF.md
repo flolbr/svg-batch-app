@@ -4,19 +4,21 @@ Last updated: 2026-10-05
 
 ## Current task
 
-Firefox local/project font preview verification is complete. Cached Playwright
-Firefox 155 launches successfully; the previous missing-runtime blocker is stale.
-The repeatable acceptance test exercises actual self-contained file:// UI
-uploads, Save project, and downloaded HTML reopen in a fresh browser context.
-Local Ethnocentric matches top-level metrics; an uninstalled generated font
-renders expected glyph widths rather than fallback. Both survive reopen with
-exact saved font bytes/metadata and no HTTP requests. Screenshots inspected:
-`/tmp/svg-firefox-fonts-8VFDJl/font-preview.png` and `reopened-preview.png`.
-No application defect or production code change was needed.
+Drive acceptance documentation is complete. The test plan now specifies setup,
+localhost/production and browser coverage, consent/cancellation, imports,
+save/reopen, four conflict choices, auth/network failures, linked SVG reloads,
+and size checks with expected outcomes and evidence. Live tests remain blocked
+pending Google configuration and an authorized test account; no Drive runtime
+behavior or architecture decision changed.
 
-Changed: `scripts/testFirefoxFontPreview.ts`, `package.json`, TODO, test plan,
-this handoff. `SVG_BATCH_KEEP_FONT_ARTIFACTS=1 bun run test:browser:fonts` passes;
-`bun run check` passed (60 files, 379 tests; self-contained build).
+Changed: `docs/plan/08-GOOGLE-DRIVE.md`, `09-TEST-PLAN.md`, TODO and this handoff.
+Checks: documentation review against current Drive flows and `git diff --check`.
+No live Drive tests or runtime suite run for this documentation-only change.
+
+Previous Firefox acceptance passed with Firefox 155: local Ethnocentric and
+an uploaded generated font survive saved-HTML reopen without HTTP requests.
+`bun run test:browser:fonts` and `bun run check` passed (60 files, 379 tests).
+Screenshots: `/tmp/svg-firefox-fonts-8VFDJl/`. No remaining Firefox verification.
 
 ## Working behavior
 
@@ -47,7 +49,9 @@ about 2.95 MB, sharp headline at 400 DPI. Existing `outputs/` remains untouched.
 
 ## History and next step
 
-Latest verification commit: `13cb762` — Firefox fonts through saved-project reopen.
+Latest task commit: `5aeb533` — detail Google Drive acceptance tests.
+
+Previous verification commit: `13cb762` — Firefox fonts through saved-project reopen.
 
 Consolidated implementation commits, merged into local main:
 - `7530b62` — embed project fonts with face metadata (376 tests and build).
@@ -57,6 +61,9 @@ Consolidated implementation commits, merged into local main:
 Original branch history is preserved on
 `codex/backup-project-embedded-font-before-squash` at `9a46856`.
 The user explicitly authorized squashing and merging. No push requested.
+
+Next concrete step: configure the Google test account/client and execute the
+Hosted Drive checklist A–F, recording live versus injected results separately.
 
 Remaining plan gates: Edge local-file flows (runtime unavailable previously),
 and hosted Drive import/save (requires configured client and authorized account).

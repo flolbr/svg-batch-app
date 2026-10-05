@@ -112,13 +112,141 @@ visual inspection; otherwise temporary files are cleaned up.
 
 ### Hosted Drive
 
-1. open hosted app;
-2. authenticate;
-3. import a Drive SVG and Sheet;
-4. save project to Drive;
-5. reopen through hosted app;
-6. update same file;
-7. test a conflict.
+Status: procedure defined; live acceptance is still blocked pending Google
+configuration and an authorized test account. Phase 8 implementation/unit tests
+do not establish that browser OAuth and real Drive operations pass.
+
+#### Preparation and execution matrix
+
+1. Use a dedicated test account and disposable folder in My Drive. Enable Drive
+   API and Google Picker API in the Google Cloud project; configure the web
+   OAuth client, consent audience/test user, and restricted browser API key.
+2. Configure all four variables from [08 — Google Drive](08-GOOGLE-DRIVE.md#configuration).
+   Use the Google Cloud project number for `VITE_GOOGLE_APP_ID`. Register the
+   exact localhost origin (including port) and production HTTPS origin in both
+   OAuth configuration and the app allow-list; allow the corresponding web
+   referrers for the API key. Rebuild/restart after configuration changes.
+3. Upload copies of the membership SVG, CSV and XLSX fixtures, a small XLS file,
+   and a native Google Sheet with known rows, accents, blanks and leading zeros.
+   Prepare malformed SVG/project HTML, compatible/incompatible SVG revisions,
+   and a project containing an uploaded font and image for size checks.
+4. Run the cases below on localhost and production HTTPS in current Chrome.
+   Repeat OAuth, Picker, save/reopen, cancellation and recovery in Edge and
+   Firefox. Record browser/version, origin, app version/commit, date and result
+   per case. Mark unavailable configurations/browsers blocked, never passed.
+5. Use Browser Harness for real login, consent and permission exploration.
+   Use Playwright for repeatable app acceptance and injected failures; label
+   mocked results separately from live API results. Any reproducible browser
+   defect needs a Playwright regression before it is considered fixed.
+
+#### A. First connection, cancellation and isolation
+
+1. Open a fresh hosted session and import a local fixture before any Drive
+   action. Expect local features to work and no Google scripts/API requests.
+2. Click Open from Google Drive. Complete consent and select a file. Expect
+   only `drive.file` to be requested and the chosen file to load.
+3. In fresh attempts, deny consent, close the OAuth popup, then cancel Picker.
+   Expect no project changes or writes, no endless spinner/repeated popup, and
+   a subsequent user-initiated attempt to remain possible.
+4. Block the Google script hosts in a fresh browser context. Attempt Drive,
+   then import, preview, export and save locally. Expect a recoverable Drive
+   error and a working local core. Unblock and retry Drive successfully.
+5. Open the saved HTML through `file://`, then test an unlisted hosted origin.
+   Expect disabled Drive controls with an explanation and no OAuth attempt.
+
+#### B. Import, save and reopen
+
+1. Import each spreadsheet format and the native Sheet through Picker. Compare
+   displayed cells and worksheet choices against the source/local import;
+   native Sheets must use the XLSX import path without modifying the Sheet.
+2. Import the SVG; create text/QR mappings, a row override, a manual row,
+   selection and a filter. Upload a font. Record this expected project state.
+3. Choose Save to Drive and select the disposable folder. Expect one project
+   HTML with the correct name/folder. Record its file ID and version privately.
+   Repeat from a fresh project with folder selection cancelled: no file created.
+4. Close the app and open a fresh hosted session. Use Open from Google Drive
+   to select that HTML; this loads project data into the hosted app. Verify
+   SVG, mappings, data edits, selection, filters and embedded font restore.
+5. Change a cell and save again. Expect the same Drive file ID, a newer version,
+   and no duplicate. Reopen in another fresh session and verify the new value.
+6. Export two selected rows to Drive. Expect a ZIP in the selected folder;
+   download and inspect entries, filenames and enabled SVG/PDF/CSV content.
+   Unresolved validation errors must block export unless partial export was
+   explicitly selected. Cancel folder selection and verify no upload occurs.
+7. Download the project HTML and reopen locally with network disabled. Verify
+   the same state/preview and working local export. Inspect saved project JSON
+   and browser persistence for absence of OAuth tokens; do not copy tokens into
+   logs, screenshots or test reports.
+8. Attempt malformed SVG and project HTML imports. Expect validation errors
+   and preservation of the previously accepted workspace.
+
+#### C. Conflicts between two sessions
+
+Open the same disposable project in sessions A and B. Make different cell edits;
+save A, then save B. Repeat this setup independently for each choice below.
+
+| Choice in B | Expected result |
+| --- | --- |
+| Save a copy (default) | New file ID containing B's state; original retains A's state. Record the copy's actual destination. |
+| Reload | B displays A's saved state; no write to Drive. |
+| Overwrite | Original file ID now contains B's state after explicit choice. |
+| Cancel / close dialog | Drive retains A's state; B keeps its unsaved edits. |
+
+Read the resulting files in a fresh session to verify each result. Also stage a
+write from A after B's metadata check but before B's upload, using controlled
+request interception in Playwright. Record the current read-then-write race:
+version comparison is not an atomic lock. Do not claim simultaneous-write
+protection from the ordinary conflict test; record any lost update as a known
+limitation requiring a separate resolution/explicit release decision.
+
+#### D. Expiration, revoked access and interrupted requests
+
+1. After a successful connection, let the token expire and trigger another
+   action. Also inject a single 401 for repeatable coverage. Expect at most one
+   renewal/retry, preservation of edits, and a usable retry path if the browser
+   blocks the popup. Record whether a fresh user click is needed.
+2. Revoke the app's grant in the test account and retry; separately permanently
+   delete a disposable linked file. Expect recoverable access/missing errors,
+   no replacement of local state and a working local save. Reauthorize/select
+   an available file and verify recovery.
+3. Inject 403 permission/quota errors, 429 and 5xx responses, then interrupt a
+   download and upload. Expect accurate errors, cleared busy state and retained
+   edits. Do not mislabel every 403 as an oversized Sheet.
+4. For an upload with a lost response, inspect Drive before manually retrying:
+   the server may have saved it. Record duplicates or ambiguous outcomes; do
+   not infer failure or success only from the missing client response.
+
+#### E. Linked Drive SVG
+
+1. Link a disposable SVG and reload without changes: expect a no-op.
+2. Replace its Drive content while retaining target IDs. Reload, cancel once,
+   then repeat and apply. Expect changes only after confirmation and preserved
+   compatible mappings. Undo must restore the previous snapshot/mappings.
+3. Repeat with missing targets and incompatible target types. Expect the
+   compatibility report to identify affected IDs and no silent replacement.
+4. Try invalid SVG content, revoked access and a permanently deleted file.
+   Expect an explicit failure and continued use of the embedded snapshot.
+5. Save after an accepted update and reopen: expect the accepted snapshot and
+   source reference to survive without automatic background reload.
+
+#### F. File sizes and release evidence
+
+1. Upload/reopen a small project, then projects/ZIPs below and above 5 MB using
+   embedded assets. Record exact byte sizes, elapsed time and observed failures.
+   The current simple/multipart upload path must not be described as resumable;
+   larger-file support or an explicit product limit remains to be resolved if
+   acceptance fails. See Google's [upload guidance](https://developers.google.com/workspace/drive/api/guides/manage-uploads).
+2. Test a native Sheet whose XLSX export succeeds and one exceeding the export
+   endpoint's 10 MB output limit. Expect a specific size error and preserved
+   current data for the latter. Label simulated limit responses separately if
+   no real oversized fixture is available. See [files.export](https://developers.google.com/workspace/drive/api/reference/rest/v3/files/export).
+3. Keep a short result table: case, origin/browser, live or injected, expected
+   result, actual result, pass/fail/blocked and sanitized evidence/defect link.
+   Record any untested size range or concurrency limitation explicitly.
+4. Run `bun run check` after any fixes, plus the added Playwright regressions.
+   Mark the hosted Drive release gate complete only after the live matrix and
+   failure cases have evidence and unresolved failures are fixed or explicitly
+   accepted. Documentation alone does not complete that gate.
 
 ### Application update
 

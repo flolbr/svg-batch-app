@@ -135,6 +135,18 @@ VITE_GOOGLE_ALLOWED_ORIGINS
 
 These are deployment identifiers, not secrets. Still restrict the API key and OAuth origins in Google Cloud configuration.
 
+## Acceptance tests
+
+Follow the executable checklist in [09 — Hosted Drive](09-TEST-PLAN.md#hosted-drive):
+configuration and browser matrix; consent/cancellation; import/save/reopen;
+conflict choices; auth/network recovery; linked SVG updates; file sizes.
+Each case specifies its expected result and the evidence to record.
+
+Real-account localhost and production acceptance remains blocked pending
+configuration and an authorized test account. Existing implementation tests
+are not a substitute. The checklist also records the non-atomic conflict check
+and current simple/multipart upload limits for release assessment.
+
 ## Deferred
 
 - Shared Drives;
